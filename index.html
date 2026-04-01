@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aloria Labs | AI-First Software Agency & Autonomous Systems</title>
+  <meta name="description"
+    content="Aloria Labs: Leading boutique agency for high-performance AI systems, autonomous agents, and enterprise-grade web applications. We build mission-critical digital infrastructure for startups and global brands.">
+  <meta name="keywords" content="AI Development Agency, Custom AI Solutions, Autonomous Agents, SaaS Development, Enterprise Software, Full-Stack Web Development, AI Automation, Startup Coding Tools, Agentic Systems, Machine Learning Integration, High-Performance Web Apps, Boutique Software Studio, Aloria Labs, Website Development, App Development, AI Coding Tools">
+  
+  <!-- SEO OpenGraph -->
+  <meta property="og:title" content="Aloria Labs | AI-First Software Agency">
+  <meta property="og:description" content="Defying limits with Agentic Systems. Specializing in AI-driven software, autonomous operative systems, and scalable digital infrastructure.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://alorialabs.com">
+  <meta property="og:image" content="/og-image.png">
+
+  <!-- Twitter Meta -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Aloria Labs | AI-First Software Agency">
+  <meta name="twitter:description" content="Mission control for your digital infrastructure. We architect integrated, intelligent systems for business growth.">
+  <meta name="twitter:image" content="/og-image.png">
+
+  <!-- Verification & Canonical -->
+  <link rel="canonical" href="https://alorialabs.com">
+  <meta name="robots" content="index, follow">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Animation Lib (AOS) -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="/src/style.css">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "Aloria Labs",
+    "image": "https://alorialabs.com/og-image.png",
+    "@id": "https://alorialabs.com",
+    "url": "https://alorialabs.com",
+    "telephone": "+919318485680",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 0,
+      "longitude": 0
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ],
+      "opens": "00:00",
+      "closes": "23:59"
+    },
+    "sameAs": [
+      "https://instagram.com/alorialabs",
+      "https://wa.me/919318485680"
+    ],
+    "description": "Leading boutique agency for high-performance AI systems, autonomous agents, and enterprise-grade web applications.",
+    "founder": {
+      "@type": "Person",
+      "name": "Aloria Labs Founder"
+    },
+    "brand": {
+      "@type": "Brand",
+      "name": "Aloria Labs"
+    },
+    "offers": {
+      "@type": "Offer",
+      "description": "AI Development, Web Development, Automation Systems"
+    }
+  }
+  </script>
+</head>
+
+<body class="loading-active">
+  <!-- Intro Preloader -->
+  <div id="preloader" class="preloader">
+    <div class="preloader-bg"></div>
+    <div id="preloader-content" class="preloader-content">
+      <canvas id="preloader-canvas"></canvas>
+      <div id="preloader-logo" class="preloader-logo hidden-logo">
+        <span class="logo-text">ALORIA <span class="accent">LABS</span></span>
+      </div>
+    </div>
+    <div class="hex-stream" id="hex-stream"></div>
+  </div>
+
+  <div id="site-wrapper" class="site-wrapper">
+    <!-- Background Effects -->
+    <div class="mesh-gradient"></div>
+    <div class="blob-wrapper">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+      <div class="blob blob-4"></div>
+    </div>
+
+    <!-- Waves -->
+    <div class="wave-bg">
+      <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+        <defs>
+          <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+        </defs>
+        <g class="parallax">
+          <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(37, 99, 235, 0.05)" />
+          <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(37, 99, 235, 0.03)" />
+          <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(124, 58, 237, 0.02)" />
+          <use xlink:href="#gentle-wave" x="48" y="7" fill="rgba(37, 99, 235, 0.01)" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Navigation -->
+    <header id="header">
+      <div class="container nav-wrapper">
+        <div class="logo">
+          <span class="logo-text">ALORIA <span class="accent">LABS</span></span>
+        </div>
+        <nav class="desktop-nav">
+          <a href="#services">Services</a>
+          <a href="#work">Our Work</a>
+          <a href="#process">Process</a>
+          <a href="#footer">Contact</a>
+        </nav>
+        <div class="nav-cta">
+          <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20work%20with%20you."
+            class="btn btn-secondary">Get Started</a>
+        </div>
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <i data-lucide="menu"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Nav Overlay -->
+    <div class="mobile-nav" id="mobile-nav">
+      <button class="close-btn" id="close-btn">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="mobile-nav-links">
+        <a href="#services">Services</a>
+        <a href="#work">Our Work</a>
+        <a href="#process">Process</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#footer">Contact</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="#" class="btn btn-primary">Book a Call</a>
+      </div>
+    </div>
+
+    <main>
+      <!-- Hero Section -->
+      <section class="hero" id="home">
+        <div class="hero-3d-container">
+          <canvas id="hero-canvas"></canvas>
+        </div>
+
+        <div class="container hero-content">
+          <div class="nano-debug">CORE_STATUS: STABLE</div>
+          <h1 data-aos="fade-up" data-aos-delay="100">
+            We build <span class="gradient-text">Agentic Systems</span> that defy limits.
+          </h1>
+          <p data-aos="fade-up" data-aos-delay="200">
+            Mission control for your digital infrastructure. Customized AI automations, precision web scale, and
+            autonomous operative systems.
+          </p>
+          <div class="hero-actions" data-aos="fade-up" data-aos-delay="300">
+            <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20work%20with%20you."
+              class="btn btn-primary">Let's Connect</a>
+            <a href="#work" class="btn btn-secondary">View Artifacts <i data-lucide="arrow-right"></i></a>
+          </div>
+
+          <div class="hero-stats" data-aos="fade-up" data-aos-delay="500">
+            <div class="stat-item">
+              <span class="stat-number">10+</span>
+              <span class="stat-label">AI System <br> Deployments</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">20+</span>
+              <span class="stat-label">Clients <br> Served</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">STABLE</span>
+              <span class="stat-label">Boutique <br> Execution</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Tech Stack Section -->
+      <section class="tech-stack">
+        <div class="container">
+          <div class="stack-wrapper card-glass">
+            <p class="section-tag hacker-text">Technical Mastery</p>
+            <h3>Built with the <span class="gradient-text">World's Best Tech</span></h3>
+            <div class="stack-grid">
+              <div class="stack-item" title="Python"><i data-lucide="code-2"></i><span>Python</span></div>
+              <div class="stack-item" title="React"><i data-lucide="layers"></i><span>React</span></div>
+              <div class="stack-item" title="Node.js"><i data-lucide="server"></i><span>Node.js</span></div>
+              <div class="stack-item" title="AWS"><i data-lucide="cloud"></i><span>Cloud-Native</span></div>
+              <div class="stack-item" title="PostgreSQL"><i data-lucide="database"></i><span>Data Systems</span></div>
+              <div class="stack-item" title="Rust"><i data-lucide="cpu"></i><span>High Performance</span></div>
+            </div>
+            <p class="stack-footer">Any language. Any platform. Always scalable.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Founder Section -->
+      <section id="founder" class="founder-section">
+        <div class="container">
+          <p class="section-tag section-tag-founder hacker-text" data-aos="fade-up">Founder's Vision</p>
+          <div class="founder-grid">
+            <div class="founder-images-scroll-wrapper">
+              <div class="founder-image-card card-glass" data-aos="fade-right">
+                <img src="/founder.png" alt="Founder of Aloria Labs" class="founder-img">
+                <div class="nano-debug">THE FOUNDER / ARCHITECT</div>
+              </div>
+              <div class="founder-image-card card-glass" data-aos="fade-right" data-aos-delay="100">
+                <img src="/co-founder.jpg" alt="Co-Founder of Aloria Labs" class="founder-img">
+                <div class="nano-debug">THE CO-FOUNDER / STRATEGIST</div>
+              </div>
+            </div>
+            <div class="founder-content" data-aos="fade-left">
+
+              <h2>Intelligent Systems, <span class="gradient-text">Defying Limits.</span></h2>
+              <p class="founder-text">
+                Aloria Labs is built on the belief that modern businesses no longer need isolated digital products; they
+                require integrated, intelligent systems that evolve with their needs. The partnership between our Founder and Co-founder is built on an uncompromising commitment to technical excellence and high-level systems-thinking.
+              </p>
+              <p class="founder-text">
+                We don't just write code; we architect complete ecosystems where software, automation, and artificial intelligence work together seamlessly to drive measurable ROI. Every project is approached with a strategic lens, ensuring that what we build is not just a tool, but a long-term commercial advantage for our clients.
+              </p>
+              <p class="founder-text">
+                Our goal is to move beyond traditional development and create the invisible infrastructure that quietly powers global operations, enhances sub-second decision-making, and removes all human friction from complex business processes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why Choose Aloria Labs Section -->
+      <section id="why-us" class="why-us">
+        <div class="container">
+          <div class="section-header text-center" data-aos="fade-up">
+            <p class="section-tag hacker-text">The Aloria Approach</p>
+            <h2>What Differentiates <span class="gradient-text">Aloria Labs</span></h2>
+          </div>
+          <div class="why-grid">
+            <div class="choice-card" data-aos="fade-up" data-aos-delay="100">
+              <div class="nano-debug">PHILOSOPHY: 01</div>
+              <h3>Systems Thinking</h3>
+              <p>Every project is treated as part of a larger ecosystem, not a standalone deliverable.</p>
+            </div>
+            <div class="choice-card" data-aos="fade-up" data-aos-delay="200">
+              <div class="nano-debug">PHILOSOPHY: 02</div>
+              <h3>Speed with Precision</h3>
+              <p>AI-assisted workflows allow for rapid development without compromising on quality or structure.</p>
+            </div>
+            <div class="choice-card" data-aos="fade-up" data-aos-delay="300">
+              <div class="nano-debug">PHILOSOPHY: 03</div>
+              <h3>Boutique Execution</h3>
+              <p>Each project is handled with a high level of attention to detail, ensuring tailored solutions.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Services Section -->
+      <section class="services" id="services">
+        <div class="container">
+          <div class="section-header text-center">
+            <div class="section-tag" data-aos="fade-up">What We Do</div>
+            <h2 data-aos="fade-up" data-aos-delay="100">Future-proof your business with <span
+                class="gradient-text">intelligent systems</span></h2>
+          </div>
+
+          <div class="services-container">
+            <div class="services-track">
+              <!-- Service 1 -->
+              <div class="service-card">
+                <div class="service-icon"><i data-lucide="brain-circuit"></i></div>
+                <h3>AI-First Software Systems</h3>
+                <p>Advanced applications using React, TS, and scalable backends — enhanced with AI-driven logic for
+                  adaptive solutions.</p>
+                <ul class="service-features">
+                  <li><i data-lucide="check"></i> Adaptive Architectures</li>
+                  <li><i data-lucide="check"></i> System-Ready Codebases</li>
+                  <li><i data-lucide="check"></i> Future-Proof Foundations</li>
+                </ul>
+              </div>
+              <!-- Service 2 -->
+              <div class="service-card active">
+                <div class="service-icon"><i data-lucide="code-xml"></i></div>
+                <h3>Intelligent Automation Workflows</h3>
+                <p>Systems that automate repetitive operational tasks, reducing manual effort and increasing
+                  organizational efficiency.</p>
+                <ul class="service-features">
+                  <li><i data-lucide="check"></i> Automated Comm-Lines</li>
+                  <li><i data-lucide="check"></i> Operational Lead Handling</li>
+                  <li><i data-lucide="check"></i> Seamless AI Integration</li>
+                </ul>
+              </div>
+              <!-- Service 3 -->
+              <div class="service-card">
+                <div class="service-icon"><i data-lucide="layout"></i></div>
+                <h3>Performance-Engineered Web Platforms</h3>
+                <p>High-performance digital platforms merging refined UI with strong technical foundations for speed and
+                  scalability.</p>
+                <ul class="service-features">
+                  <li><i data-lucide="check"></i> Refined UI Architecture</li>
+                  <li><i data-lucide="check"></i> Speed-Optimized Assets</li>
+                  <li><i data-lucide="check"></i> Long-Term Scalability</li>
+                </ul>
+              </div>
+              <!-- DUPLICATES FOR INFINITE SCROLL -->
+              <div class="service-card service-duplicate">
+                <div class="service-icon"><i data-lucide="brain-circuit"></i></div>
+                <h3>AI-First Software Systems</h3>
+                <p>Advanced applications using React, TS, and scalable backends — enhanced with AI-driven logic for
+                  adaptive solutions.</p>
+              </div>
+              <div class="service-card active service-duplicate">
+                <div class="service-icon"><i data-lucide="code-xml"></i></div>
+                <h3>Intelligent Automation Workflows</h3>
+                <p>Systems that automate repetitive operational tasks, reducing manual effort and increasing
+                  organizational efficiency.</p>
+              </div>
+              <div class="service-card service-duplicate">
+                <div class="service-icon"><i data-lucide="layout"></i></div>
+                <h3>Performance-Engineered Web Platforms</h3>
+                <p>High-performance digital platforms merging refined UI with strong technical foundations for speed and
+                  scalability.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Portfolio Section -->
+      <section class="portfolio" id="work">
+        <div class="container">
+          <div class="section-header text-center">
+            <div class="section-tag" data-aos="fade-up">Portfolio</div>
+            <h2 data-aos="fade-up" data-aos-delay="100">Featured <span class="gradient-text">Projects</span></h2>
+            <div class="header-actions" data-aos="fade-up" data-aos-delay="200">
+              <a href="#" class="btn btn-secondary">Explore Artifacts</a>
+            </div>
+          </div>
+
+          <div class="portfolio-container">
+            <div class="portfolio-track">
+              <!-- Original Projects -->
+              <div class="project-card" data-aos="fade-up">
+                <div class="project-image">
+                  <img src="https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=800"
+                    alt="E-Commerce">
+                </div>
+                <div class="project-info">
+                  <h3>E-Commerce Powerhouse</h3>
+                  <p>A mission-critical commerce engine optimized for high-velocity transactions and global scale.</p>
+                  <div class="result-badge">
+                    <i data-lucide="trending-up"></i>
+                    <span>+240% Conv.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="project-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="project-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&q=80&w=800"
+                    alt="Travel OTA">
+                </div>
+                <div class="project-info">
+                  <h3>Travel OS Platform</h3>
+                  <p>An intelligent hotel discovery and booking workflow built on agentic AI foundations.</p>
+                  <div class="result-badge">
+                    <i data-lucide="clock"></i>
+                    <span>99.9% Uptime</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="project-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="project-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&q=80&w=800"
+                    alt="Automation">
+                </div>
+                <div class="project-info">
+                  <h3>AI Automation Hub</h3>
+                  <p>Enterprise-grade automation pipelines replacing manual workflows with agentic precision.</p>
+                  <div class="result-badge">
+                    <i data-lucide="zap"></i>
+                    <span>500+ Hrs Saved</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Duplicates for Mobile Infinite Scroll -->
+              <div class="project-card project-duplicate">
+                <div class="project-image">
+                  <img src="https://images.unsplash.com/photo-1557821552-17105176677c?auto=format&fit=crop&q=80&w=800"
+                    alt="E-Commerce">
+                </div>
+                <div class="project-info">
+                  <h3>E-Commerce Powerhouse</h3>
+                  <p>A mission-critical commerce engine optimized for high-velocity transactions and global scale.</p>
+                  <div class="result-badge">
+                    <i data-lucide="trending-up"></i>
+                    <span>+240% Conv.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="project-card project-duplicate">
+                <div class="project-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&q=80&w=800"
+                    alt="Travel OTA">
+                </div>
+                <div class="project-info">
+                  <h3>Travel OS Platform</h3>
+                  <p>An intelligent hotel discovery and booking workflow built on agentic AI foundations.</p>
+                  <div class="result-badge">
+                    <i data-lucide="clock"></i>
+                    <span>99.9% Uptime</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="project-card project-duplicate">
+                <div class="project-image">
+                  <img
+                    src="https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&q=80&w=800"
+                    alt="Automation">
+                </div>
+                <div class="project-info">
+                  <h3>AI Automation Hub</h3>
+                  <p>Enterprise-grade automation pipelines replacing manual workflows with agentic precision.</p>
+                  <div class="result-badge">
+                    <i data-lucide="zap"></i>
+                    <span>500+ Hrs Saved</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Section -->
+      <section class="results">
+        <div class="container">
+          <div class="results-wrapper card-glass" data-aos="fade-up">
+            <div class="results-bg-stream"></div>
+            <div class="results-line"></div>
+            <div class="results-header text-center">
+              <h2 class="hacker-text">Real Results for Real Businesses</h2>
+              <p>We don't just build technology; we drive measurable business growth.</p>
+            </div>
+            <div class="results-grid">
+              <div class="result-item" data-aos="fade-up">
+                <div class="result-icon"><i data-lucide="calendar-check"></i></div>
+                <div class="result-data">65%</div>
+                <div class="result-text">Increase in Booked Appointments</div>
+              </div>
+              <div class="result-item" data-aos="fade-up" data-aos-delay="100">
+                <div class="result-icon"><i data-lucide="clock-4"></i></div>
+                <div class="result-data">300+</div>
+                <div class="result-text">Hours Saved Monthly Per Team</div>
+              </div>
+              <div class="result-item" data-aos="fade-up" data-aos-delay="200">
+                <div class="result-icon"><i data-lucide="bar-chart-3"></i></div>
+                <div class="result-data">2.5X</div>
+                <div class="result-text">Average ROI Within 6 Months</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pioneering AI Frontier Section -->
+      <section class="why-frontier">
+        <div class="container flex-row">
+          <div class="why-content" data-aos="fade-right">
+            <div class="section-tag hacker-text">Why Choose Us</div>
+            <h2>Pioneering the <span class="gradient-text">AI Frontier</span></h2>
+            <p>Our team blends deep software engineering expertise with the latest breakthroughs in machine learning.
+            </p>
+
+            <div class="benefits-list">
+              <div class="benefit-item">
+                <div class="benefit-icon"><i data-lucide="zap"></i></div>
+                <div>
+                  <h4>Speed of Delivery</h4>
+                  <p>Ship production-ready AI systems in weeks, not months.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon"><i data-lucide="shield-check"></i></div>
+                <div>
+                  <h4>Secure & Scalable</h4>
+                  <p>Enterprise-grade security and architecture built for high load.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon"><i data-lucide="trending-up"></i></div>
+                <div>
+                  <h4>Conversion Focused</h4>
+                  <p>Everything we build is measured by how much it grows your bottom line.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="why-visual" data-aos="fade-left">
+            <div class="visual-card-glass">
+              <div class="visual-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+              </div>
+              <div class="visual-content">
+                <div class="line-skeleton short"></div>
+                <div class="line-skeleton"></div>
+                <div class="line-skeleton medium"></div>
+                <div class="pulse-circle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Verticals We Scale -->
+      <section class="verticals">
+        <div class="container">
+          <div class="section-header text-center">
+            <div class="section-tag hacker-text" data-aos="fade-up">Industry Expertise</div>
+            <h2 data-aos="fade-up" data-aos-delay="100">Solutions for <span class="gradient-text">Any Industry</span>
+            </h2>
+          </div>
+          <div class="verticals-grid">
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="100">
+              <i data-lucide="landmark"></i>
+              <h4>Fintech</h4>
+              <p>Secure ledger systems & AI risk management.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="200">
+              <i data-lucide="shopping-cart"></i>
+              <h4>E-Commerce</h4>
+              <p>Autonomous inventory & dynamic pricing.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="300">
+              <i data-lucide="hospital"></i>
+              <h4>Healthtech</h4>
+              <p>HIPAA-ready data flows & patient AI.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="400">
+              <i data-lucide="truck"></i>
+              <h4>Logistics</h4>
+              <p>Predictive routing & fleet automation.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="500">
+              <i data-lucide="graduation-cap"></i>
+              <h4>Education</h4>
+              <p>Adaptive LMS & student behavior AI.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="600">
+              <i data-lucide="home"></i>
+              <h4>Real Estate</h4>
+              <p>PropTech CRM & tenant screening AI.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="700">
+              <i data-lucide="megaphone"></i>
+              <h4>Marketing</h4>
+              <p>Autonomous ad-ops & lead gen engine.</p>
+            </div>
+            <div class="vertical-card card-glass" data-aos="zoom-in" data-aos-delay="800">
+              <i data-lucide="utensils"></i>
+              <h4>Hospitality</h4>
+              <p>AI Concierge & automated booking SaaS.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cloud Infrastructure Section -->
+      <section class="infrastructure card-glass">
+        <div class="container">
+          <div class="infra-content text-center">
+            <p class="section-tag hacker-text">End-to-End Delivery</p>
+            <h2>Built on <span class="gradient-text">World-Class Infrastructure</span></h2>
+            <p>We handle the heavy lifting. From dev to deployment on secure cloud architectures.</p>
+            <div class="infra-logos">
+              <div class="infra-logo"><i data-lucide="cloud"></i> AWS / Azure Solutions</div>
+              <div class="infra-logo"><i data-lucide="shield-check"></i> Enterprise Security</div>
+              <div class="infra-logo"><i data-lucide="activity"></i> 99.9% Uptime SLA</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="testimonials">
+        <div class="container text-center">
+          <div class="section-tag" data-aos="fade-up">Client Success</div>
+          <h2 data-aos="fade-up" data-aos-delay="100">Global <span class="gradient-text">Reviews</span></h2>
+        </div>
+        <div class="review-carousel-container">
+          <div class="review-track">
+            <!-- Original Cards -->
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"The AI appointment setter Aloria Labs built for us is basically a superhero. It handled 500+ chats in
+                the first week and booked 45 high-ticket calls."</p>
+              <div class="testimonial-author">
+                <div class="avatar">JS</div>
+                <div>
+                  <span class="name">Julian Smith</span>
+                  <span class="role">CEO, Elite Scaling</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"Most agencies just talk. Aloria Labs actually delivered a working web app that integrated perfectly
+                with our back-end in record time. Stunning design too."</p>
+              <div class="testimonial-author">
+                <div class="avatar">MA</div>
+                <div>
+                  <span class="name">Marcus Aurelius</span>
+                  <span class="role">Stoic Tech</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"Our custom data pipeline now handles 10x the load with 40% less overhead. Their eye for technical
+                detail is unmatched in the space."</p>
+              <div class="testimonial-author">
+                <div class="avatar">SC</div>
+                <div>
+                  <span class="name">Sarah Chen</span>
+                  <span class="role">Vertex AI</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loop Duplicates -->
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"The AI appointment setter Aloria Labs built for us is basically a superhero. It handled 500+ chats in
+                the first week and booked 45 high-ticket calls."</p>
+              <div class="testimonial-author">
+                <div class="avatar">JS</div>
+                <div>
+                  <span class="name">Julian Smith</span>
+                  <span class="role">CEO, Elite Scaling</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"Most agencies just talk. Aloria Labs actually delivered a working web app that integrated perfectly
+                with our back-end in record time. Stunning design too."</p>
+              <div class="testimonial-author">
+                <div class="avatar">MA</div>
+                <div>
+                  <span class="name">Marcus Aurelius</span>
+                  <span class="role">Stoic Tech</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="testimonial-card card-glass">
+              <div class="stars">
+                <i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i
+                  data-lucide="star"></i><i data-lucide="star"></i>
+              </div>
+              <p>"Our custom data pipeline now handles 10x the load with 40% less overhead. Their eye for technical
+                detail is unmatched in the space."</p>
+              <div class="testimonial-author">
+                <div class="avatar">SC</div>
+                <div>
+                  <span class="name">Sarah Chen</span>
+                  <span class="role">Vertex AI</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing Section -->
+      <section id="pricing" class="pricing-section">
+        <div class="container">
+          <!-- Local Business Tier -->
+          <div class="section-header text-center">
+            <p class="section-tag hacker-text" data-aos="fade-up">Web Development</p>
+            <h2 class="hacker-text" data-aos="fade-up" data-aos-delay="100">For Local <span
+                class="gradient-text">Businesses</span></h2>
+          </div>
+
+          <div class="pricing-grid" style="margin-bottom: 80px;">
+            <div class="pricing-card card-glass" data-aos="fade-up" data-aos-delay="100">
+              <div class="pricing-header">
+                <h3>Basic Presence</h3>
+                <p>Perfect for new startups</p>
+                <div class="price">$200<span>/setup</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Modern Landing Page</strong></li>
+                <li><i data-lucide="check"></i> Build & Deploy Included</li>
+                <li><i data-lucide="check"></i> Basic SEO Optimization</li>
+                <li><i data-lucide="check"></i> Mobile Responsive</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%27m%20interested%20in%20the%20Basic%20Presence%20package%20for%20my%20startup." target="_blank" class="btn btn-outline" style="width: 100%;">Get Started</a>
+              </div>
+            </div>
+
+            <div class="pricing-card card-glass premium-card" data-aos="fade-up" data-aos-delay="200">
+              <div class="popular-tag">MOST POPULAR</div>
+              <div class="pricing-header">
+                <h3>Business Pro</h3>
+                <p>Growth-focused brands</p>
+                <div class="price">$500<span>/project</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Multi-Page Website</strong></li>
+                <li><i data-lucide="check"></i> Advanced Technical SEO</li>
+                <li><i data-lucide="check"></i> CMS Integration & Analytics</li>
+                <li><i data-lucide="check"></i> Lead Generation Forms</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20scale%20my%20brand%20with%20the%20Business%20Pro%20package." target="_blank" class="btn btn-primary" style="width: 100%;">Scale Up</a>
+              </div>
+            </div>
+
+            <div class="pricing-card card-glass" data-aos="fade-up" data-aos-delay="300">
+              <div class="pricing-header">
+                <h3>Digital Storefront</h3>
+                <p>Full E-Commerce Setup</p>
+                <div class="price">$900<span>/project</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Complete E-Commerce</strong></li>
+                <li><i data-lucide="check"></i> Payment Gateway Setup</li>
+                <li><i data-lucide="check"></i> Custom Product Architecture</li>
+                <li><i data-lucide="check"></i> Performance Optimized</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%27d%20like%20to%20set%20up%20a%20Digital%20Storefront%20for%20my%20business." target="_blank" class="btn btn-outline" style="width: 100%;">Start Selling</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced AI Tier -->
+          <div class="section-header text-center">
+            <p class="section-tag hacker-text" data-aos="fade-up">Deep Tech Stack</p>
+            <h2 class="hacker-text" data-aos="fade-up" data-aos-delay="100">Advanced <span class="gradient-text">AI
+                Systems</span></h2>
+          </div>
+
+          <div class="pricing-grid">
+            <!-- Package 1 -->
+            <div class="pricing-card card-glass" data-aos="fade-up" data-aos-delay="100">
+              <div class="pricing-header">
+                <h3>The Prototype</h3>
+                <p>Scraping & Custom Portals</p>
+                <div class="price">$997<span>/starting</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Custom Lead Scraping Systems</strong></li>
+                <li><i data-lucide="check"></i> Tailored E-Commerce Workflows</li>
+                <li><i data-lucide="check"></i> Role-Based Dashboards & Portals</li>
+                <li><i data-lucide="check"></i> Database Architecture Setup</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20initialize%20a%20build%20for%20a%20Custom%20AI%20Prototype%20/%20Data%20System." target="_blank" class="btn btn-outline" style="width: 100%;">Initialize Build</a>
+              </div>
+            </div>
+
+            <!-- Package 2 -->
+            <div class="pricing-card card-glass premium-card" data-aos="fade-up" data-aos-delay="200">
+              <div class="popular-tag">MOST POPULAR</div>
+              <div class="pricing-header">
+                <h3>AI Calling Agents</h3>
+                <p>Fully Autonomous Voice AI</p>
+                <div class="price">$2,497<span>/project</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Custom AI Voice Assistants</strong></li>
+                <li><i data-lucide="check"></i> Clinic Appointment Booking</li>
+                <li><i data-lucide="check"></i> Order Handling & FAQs</li>
+                <li><i data-lucide="check"></i> Client-Specific Analytics Portal</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%27m%20interested%20in%20deploying%20a%20Custom%20AI%20Voice%20Assistant." target="_blank" class="btn btn-primary" style="width: 100%;">Deploy Agent</a>
+              </div>
+            </div>
+
+            <!-- Package 3 -->
+            <div class="pricing-card card-glass" data-aos="fade-up" data-aos-delay="300">
+              <div class="pricing-header">
+                <h3>Enterprise Systems</h3>
+                <p>Complex AI & Security</p>
+                <div class="price">Custom<span>/req</span></div>
+              </div>
+              <ul class="pricing-features">
+                <li><i data-lucide="check"></i> <strong>Full-Stack Secure Platforms</strong></li>
+                <li><i data-lucide="check"></i> Advanced Scrapers (Proxy Rotation)</li>
+                <li><i data-lucide="check"></i> Multi-Agent Internal Workflows</li>
+                <li><i data-lucide="check"></i> Enterprise Security Software</li>
+              </ul>
+              <div class="pricing-action">
+                <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20discuss%20Enterprise%20AI%20Systems%20or%20Multi-Agent%20Workflows." target="_blank" class="btn btn-outline" style="width: 100%;">Contact Architecture</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Build Banner -->
+          <div class="custom-build-banner card-glass" data-aos="fade-up" data-aos-delay="400">
+            <div class="banner-content">
+              <h3>Wanna build something <span class="gradient-text">outstanding?</span></h3>
+              <p>We do a lot more than just websites and basic AI. Talk to us right now if you want to build custom
+                Multi-Tenant SaaS Portals, End-to-End Enterprise Systems, or High-Level Security Software.</p>
+              <div class="banner-tags">
+                <span class="nano-tag">#SaaS_Architecture</span>
+                <span class="nano-tag">#Security_Software</span>
+                <span class="nano-tag">#Multi_Agent_Systems</span>
+              </div>
+            </div>
+            <div class="banner-action">
+              <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20build%20something%20Outstanding!%20Let%27s%20talk%20about%20Custom%20SaaS/Enterprise%20Systems." target="_blank" class="btn btn-primary btn-large">Let's Talk Custom Code</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA -->
+      <section class="final-cta">
+        <div class="container">
+          <div class="cta-box card-glass" data-aos="zoom-in">
+            <div class="nano-debug">MISSION_READY: 99.9%</div>
+            <h2 id="typewriter-cta">Ready to Automate your Success?</h2>
+            <p>Schedule a free discovery call where we'll audit your processes and map out an AI roadmap for your
+              business.</p>
+            <div class="cta-actions">
+              <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%27d%20like%20to%20book%20my%20Free%20Discovery%20Call%20and%20get%20an%20AI%20roadmap%20audit%20for%20my%20business." target="_blank" class="btn btn-primary btn-large">Book Your Discovery Call</a>
+              <span class="cta-note">Limited slots available for Q2</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer">
+      <canvas id="footer-canvas"></canvas>
+      <div class="container footer-content-container">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <div class="logo">
+              <span class="logo-text">ALORIA <span class="accent">LABS</span></span>
+            </div>
+            <p>Building the digital infrastructure of the future.</p>
+            <div class="social-links">
+              <!-- WhatsApp -->
+              <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20work%20with%20you."
+                target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                  </path>
+                </svg>
+              </a>
+              <!-- Instagram -->
+              <a href="https://instagram.com/alorialabs" target="_blank" rel="noopener noreferrer"
+                aria-label="Instagram">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+              </a>
+              <!-- Email -->
+              <a href="mailto:alorialabs@gmail.com?subject=Project Inquiry&body=Hey Aloria Labs, I want to build something outstanding with you."
+                aria-label="Email">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div class="footer-links">
+            <div class="link-group">
+              <h4>Agency</h4>
+              <a href="#services">Services</a>
+              <a href="#work">Case Studies</a>
+              <a href="#process">How it Works</a>
+            </div>
+            <div class="link-group">
+              <h4>Connect</h4>
+              <a href="#">Book a Call</a>
+              <a href="#">LinkedIn</a>
+              <a href="#">Email Us</a>
+            </div>
+            <div class="link-group">
+              <h4>Legal</h4>
+              <a href="/privacy-policy.html">Privacy Policy</a>
+              <a href="/privacy-policy.html#terms">Terms of Service</a>
+              r
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 Aloria Labs. All rights reserved.</p>
+          <div class="made-with">
+            Premium AI Solutions
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div> <!-- End site-wrapper -->
+
+  <!-- Liquid Metal Floating Contact Node -->
+  <div class="floating-contact">
+    <div class="contact-options">
+      <!-- Instagram Bubble (1st) -->
+      <a href="https://instagram.com/alorialabs" target="_blank" rel="noopener noreferrer" class="contact-option"
+        style="--delay: 1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+      </a>
+
+      <!-- WhatsApp Bubble (2nd) -->
+      <a href="https://wa.me/919318485680?text=Hey%20Aloria%20Labs%2C%20I%20want%20to%20work%20with%20you.%20I%20just%20want%20to%20build%20something%20outstanding."
+        target="_blank" rel="noopener noreferrer" class="contact-option" style="--delay: 2">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+          </path>
+        </svg>
+      </a>
+
+      <!-- Email Bubble (3rd) with Email Pop-out -->
+      <div class="email-wrapper" style="--delay: 3">
+        <div class="email-copy-popup" id="email-popup">alorialabs@gmail.com</div>
+        <button class="contact-option" id="email-btn-toggle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Toggle (WhatsApp Chrome Icon) -->
+    <button class="contact-toggle" aria-label="Open Communication Channels">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path
+          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+        </path>
+      </svg>
+    </button>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

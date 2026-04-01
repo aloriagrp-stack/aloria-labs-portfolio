@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy & Terms | Aloria Labs</title>
+  <meta name="description" content="Aloria Labs Privacy Policy and Terms of Service. Learn how we collect, use, and protect your data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #000;
+      --text: #fff;
+      --muted: rgba(255,255,255,0.5);
+      --border: rgba(255,255,255,0.08);
+      --accent: #fff;
+      --card: rgba(255,255,255,0.03);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .logo-text {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo-text .accent { color: rgba(255,255,255,0.5); }
+
+    nav a.back-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    nav a.back-link:hover { color: var(--text); }
+
+    /* HERO BANNER */
+    .page-hero {
+      padding: 80px 40px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-family: monospace;
+    }
+
+    .page-hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .page-hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 600px;
+    }
+
+    .last-updated {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* CONTENT */
+    .content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 40px 100px;
+    }
+
+    /* TABLE OF CONTENTS */
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 60px;
+    }
+
+    .toc h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      list-style: decimal;
+      padding-left: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 20px;
+    }
+
+    .toc a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover { color: var(--text); }
+
+    /* SECTIONS */
+    .policy-section {
+      margin-bottom: 60px;
+      padding-bottom: 60px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .policy-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-num {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .policy-section h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .policy-section p {
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+
+    .policy-section ul {
+      list-style: none;
+      margin: 16px 0 20px;
+      padding: 0;
+    }
+
+    .policy-section ul li {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.95rem;
+      padding: 8px 0 8px 24px;
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .policy-section ul li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+
+    .highlight-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-left: 3px solid rgba(255,255,255,0.3);
+      padding: 20px 24px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* CONTACT SECTION */
+    .contact-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .contact-section h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+
+    .contact-section p {
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .contact-links {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .contact-links a {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .contact-links a:hover {
+      background: var(--text);
+      color: var(--bg);
+    }
+
+    /* FOOTER */
+    .page-footer {
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .page-footer a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .page-footer a:hover { color: var(--text); }
+
+    @media (max-width: 768px) {
+      nav { padding: 18px 20px; }
+      .page-hero { padding: 50px 20px 40px; }
+      .content { padding: 40px 20px 80px; }
+      .toc ol { grid-template-columns: 1fr; }
+      .contact-section { padding: 30px 20px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav>
+    <a href="/" class="logo-text">ALORIA <span class="accent">LABS</span></a>
+    <a href="/" class="back-link">← Back to Home</a>
+  </nav>
+
+  <div class="page-hero">
+    <span class="page-tag">LEGAL_DOCS</span>
+    <h1>Privacy Policy &amp; Terms of Service</h1>
+    <p>We're committed to protecting your privacy and being transparent about how we handle your information. Please read this carefully.</p>
+    <p class="last-updated">Last updated: // April 2026</p>
+  </div>
+
+  <div class="content">
+
+    <!-- Table of Contents -->
+    <div class="toc">
+      <h3>TABLE OF CONTENTS</h3>
+      <ol>
+        <li><a href="#information">Information We Collect</a></li>
+        <li><a href="#use">How We Use Your Data</a></li>
+        <li><a href="#sharing">Data Sharing</a></li>
+        <li><a href="#cookies">Cookies</a></li>
+        <li><a href="#security">Data Security</a></li>
+        <li><a href="#rights">Your Rights</a></li>
+        <li><a href="#terms">Terms of Service</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+      </ol>
+    </div>
+
+    <!-- Section 1 -->
+    <div class="policy-section" id="information">
+      <span class="section-num">01 / PRIVACY POLICY</span>
+      <h2>Information We Collect</h2>
+      <p>Aloria Labs collects information you provide directly to us when you use our services, contact us, or submit a project inquiry.</p>
+      <ul>
+        <li><strong>Contact Information</strong> — Name, email address, phone number, and business name when you fill out forms</li>
+        <li><strong>Project Details</strong> — Information about your business needs, goals, and requirements shared during discovery calls</li>
+        <li><strong>Communication Data</strong> — Messages sent via WhatsApp, email, or Instagram</li>
+        <li><strong>Usage Data</strong> — Basic analytics such as pages visited and how you interact with our website</li>
+        <li><strong>Technical Data</strong> — Browser type, device, IP address, and referring URL (collected automatically)</li>
+      </ul>
+      <div class="highlight-box">
+        We do not purchase, sell, or trade personal data. We only collect what is necessary to provide our services.
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="policy-section" id="use">
+      <span class="section-num">02 / DATA USE</span>
+      <h2>How We Use Your Data</h2>
+      <p>Information collected is used solely to provide, improve, and communicate about our services.</p>
+      <ul>
+        <li>To respond to project inquiries and schedule discovery calls</li>
+        <li>To deliver agreed-upon services (web development, AI systems, automation)</li>
+        <li>To send relevant updates about your ongoing project</li>
+        <li>To improve our website and service quality</li>
+        <li>To comply with legal obligations if required by law</li>
+      </ul>
+      <p>We will never send unsolicited marketing emails or share your contact details with third-party advertisers.</p>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="policy-section" id="sharing">
+      <span class="section-num">03 / SHARING</span>
+      <h2>Data Sharing</h2>
+      <p>Aloria Labs does not sell your personal information. We may share data only in the following limited circumstances:</p>
+      <ul>
+        <li><strong>Service Providers</strong> — Trusted tools we use to deliver projects (e.g., cloud hosting, communication platforms)</li>
+        <li><strong>Legal Requirements</strong> — If required to comply with applicable law or valid legal process</li>
+        <li><strong>Business Transfer</strong> — In the event of a business acquisition or merger, with appropriate notice to you</li>
+      </ul>
+      <p>All third-party service providers are contractually bound to keep your data secure and use it only for the services they provide to us.</p>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="policy-section" id="cookies">
+      <span class="section-num">04 / COOKIES</span>
+      <h2>Cookies &amp; Tracking</h2>
+      <p>Our website uses minimal cookies to ensure proper functionality and analyze website usage. We use:</p>
+      <ul>
+        <li><strong>Essential Cookies</strong> — Required for the website to function correctly</li>
+        <li><strong>Analytics Cookies</strong> — Anonymous usage data to understand how visitors interact with our site</li>
+      </ul>
+      <p>You can control cookies through your browser settings. Disabling cookies may affect some website features but will not impact your ability to contact us.</p>
+    </div>
+
+    <!-- Section 5 -->
+    <div class="policy-section" id="security">
+      <span class="section-num">05 / SECURITY</span>
+      <h2>Data Security</h2>
+      <p>We implement industry-standard security measures to protect your personal information:</p>
+      <ul>
+        <li>All communications are encrypted via HTTPS/TLS</li>
+        <li>Project files and client data are stored on secure, access-controlled servers</li>
+        <li>We regularly review and update our security practices</li>
+        <li>Access to client data is restricted to team members who require it</li>
+      </ul>
+      <div class="highlight-box">
+        While we take every precaution, no method of internet transmission is 100% secure. We encourage you to use secure communication channels for sensitive information.
+      </div>
+    </div>
+
+    <!-- Section 6 -->
+    <div class="policy-section" id="rights">
+      <span class="section-num">06 / YOUR RIGHTS</span>
+      <h2>Your Rights</h2>
+      <p>You have the following rights regarding your personal data:</p>
+      <ul>
+        <li><strong>Access</strong> — Request a copy of the personal data we hold about you</li>
+        <li><strong>Correction</strong> — Request corrections to inaccurate or incomplete data</li>
+        <li><strong>Deletion</strong> — Request deletion of your personal data ("right to be forgotten")</li>
+        <li><strong>Portability</strong> — Request your data in a portable format</li>
+        <li><strong>Objection</strong> — Object to certain types of data processing</li>
+      </ul>
+      <p>To exercise any of these rights, contact us at <a href="mailto:alorialabs@gmail.com" style="color: rgba(255,255,255,0.7);">alorialabs@gmail.com</a>. We will respond within 30 days.</p>
+    </div>
+
+    <!-- Section 7 - Terms -->
+    <div class="policy-section" id="terms">
+      <span class="section-num">07 / TERMS OF SERVICE</span>
+      <h2>Terms of Service</h2>
+      <p>By engaging Aloria Labs for any service, you agree to the following terms:</p>
+
+      <h3 style="font-size:1rem; margin: 24px 0 10px; color: rgba(255,255,255,0.8);">Services &amp; Deliverables</h3>
+      <ul>
+        <li>All project scopes, timelines, and deliverables will be defined in a written agreement before work begins</li>
+        <li>Aloria Labs retains the right to showcase completed work in our portfolio unless explicitly agreed otherwise</li>
+        <li>Client must provide necessary access, content, and feedback within agreed timelines</li>
+      </ul>
+
+      <h3 style="font-size:1rem; margin: 24px 0 10px; color: rgba(255,255,255,0.8);">Payments</h3>
+      <ul>
+        <li>Payment terms are outlined in individual project agreements</li>
+        <li>A deposit may be required before project commencement</li>
+        <li>Late payments may result in project suspension</li>
+        <li>All prices are in USD unless otherwise stated</li>
+      </ul>
+
+      <h3 style="font-size:1rem; margin: 24px 0 10px; color: rgba(255,255,255,0.8);">Intellectual Property</h3>
+      <ul>
+        <li>Upon full payment, client owns the final deliverables</li>
+        <li>Aloria Labs retains rights to underlying frameworks, methodologies, and reusable code components</li>
+        <li>Client is responsible for ensuring they have rights to any content, images, or materials they provide</li>
+      </ul>
+
+      <h3 style="font-size:1rem; margin: 24px 0 10px; color: rgba(255,255,255,0.8);">Limitation of Liability</h3>
+      <p>Aloria Labs shall not be liable for any indirect, incidental, or consequential damages arising from the use of our services. Our total liability shall not exceed the total amount paid for the specific service in question.</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="contact-section" id="contact">
+      <h3>Questions about this policy?</h3>
+      <p>We're happy to clarify anything. Reach out to us directly.</p>
+      <div class="contact-links">
+        <a href="mailto:alorialabs@gmail.com">Email Us</a>
+        <a href="https://wa.me/919318485680" target="_blank">WhatsApp</a>
+        <a href="https://instagram.com/alorialabs" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="page-footer">
+    <p>&copy; 2026 Aloria Labs. All rights reserved. &nbsp;|&nbsp; <a href="/">Back to Home</a></p>
+  </footer>
+
+</body>
+</html>
