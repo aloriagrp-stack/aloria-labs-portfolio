@@ -2989,3 +2989,225 @@ footer {
   }
 
 }
+
+
+
+/* Nano-Tag Elite Styles */
+.nano-tag {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border-left: 2px solid var(--accent-primary);
+  margin-top: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.service-card:hover .nano-tag {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.section-tag-mini {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent-primary);
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+/* Insights Section */
+.insights-section {
+  padding: var(--section-padding);
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.blog-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.blog-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.blog-image {
+  height: 200px;
+  background: linear-gradient(45deg, #111, #222);
+  overflow: hidden;
+}
+
+.blog-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.blog-card:hover .blog-image img {
+  transform: scale(1.1);
+}
+
+.blog-content {
+  padding: 30px;
+}
+
+.blog-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.blog-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.blog-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+}
+
+.read-more {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 992px) {
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tools Hub Styles */
+.tools-section {
+  padding: var(--section-padding);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  margin-top: 50px;
+}
+
+.tool-card {
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tool-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--accent-primary);
+  margin-bottom: 10px;
+}
+
+.tool-card h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.tool-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 992px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Email CTA Section */
+.email-cta-section {
+  padding: 80px 0;
+  text-align: center;
+}
+
+.email-card {
+  padding: 80px 40px;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.email-card h2 {
+  font-size: 2.8rem;
+  font-weight: 900;
+}
+
+.email-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px 40px;
+  border-radius: 100px;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  transition: all 0.3s ease;
+}
+
+.email-wrapper:hover {
+  background: rgba(37, 99, 235, 0.05);
+  transform: scale(1.05);
+  border-color: var(--accent-primary);
+}
+
+.email-wrapper i {
+  color: var(--accent-primary);
+  width: 30px;
+  height: 30px;
+}
+
+.email-link {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@media (max-width: 768px) {
+  .email-card h2 { font-size: 2rem; }
+  .email-link { font-size: 1.2rem; }
+  .email-wrapper { padding: 15px 25px; }
+}

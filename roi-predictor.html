@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI ROI Predictor | Aloria Labs - Strategy Tools</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+</head>
+<body class="tool-page">
+  <header id="header" class="scrolled">
+    <div class="container nav-wrapper">
+      <a href="/" class="logo">
+        <span class="logo-text">ALORIA <span class="accent">LABS</span></span>
+      </a>
+      <a href="/" class="btn btn-outline">Back to Hub</a>
+    </div>
+  </header>
+
+  <main style="padding-top: 120px;">
+    <div class="container">
+      <div class="tool-wrapper card-glass" style="max-width: 800px; margin: 0 auto; padding: 60px;">
+        <p class="section-tag-mini hacker-text">Diagnostic Tool 01</p>
+        <h1 class="gradient-text">AI ROI <span style="color:#fff">Predictor</span></h1>
+        <p style="margin-bottom: 40px; color: var(--text-muted);">Estimate your monthly and annual profit unlock by implementing Aloria Labs' Autonomous Operative Systems.</p>
+
+        <div class="roi-grid" style="display: grid; grid-template-columns: 1fr; gap: 40px;">
+          <div class="input-group">
+            <label style="display:block; margin-bottom: 20px;">Total Monthly Manual Hours (Team-wide)</label>
+            <input type="range" id="hours" min="100" max="10000" value="1000" style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; -webkit-appearance: none;">
+            <div style="font-size: 2rem; font-weight: 800; margin-top: 15px;"><span id="h-val">1,000</span> Hours</div>
+          </div>
+
+          <div class="input-group">
+            <label style="display:block; margin-bottom: 20px;">Avg. Hourly Labor Cost (<span class="curr-label">₹</span>)</label>
+            <input type="range" id="cost" min="100" max="5000" value="500" style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; -webkit-appearance: none;">
+            <div style="font-size: 2rem; font-weight: 800; margin-top: 15px;"><span class="curr-label">₹</span><span id="c-val">500</span>/hr</div>
+          </div>
+
+          <div class="result-box card-glass" style="padding: 40px; background: rgba(255,255,255,0.03); text-align: center;">
+            <p style="font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;">Estimated Annual Savings</p>
+            <div class="gradient-text" style="font-size: 4rem; font-weight: 900; line-height: 1;" id="final-roi">₹0</div>
+            <p style="color: var(--text-muted); margin-top: 20px;">Based on 60% operational automation efficiency.</p>
+            
+            <div style="margin-top: 40px;">
+              <a id="wa-link" href="#" class="btn btn-primary" style="width: 100%; padding: 25px;">Claim These Savings <i data-lucide="zap"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+  </style>
+
+  <script src="/src/currency-gate.js"></script>
+
+  <script>
+    const h = document.getElementById('hours');
+    const c = document.getElementById('cost');
+    const hv = document.getElementById('h-val');
+    const cv = document.getElementById('c-val');
+    const fr = document.getElementById('final-roi');
+    const wa = document.getElementById('wa-link');
+    const cs = document.querySelectorAll('.curr-symbol-dynamic');
+
+    let activeCurrency = { symbol: '₹', rate: 1 };
+
+    window.addEventListener('currencyUpdated', (e) => {
+        activeCurrency = e.detail;
+        update();
+    });
+
+    const update = () => {
+      hv.innerText = parseInt(h.value).toLocaleString();
+      cv.innerText = parseInt(c.value).toLocaleString();
+      
+      // Calculate based on currency symbol
+      const symbol = activeCurrency.symbol;
+      
+      const monthly = h.value * c.value * 0.6;
+      const annual = monthly * 12;
+      const formatted = symbol + Math.round(annual).toLocaleString();
+      fr.innerText = formatted;
+
+      // Update interactive currency symbols in text
+      document.querySelectorAll('.curr-label').forEach(el => el.innerText = symbol);
+
+      wa.href = `https://wa.me/919318485680?text=I just calculated my AI ROI as ${formatted}. Let's unlock these savings!`;
+    };
+
+    h.addEventListener('input', update);
+    c.addEventListener('input', update);
+    
+    window.addEventListener('DOMContentLoaded', () => { 
+        if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Security Quiz | Aloria Labs - Strategy Tools</title>
+  <link rel="stylesheet" href="/src/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+</head>
+<body class="tool-page">
+  <header id="header" class="scrolled">
+    <div class="container nav-wrapper">
+      <a href="/" class="logo">
+        <span class="logo-text">ALORIA <span class="accent">LABS</span></span>
+      </a>
+      <a href="/" class="btn btn-outline">Back to Hub</a>
+    </div>
+  </header>
+
+  <main style="padding-top: 120px;">
+    <div class="container">
+      <div id="quiz-container" class="tool-wrapper card-glass" style="max-width: 600px; margin: 0 auto; padding: 60px;">
+        <p class="section-tag-mini hacker-text">Diagnostic Tool 03</p>
+        <h1 class="gradient-text">AI Security <span style="color:#fff">Readiness</span></h1>
+        
+        <div id="q1">
+            <h3 style="margin: 30px 0;">Where is your business data currently stored?</h3>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <button onclick="next(1, 'Cloud (Google Drive, AWS, Azure)')" class="btn btn-outline" style="text-align:left;">Cloud (Google Drive, AWS, Azure)</button>
+                <button onclick="next(1, 'Local Servers / Hard Drives')" class="btn btn-outline" style="text-align:left;">Local Servers / Hard Drives</button>
+                <button onclick="next(1, 'Paper / Physical Records')" class="btn btn-outline" style="text-align:left;">Paper / Physical Records</button>
+            </div>
+        </div>
+
+        <div id="q2" style="display:none;">
+            <h3 style="margin: 30px 0;">What is your primary privacy concern?</h3>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <button onclick="next(2, 'Client Confidentiality')" class="btn btn-outline" style="text-align:left;">Client Confidentiality</button>
+                <button onclick="next(2, 'Data Leaks to public LLMs')" class="btn btn-outline" style="text-align:left;">Data Leaks to public LLMs</button>
+                <button onclick="next(2, 'Competitors stealing IP')" class="btn btn-outline" style="text-align:left;">Competitors stealing IP</button>
+            </div>
+        </div>
+
+        <div id="result" style="display:none; text-align:center;">
+            <p class="section-tag-mini">AI Security Grade</p>
+            <h2 style="font-size: 3rem; margin: 20px 0; color:var(--accent-primary);">GRADE: SECURE-READY</h2>
+            <p style="color:var(--text-muted); margin-bottom: 30px;">Your infrastructure is eligible for AI implementation via **Local LLMs** to maintain 100% data sovereignty. No data will ever leave your firewall.</p>
+            <a id="wa-final" href="#" class="btn btn-primary" style="width:100%;">Get Your AI Security Roadmap <i data-lucide="shield"></i></a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let responses = [];
+    function next(current, response) {
+        responses.push(response);
+        document.getElementById('q' + current).style.display = 'none';
+        if(current < 2) {
+            document.getElementById('q' + (current + 1)).style.display = 'block';
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('result').style.display = 'block';
+        const wa = document.getElementById('wa-final');
+        wa.href = `https://wa.me/919318485680?text=I completed the AI Security Quiz. My data is on ${responses[0]} and I'm concerned about ${responses[1]}. Let's discuss a secure roadmap.`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => { if (window.lucide) window.lucide.createIcons(); });
+  </script>
+</body>
+</html>
