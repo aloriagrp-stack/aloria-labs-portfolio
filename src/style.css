@@ -1482,6 +1482,25 @@ header.scrolled {
 
 .portfolio-container {
   margin-top: 60px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 255, 18, 0.3) transparent;
+}
+
+.portfolio-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.portfolio-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portfolio-container::-webkit-scrollbar-thumb {
+  background: rgba(163, 255, 18, 0.3);
+  border-radius: 3px;
 }
 
 /* Base track styles */
@@ -2603,10 +2622,23 @@ footer {
     border-radius: 20px;
   }
 
-  /* Carousel Scale for Mobile */
+  /* Carousel Scale for Mobile - Enable Manual Scrolling */
+  .portfolio-container {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+  }
+
   .portfolio-track {
     animation: none;
-    /* Disabled autoscroll on mobile */
+    /* Disabled autoscroll - user can manually swipe */
+    scroll-snap-type: x mandatory;
+  }
+
+  .project-card {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    flex-shrink: 0;
   }
 
   .project-card {
