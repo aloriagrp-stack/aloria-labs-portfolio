@@ -2605,19 +2605,8 @@ footer {
 
   /* Carousel Scale for Mobile */
   .portfolio-track {
-    animation: mobile-scroll 15s linear infinite;
-    /* Faster scroll */
-  }
-
-  @keyframes mobile-scroll {
-    0% {
-      transform: translateX(0);
-    }
-
-    100% {
-      /* Based on 280px card + 30px gap for 3 cards */
-      transform: translateX(calc(-280px * 3 - 30px * 3));
-    }
+    animation: none;
+    /* Disabled autoscroll on mobile */
   }
 
   .project-card {
