@@ -515,8 +515,12 @@
     const tpl = document.getElementById('formTemplate').value;
     if (!name) return toast('Enter a category name');
     if (!fields.length) return toast('Add at least one field');
+    toast('Saving form...');
+    console.log('saveForm called, db:', db, 'fields:', fields.length);
     const form = { id: Date.now().toString(36), name, teamMember: member || null, template: tpl, fields: [...fields], created: new Date().toISOString() };
+    if (!db) { toast('Firebase not initialized'); return; }
     db.collection('forms').add(form).then(() => {
+      console.log('Form saved to Firestore');
       document.getElementById('catName').value = '';
       document.getElementById('teamMember').value = '';
       document.getElementById('formTemplate').value = 'standard';
@@ -526,8 +530,22 @@
       const encoded = encodeFormData(form);
       const link = window.location.origin + '/admin.html?apply=' + form.id + '&data=' + encoded;
       navigator.clipboard.writeText(link);
-    }).catch(e => toast('Error saving form'));
+    }).catch(e => { console.error('Firestore save error:', e); toast('Error: ' + e.message); });
   }
+
+  // Debug: test Firestore connection
+  window.testFirebase = async function() {
+    if (!db) { toast('db undefined'); return; }
+    toast('Testing Firestore...');
+    try {
+      const snap = await db.collection('forms').limit(1).get();
+      toast('Firestore OK: ' + snap.size + ' docs');
+      console.log('Firestore test OK', snap.size);
+    } catch(e) {
+      console.error('Firestore test failed:', e);
+      toast('Firestore Error: ' + e.message);
+    }
+  };
 
   function render() {
     renderForms();
