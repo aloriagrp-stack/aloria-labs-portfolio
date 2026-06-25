@@ -321,6 +321,7 @@
           <input id="newAdminPw" type="password" placeholder="New password">
         </div>
         <button class="btn btn-primary btn-sm" onclick="changeAdminPassword()">Change Password</button>
+        <button class="btn btn-outline btn-sm mt-8" onclick="logoutAdmin()" style="color:#ff4444;border-color:#ff4444;">Logout</button>
       </div>
 
       <!-- Email Templates -->
@@ -391,7 +392,12 @@
   if (!stored || stored === 'aloria123') localStorage.setItem(ADMIN_PW_KEY, defaultPW);
 
   function checkLogin() {
-    if (sessionStorage.getItem('aloria_admin_logged_in') === 'true') return true;
+    const isPublicForm = window.location.search.includes('apply=');
+    if (isPublicForm) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      return true;
+    }
+    if (localStorage.getItem('aloria_admin_logged_in') === 'true') return true;
     document.getElementById('loginOverlay').classList.remove('hidden');
     document.getElementById('adminApp').style.display = 'none';
     return false;
@@ -400,7 +406,7 @@
   document.getElementById('loginBtn').addEventListener('click', function() {
     const pw = document.getElementById('loginPassword').value;
     if (pw === localStorage.getItem(ADMIN_PW_KEY)) {
-      sessionStorage.setItem('aloria_admin_logged_in', 'true');
+      localStorage.setItem('aloria_admin_logged_in', 'true');
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('adminApp').style.display = '';
     } else {
@@ -762,6 +768,11 @@
     } else {
       statusEl.innerHTML = '<div class="config-missing">⚠ SMTP not configured. Auto-email on approve will not work.</div>';
     }
+  }
+
+  function logoutAdmin() {
+    localStorage.removeItem('aloria_admin_logged_in');
+    location.reload();
   }
 
   function changeAdminPassword() {
