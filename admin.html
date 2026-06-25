@@ -394,6 +394,31 @@
   const stored = localStorage.getItem(ADMIN_PW_KEY);
   if (!stored || stored === 'aloria123') localStorage.setItem(ADMIN_PW_KEY, defaultPW);
 
+  // Firebase init with error handling
+  let db = null;
+  if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+    db = firebase.firestore();
+  } else if (typeof firebase !== 'undefined') {
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo",
+        authDomain: "aloria-labs.firebaseapp.com",
+        projectId: "aloria-labs",
+        storageBucket: "aloria-labs.firebasestorage.app",
+        messagingSenderId: "121783687697",
+        appId: "1:121783687697:web:6d8cdeee052ebbc455afb0",
+        measurementId: "G-FTR9NBQCFP"
+      };
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    } catch(e) {
+      console.error('Firebase init failed:', e);
+    }
+  } else {
+    console.error('Firebase SDK not loaded');
+  }
+
   function checkLogin() {
     const isPublicForm = window.location.search.includes('apply=');
     if (isPublicForm) {
@@ -435,6 +460,7 @@
   let dataLoaded = false;
 
   function startFirestoreListeners() {
+    if (!db) { console.warn('Firestore not initialized, skipping listeners'); return; }
     let initialLoads = 0;
     function onLoad() {
       initialLoads++;
@@ -610,7 +636,7 @@
 
   function deleteForm(id) {
     if (!confirm('Delete this form and all its applications?')) return;
-    // Delete from Firestore
+    if (!db) return toast('Database not connected');
     const formDoc = forms.find(f => f.id === id);
     if (formDoc && formDoc._id) db.collection('forms').doc(formDoc._id).delete();
     applications.filter(a => a.formId === id).forEach(a => {
@@ -686,6 +712,7 @@
   }
 
   async function approveApp(id) {
+    if (!db) return toast('Database not connected');
     const app = applications.find(a => a.id === id);
     if (!app) return;
     app.status = 'approved';
@@ -696,6 +723,7 @@
   }
 
   async function sendApprovalEmail(id) {
+    if (!db) return toast('Database not connected');
     const app = applications.find(a => a.id === id);
     if (!app) return;
     const form = forms.find(f => f.id === app.formId);
@@ -1189,6 +1217,7 @@
       }
     }
     const app = { id: Date.now().toString(36), formId, values, submitted: new Date().toISOString(), status: 'pending' };
+    if (!db) return toast('Database not connected');
     db.collection('applications').add(app).then(() => {
       submitted.push(formId);
       localStorage.setItem('aloria_submitted_forms', JSON.stringify(submitted));
