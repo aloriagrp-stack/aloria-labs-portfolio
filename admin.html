@@ -469,6 +469,14 @@
     ).join('');
   }
 
+  function encodeFormData(form) {
+    try { return encodeURIComponent(btoa(JSON.stringify(form))); } catch(e) { return ''; }
+  }
+
+  function decodeFormData(str) {
+    try { return JSON.parse(atob(decodeURIComponent(str))); } catch(e) { return null; }
+  }
+
   function saveForm() {
     const name = document.getElementById('catName').value.trim();
     const member = document.getElementById('teamMember').value.trim();
@@ -485,7 +493,8 @@
     renderFields();
     toast('Form created! Share link copied.');
     render();
-    const link = window.location.origin + '/admin.html?apply=' + form.id;
+    const encoded = encodeFormData(form);
+    const link = window.location.origin + '/admin.html?apply=' + form.id + '&data=' + encoded;
     navigator.clipboard.writeText(link);
   }
 
@@ -542,7 +551,10 @@
   }
 
   function copyLink(id) {
-    const link = window.location.origin + '/admin.html?apply=' + id;
+    const form = forms.find(f => f.id === id);
+    if (!form) return toast('Form not found');
+    const encoded = encodeFormData(form);
+    const link = window.location.origin + '/admin.html?apply=' + id + '&data=' + encoded;
     navigator.clipboard.writeText(link);
     toast('Link copied!');
   }
@@ -1045,22 +1057,26 @@
   (function init() {
     const params = new URLSearchParams(window.location.search);
     const applyId = params.get('apply');
-    if (applyId) {
-      const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
-      if (submitted.includes(applyId)) {
-        document.getElementById('adminApp').innerHTML = `
-          <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
-            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
-            <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
-              <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
-              <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Already Submitted</h2>
-              <p style="color:#888;margin-top:8px;">You have already submitted this application.</p>
-            </div>
-          </div>`;
-        return;
-      }
-      const form = forms.find(f => f.id === applyId);
+    const formData = params.get('data');
+    if (applyId || formData) {
+      // If form data is embedded in URL, decode it (works cross-device)
+      let form = formData ? decodeFormData(formData) : null;
+      // Fallback to localStorage lookup
+      if (!form) form = forms.find(f => f.id === applyId);
       if (form) {
+        const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
+        if (submitted.includes(form.id)) {
+          document.getElementById('adminApp').innerHTML = `
+            <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
+              <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
+              <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+                <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
+                <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Already Submitted</h2>
+                <p style="color:#888;margin-top:8px;">You have already submitted this application.</p>
+              </div>
+            </div>`;
+          return;
+        }
         showPublicForm(form);
       } else {
         document.getElementById('adminApp').innerHTML = '<div style="padding:40px;text-align:center;color:#666;"><h2>Form not found</h2><p>This form may have been deleted.</p></div>';
