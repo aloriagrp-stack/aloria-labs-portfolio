@@ -435,26 +435,29 @@
   let dataLoaded = false;
 
   function startFirestoreListeners() {
-    let loaded = 0;
+    let initialLoads = 0;
     function onLoad() {
-      loaded++;
-      if (loaded >= 3) {
+      initialLoads++;
+      if (initialLoads >= 3) {
         dataLoaded = true;
         if (!window.location.search.includes('apply=')) render();
       }
     }
     db.collection('forms').onSnapshot(snapshot => {
       forms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      onLoad();
-    });
+      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      else onLoad();
+    }, err => console.error('Firestore forms error:', err));
     db.collection('applications').orderBy('submitted', 'desc').onSnapshot(snapshot => {
       applications = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      onLoad();
-    });
+      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      else onLoad();
+    }, err => console.error('Firestore applications error:', err));
     db.collection('emailLog').orderBy('sentAt', 'desc').onSnapshot(snapshot => {
       emailLog = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      onLoad();
-    });
+      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      else onLoad();
+    }, err => console.error('Firestore emailLog error:', err));
   }
 
   let sendingEmail = false;
@@ -595,10 +598,6 @@
     applications.filter(a => a.formId === id).forEach(a => {
       if (a._id) db.collection('applications').doc(a._id).delete();
     });
-    // Also delete from email log
-    emailLog.filter(e => e.formId === id || applications.some(a => a.formId === id && a._id === e.applicationId)).forEach(e => {
-      if (e._id) db.collection('emailLog').doc(e._id).delete();
-    });
     toast('Form deleted');
     render();
   }
@@ -671,11 +670,11 @@
   async function approveApp(id) {
     const app = applications.find(a => a.id === id);
     if (!app) return;
-    if (app._id) db.collection('applications').doc(app._id).update({ status: 'approved' });
+    app.status = 'approved';
+    if (app._id) await db.collection('applications').doc(app._id).update({ status: 'approved' }).catch(() => {});
     toast('Application approved!');
     await sendApprovalEmail(id);
     viewApp(id);
-    render();
   }
 
   async function sendApprovalEmail(id) {
