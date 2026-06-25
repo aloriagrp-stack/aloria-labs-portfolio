@@ -133,9 +133,28 @@
     .modal.open { display: flex; }
     .modal-box { background: #111; border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
     .modal-box h3 { font-size: 16px; margin-bottom: 16px; }
+    .login-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
+      display: flex; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 20px;
+    }
+    .login-overlay.hidden { display: none; }
+    .login-box { background: #0d0d0d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 32px; max-width: 360px; width: 90%; }
+    .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 20px; margin-bottom: 4px; }
+    .login-box p { color: #888; font-size: 13px; margin-bottom: 20px; }
+    .login-box .error { color: #ff4444; font-size: 12px; margin-top: 8px; display: none; }
   </style>
 </head>
 <body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 Admin Login</h2>
+    <p>Enter password to access the panel</p>
+    <input type="password" id="loginPassword" placeholder="Enter password" style="margin-bottom:12px;" autofocus>
+    <button class="btn-primary" id="loginBtn" style="width:100%;">Login</button>
+    <div class="error" id="loginError">Wrong password</div>
+  </div>
+</div>
 
 <div class="app" id="adminApp">
   <div class="sidebar">
@@ -289,6 +308,21 @@
         <button class="btn btn-outline btn-sm mt-8" onclick="testSmtp()" id="testBtn">Test Connection</button>
       </div>
 
+      <!-- Admin Password -->
+      <div class="card">
+        <h3>Admin Password</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Change password for admin panel access.</p>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input id="currentAdminPw" type="password" placeholder="Current password">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input id="newAdminPw" type="password" placeholder="New password">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="changeAdminPassword()">Change Password</button>
+      </div>
+
       <!-- Email Templates -->
       <div class="card">
         <h3>Email Templates</h3>
@@ -350,6 +384,33 @@
 
 <script>
   const API_URL = 'http://localhost:5000';
+
+  const ADMIN_PW_KEY = 'aloria_admin_pw';
+  const defaultPW = 'aloria123';
+  if (!localStorage.getItem(ADMIN_PW_KEY)) localStorage.setItem(ADMIN_PW_KEY, defaultPW);
+
+  function checkLogin() {
+    if (sessionStorage.getItem('aloria_admin_logged_in') === 'true') return true;
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('adminApp').style.display = 'none';
+    return false;
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', function() {
+    const pw = document.getElementById('loginPassword').value;
+    if (pw === localStorage.getItem(ADMIN_PW_KEY)) {
+      sessionStorage.setItem('aloria_admin_logged_in', 'true');
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('adminApp').style.display = '';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  });
+  document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+
+  checkLogin();
 
   let smtpConfig = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
   let forms = JSON.parse(localStorage.getItem('aloria_forms') || '[]');
@@ -700,6 +761,17 @@
     } else {
       statusEl.innerHTML = '<div class="config-missing">⚠ SMTP not configured. Auto-email on approve will not work.</div>';
     }
+  }
+
+  function changeAdminPassword() {
+    const current = document.getElementById('currentAdminPw').value;
+    const newPw = document.getElementById('newAdminPw').value;
+    if (current !== localStorage.getItem(ADMIN_PW_KEY)) return toast('Current password is wrong');
+    if (!newPw || newPw.length < 4) return toast('New password must be at least 4 characters');
+    localStorage.setItem(ADMIN_PW_KEY, newPw);
+    document.getElementById('currentAdminPw').value = '';
+    document.getElementById('newAdminPw').value = '';
+    toast('Password changed successfully');
   }
 
   function togglePassword() {
