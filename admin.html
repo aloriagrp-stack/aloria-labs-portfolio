@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Aloria Labs</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -426,10 +428,35 @@
   checkLogin();
 
   let smtpConfig = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
-  let forms = JSON.parse(localStorage.getItem('aloria_forms') || '[]');
-  let applications = JSON.parse(localStorage.getItem('aloria_apps') || '[]');
-  let emailLog = JSON.parse(localStorage.getItem('aloria_email_log') || '[]');
+  let forms = [];
+  let applications = [];
+  let emailLog = [];
   let fields = [];
+  let dataLoaded = false;
+
+  function startFirestoreListeners() {
+    let loaded = 0;
+    function onLoad() {
+      loaded++;
+      if (loaded >= 3) {
+        dataLoaded = true;
+        if (!window.location.search.includes('apply=')) render();
+      }
+    }
+    db.collection('forms').onSnapshot(snapshot => {
+      forms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      onLoad();
+    });
+    db.collection('applications').orderBy('submitted', 'desc').onSnapshot(snapshot => {
+      applications = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      onLoad();
+    });
+    db.collection('emailLog').orderBy('sentAt', 'desc').onSnapshot(snapshot => {
+      emailLog = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      onLoad();
+    });
+  }
+
   let sendingEmail = false;
 
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -438,11 +465,13 @@
       el.classList.add('active');
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById('tab-' + el.dataset.tab).classList.add('active');
-      render();
       if (el.dataset.tab === 'settings') renderSettings();
       if (el.dataset.tab === 'emails') renderEmailLog();
     });
   });
+
+  startFirestoreListeners();
+  render();
 
   function addField() {
     const label = document.getElementById('fieldLabel').value.trim();
@@ -484,18 +513,17 @@
     if (!name) return toast('Enter a category name');
     if (!fields.length) return toast('Add at least one field');
     const form = { id: Date.now().toString(36), name, teamMember: member || null, template: tpl, fields: [...fields], created: new Date().toISOString() };
-    forms.push(form);
-    localStorage.setItem('aloria_forms', JSON.stringify(forms));
-    document.getElementById('catName').value = '';
-    document.getElementById('teamMember').value = '';
-    document.getElementById('formTemplate').value = 'standard';
-    fields = [];
-    renderFields();
-    toast('Form created! Share link copied.');
-    render();
-    const encoded = encodeFormData(form);
-    const link = window.location.origin + '/admin.html?apply=' + form.id + '&data=' + encoded;
-    navigator.clipboard.writeText(link);
+    db.collection('forms').add(form).then(() => {
+      document.getElementById('catName').value = '';
+      document.getElementById('teamMember').value = '';
+      document.getElementById('formTemplate').value = 'standard';
+      fields = [];
+      renderFields();
+      toast('Form created! Share link copied.');
+      const encoded = encodeFormData(form);
+      const link = window.location.origin + '/admin.html?apply=' + form.id + '&data=' + encoded;
+      navigator.clipboard.writeText(link);
+    }).catch(e => toast('Error saving form'));
   }
 
   function render() {
@@ -561,12 +589,18 @@
 
   function deleteForm(id) {
     if (!confirm('Delete this form and all its applications?')) return;
-    forms = forms.filter(f => f.id !== id);
-    applications = applications.filter(a => a.formId !== id);
-    localStorage.setItem('aloria_forms', JSON.stringify(forms));
-    localStorage.setItem('aloria_apps', JSON.stringify(applications));
-    render();
+    // Delete from Firestore
+    const formDoc = forms.find(f => f.id === id);
+    if (formDoc && formDoc._id) db.collection('forms').doc(formDoc._id).delete();
+    applications.filter(a => a.formId === id).forEach(a => {
+      if (a._id) db.collection('applications').doc(a._id).delete();
+    });
+    // Also delete from email log
+    emailLog.filter(e => e.formId === id || applications.some(a => a.formId === id && a._id === e.applicationId)).forEach(e => {
+      if (e._id) db.collection('emailLog').doc(e._id).delete();
+    });
     toast('Form deleted');
+    render();
   }
 
   function findEmailValue(app, form) {
@@ -637,12 +671,9 @@
   async function approveApp(id) {
     const app = applications.find(a => a.id === id);
     if (!app) return;
-    app.status = 'approved';
-    localStorage.setItem('aloria_apps', JSON.stringify(applications));
+    if (app._id) db.collection('applications').doc(app._id).update({ status: 'approved' });
     toast('Application approved!');
-
     await sendApprovalEmail(id);
-
     viewApp(id);
     render();
   }
@@ -723,8 +754,7 @@
           templateUsed: templateKey,
           sentAt: new Date().toISOString(), status: 'sent'
         };
-        emailLog.push(logEntry);
-        localStorage.setItem('aloria_email_log', JSON.stringify(emailLog));
+        db.collection('emailLog').add(logEntry);
         toast('Approval email sent to ' + emailVal);
       } else {
         throw new Error(data.error);
@@ -737,8 +767,7 @@
         teamMember,
         sentAt: new Date().toISOString(), status: 'failed', error: err.message
       };
-      emailLog.push(logEntry);
-      localStorage.setItem('aloria_email_log', JSON.stringify(emailLog));
+      db.collection('emailLog').add(logEntry);
     }
 
     sendingEmail = false;
@@ -1062,28 +1091,41 @@
     const formData = params.get('data');
     if (applyId || formData) {
       let form = formData ? decodeFormData(formData) : null;
-      if (!form) form = forms.find(f => f.id === applyId);
       if (form) {
-        currentPublicForm = form;
-        const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
-        if (submitted.includes(form.id)) {
-          document.getElementById('adminApp').innerHTML = `
-            <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
-              <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
-              <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
-                <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
-                <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Already Submitted</h2>
-                <p style="color:#888;margin-top:8px;">You have already submitted this application.</p>
-              </div>
-            </div>`;
-          return;
-        }
-        showPublicForm(form);
+        showPublicFormWithCheck(form);
       } else {
-        document.getElementById('adminApp').innerHTML = '<div style="padding:40px;text-align:center;color:#666;"><h2>Form not found</h2><p>This form may have been deleted.</p></div>';
+        function checkFormLoaded() {
+          form = forms.find(f => f.id === applyId);
+          if (form) {
+            showPublicFormWithCheck(form);
+          } else if (dataLoaded) {
+            document.getElementById('adminApp').innerHTML = '<div style="padding:40px;text-align:center;color:#666;"><h2>Form not found</h2><p>This form may have been deleted.</p></div>';
+          } else {
+            setTimeout(checkFormLoaded, 200);
+          }
+        }
+        setTimeout(checkFormLoaded, 200);
       }
     }
   })();
+
+  function showPublicFormWithCheck(form) {
+    currentPublicForm = form;
+    const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
+    if (submitted.includes(form.id)) {
+      document.getElementById('adminApp').innerHTML = `
+        <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
+          <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+            <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
+            <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Already Submitted</h2>
+            <p style="color:#888;margin-top:8px;">You have already submitted this application.</p>
+          </div>
+        </div>`;
+      return;
+    }
+    showPublicForm(form);
+  }
 
   function showPublicForm(form) {
     const app = document.getElementById('adminApp');
@@ -1124,23 +1166,19 @@
       return el ? el.value.trim() : '';
     });
     if (values.some(v => !v)) return toast('Please fill all fields');
-    // Validate phone fields
     for (let i = 0; i < form.fields.length; i++) {
       if (form.fields[i].type === 'tel' && !/^\d{10}$/.test(values[i])) {
         return toast('Phone number must be exactly 10 digits');
       }
     }
     const app = { id: Date.now().toString(36), formId, values, submitted: new Date().toISOString(), status: 'pending' };
-    applications.push(app);
-    localStorage.setItem('aloria_apps', JSON.stringify(applications));
-    // Mark as submitted so refresh doesn't show form again
-    submitted.push(formId);
-    localStorage.setItem('aloria_submitted_forms', JSON.stringify(submitted));
-    document.getElementById('publicFormFields').innerHTML = '<div style="text-align:center;padding:20px;color:#44ff88;"><div style="font-size:40px;margin-bottom:8px;">✓</div><div style="font-weight:600;">Application submitted!</div><div style="color:#666;font-size:13px;margin-top:4px;">We will review and get back to you.</div></div>';
-    document.querySelector('.btn-primary').style.display = 'none';
+    db.collection('applications').add(app).then(() => {
+      submitted.push(formId);
+      localStorage.setItem('aloria_submitted_forms', JSON.stringify(submitted));
+      document.getElementById('publicFormFields').innerHTML = '<div style="text-align:center;padding:20px;color:#44ff88;"><div style="font-size:40px;margin-bottom:8px;">✓</div><div style="font-weight:600;">Application submitted!</div><div style="color:#666;font-size:13px;margin-top:4px;">We will review and get back to you.</div></div>';
+      document.querySelector('.btn-primary').style.display = 'none';
+    }).catch(e => toast('Error submitting application'));
   }
-
-  render();
 </script>
 </body>
 </html>
