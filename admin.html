@@ -387,7 +387,8 @@
 
   const ADMIN_PW_KEY = 'aloria_admin_pw';
   const defaultPW = 'shriyanshking';
-  if (!localStorage.getItem(ADMIN_PW_KEY)) localStorage.setItem(ADMIN_PW_KEY, defaultPW);
+  const stored = localStorage.getItem(ADMIN_PW_KEY);
+  if (!stored || stored === 'aloria123') localStorage.setItem(ADMIN_PW_KEY, defaultPW);
 
   function checkLogin() {
     if (sessionStorage.getItem('aloria_admin_logged_in') === 'true') return true;
