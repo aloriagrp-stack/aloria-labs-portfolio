@@ -1053,17 +1053,18 @@
     el.innerHTML = html;
   }
 
+  let currentPublicForm = null;
+
   // ========== PUBLIC FORM ==========
   (function init() {
     const params = new URLSearchParams(window.location.search);
     const applyId = params.get('apply');
     const formData = params.get('data');
     if (applyId || formData) {
-      // If form data is embedded in URL, decode it (works cross-device)
       let form = formData ? decodeFormData(formData) : null;
-      // Fallback to localStorage lookup
       if (!form) form = forms.find(f => f.id === applyId);
       if (form) {
+        currentPublicForm = form;
         const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
         if (submitted.includes(form.id)) {
           document.getElementById('adminApp').innerHTML = `
@@ -1114,7 +1115,7 @@
   }
 
   function submitPublicForm(formId) {
-    const form = forms.find(f => f.id === formId);
+    const form = forms.find(f => f.id === formId) || currentPublicForm;
     if (!form) return;
     const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
     if (submitted.includes(formId)) return toast('Already submitted');
