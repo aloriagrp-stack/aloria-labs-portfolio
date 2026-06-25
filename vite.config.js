@@ -14,6 +14,7 @@ export default defineConfig({
         blogRoiSme: resolve(__dirname, 'blog-roi-sme.html'),
         blogPost: resolve(__dirname, 'blog-post.html'),
         aloriaGroup: resolve(__dirname, 'aloria-group.html'),
+        admin: resolve(__dirname, 'admin.html'),
       },
     },
   },

@@ -65,8 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- PARTICLE CONVERGENCE INTRO (Version Reverted) ---
   const preloaderCanvas = document.getElementById('preloader-canvas');
   const introLogoElement = document.getElementById('preloader-logo');
-  
-    if (preloaderCanvas) {
+
+  // Skip intro animation if already seen this session
+  const introSeen = sessionStorage.getItem('aloria_intro_seen');
+  if (introSeen) {
+    document.body.classList.add('loaded');
+    document.body.classList.remove('loading-active');
+  } else {
+    sessionStorage.setItem('aloria_intro_seen', '1');
+  }
+
+    if (preloaderCanvas && !introSeen) {
     const ctx = preloaderCanvas.getContext('2d');
     // PERFORMANCE BOOSTER: Cap DPR at 2.0 for buttery smoothness on 2GB RAM phones
     const dpr = Math.min(window.devicePixelRatio || 1, 2);

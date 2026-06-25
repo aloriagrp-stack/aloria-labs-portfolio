@@ -892,7 +892,11 @@ header.scrolled {
 /* Mobile Optimization Details */
 @media (max-width: 768px) {
   :root {
-    --section-padding: 40px 20px;
+    --section-padding: 40px 0px;
+  }
+  .container {
+    padding: 0;
+    max-width: 100%;
   }
 
   h1 {
@@ -2667,7 +2671,7 @@ footer {
     font-size: 0.75rem;
   }
 
-  .services-container.interactive {
+  .services-container {
     overflow-x: auto !important;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
@@ -2675,7 +2679,7 @@ footer {
     padding: 20px 0 60px !important;
   }
   
-  .services-container.interactive::-webkit-scrollbar {
+  .services-container::-webkit-scrollbar {
     display: none;
   }
 

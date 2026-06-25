@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Aloria Labs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #000; --bg2: #0a0a0a; --border: rgba(255,255,255,0.1); --text: #fff; --muted: #666; --accent: #fff; --card: #0d0d0d; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; }
+    .sidebar .logo { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; letter-spacing: -0.5px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); cursor: pointer; transition: all 0.2s; font-size: 13px; border-left: 2px solid transparent; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--text); border-left-color: var(--accent); background: rgba(255,255,255,0.05); }
+    .main { flex: 1; padding: 30px 40px; max-width: 960px; }
+    .main h2 { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .main .sub { color: var(--muted); margin-bottom: 24px; }
+    .tab { display: none; }
+    .tab.active { display: block; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+    .card h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+    input, textarea, select { width: 100%; padding: 10px 12px; background: #111; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+    input:focus, textarea:focus { border-color: #fff; }
+    label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 4px; color: #aaa; }
+    .form-group { margin-bottom: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-danger { background: #ff4444; color: #fff; }
+    .btn-success { background: #1a1a1a; border: 1px solid #44ff88; color: #44ff88; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .gap-8 { gap: 8px; }
+    .flex { display: flex; }
+    .flex-wrap { flex-wrap: wrap; }
+    .field-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #111; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; }
+    .field-item .name { flex: 1; font-size: 13px; }
+    .field-item .type { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+    .field-item .remove { color: #ff4444; cursor: pointer; font-size: 16px; line-height: 1; background: none; border: none; padding: 0 4px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11px; background: rgba(255,255,255,0.06); color: var(--muted); }
+    .badge.approved { background: rgba(68,255,136,0.1); color: #44ff88; }
+    .badge.pending { background: rgba(255,255,68,0.1); color: #ffff44; }
+    .badge.sent { background: rgba(0,150,255,0.1); color: #44aaff; }
+    .badge.failed { background: rgba(255,68,68,0.1); color: #ff4444; }
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .form-card .info h4 { font-size: 14px; font-weight: 600; }
+    .form-card .info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .form-card .actions { display: flex; gap: 6px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); font-weight: 500; }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 13px; display: none; z-index: 100; }
+    .config-done { background: rgba(68,255,136,0.1); border: 1px solid rgba(68,255,136,0.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #44ff88; margin-bottom: 16px; }
+    .config-missing { background: rgba(255,255,68,0.1); border: 1px solid rgba(255,255,68,0.3); border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #ffff44; margin-bottom: 16px; }
+    @media (max-width: 768px) {
+      .sidebar { width: 56px; }
+      .sidebar .logo { font-size: 14px; padding: 0 12px 20px; text-align: center; }
+      .sidebar .nav-item span { display: none; }
+      .sidebar .nav-item { justify-content: center; padding: 10px 12px; }
+      .main { padding: 20px 16px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      body { font-size: 13px; }
+      .app { flex-direction: column; min-height: auto; }
+      .sidebar {
+        position: fixed; bottom: 0; left: 0; right: 0; top: auto; z-index: 100;
+        width: 100%; height: auto; display: flex; flex-direction: row;
+        background: #050505; border-right: none; border-top: 1px solid rgba(255,255,255,0.1);
+        padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      }
+      .sidebar .logo { display: none; }
+      .sidebar .nav-item {
+        flex: 1; min-width: 0; flex-direction: column; gap: 1px;
+        padding: 6px 2px; font-size: 9px; border-left: none; border-top: 2px solid transparent;
+        text-align: center; justify-content: center; letter-spacing: 0;
+      }
+      .sidebar .nav-item.active { border-top-color: #fff; border-left-color: transparent; background: rgba(255,255,255,0.05); }
+      .sidebar .nav-item span:first-child { font-size: 18px; line-height: 1.3; }
+      .sidebar .nav-item span:last-child { font-size: 8px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+      .main { padding: 12px; padding-bottom: 70px; max-width: 100%; }
+      .main h2 { font-size: 17px; }
+      .main .sub { font-size: 12px; margin-bottom: 16px; }
+      .card { padding: 12px; margin-bottom: 10px; }
+      .card h3 { font-size: 13px; margin-bottom: 10px; }
+      .form-row { grid-template-columns: 1fr; gap: 8px; }
+      .form-group { margin-bottom: 10px; }
+      input, textarea, select { font-size: 16px !important; padding: 10px 10px; }
+      label { font-size: 11px; }
+      .btn, .btn-sm { font-size: 12px; padding: 8px 14px; }
+      .form-card { flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 14px; }
+      .form-card .info h4 { font-size: 13px; }
+      .form-card .info p { font-size: 11px; }
+      .form-card .actions { width: 100%; justify-content: flex-end; }
+      .field-item { padding: 6px 10px; font-size: 12px; }
+      .field-item .name { font-size: 12px; }
+      .flex-wrap { gap: 4px; }
+      /* Table -> Card layout on mobile */
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr {
+        background: #0d0d0d; border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+      }
+      td {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 12px; border: none;
+      }
+      td:before {
+        content: attr(data-label);
+        font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;
+        margin-right: 8px; flex-shrink: 0; font-weight: 500;
+      }
+      td:last-child { border-bottom: none; justify-content: flex-start; }
+      td:last-child:before { display: none; }
+      .badge { font-size: 10px; padding: 2px 8px; }
+      .modal-box { max-width: 94%; padding: 14px; }
+      .empty { font-size: 13px; padding: 24px 16px; }
+      .toast { bottom: 80px; right: 10px; left: 10px; font-size: 12px; padding: 10px 14px; text-align: center; }
+    }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 50; align-items: center; justify-content: center; }
+    .modal.open { display: flex; }
+    .modal-box { background: #111; border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal-box h3 { font-size: 16px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="app" id="adminApp">
+  <div class="sidebar">
+    <div class="logo">ALORIA</div>
+    <div class="nav-item active" data-tab="dashboard"><span>📊</span><span>Dashboard</span></div>
+    <div class="nav-item" data-tab="create"><span>✚</span><span>Create Form</span></div>
+    <div class="nav-item" data-tab="forms"><span>📋</span><span>My Forms</span></div>
+    <div class="nav-item" data-tab="applications"><span>📩</span><span>Applications</span></div>
+    <div class="nav-item" data-tab="emails"><span>✉</span><span>Emails Sent</span></div>
+    <div class="nav-item" data-tab="settings"><span>⚙</span><span>Settings</span></div>
+  </div>
+
+  <div class="main">
+    <!-- Dashboard -->
+    <div id="tab-dashboard" class="tab active">
+      <h2>Dashboard</h2>
+      <p class="sub">Overview of your forms and applications.</p>
+      <div class="flex gap-8 flex-wrap">
+        <div class="card" style="flex:1;min-width:140px"><h3>Total Forms</h3><div id="statForms" style="font-size:32px;font-weight:700">0</div></div>
+        <div class="card" style="flex:1;min-width:140px"><h3>Applications</h3><div id="statApps" style="font-size:32px;font-weight:700">0</div></div>
+        <div class="card" style="flex:1;min-width:140px"><h3>Pending</h3><div id="statPending" style="font-size:32px;font-weight:700">0</div></div>
+        <div class="card" style="flex:1;min-width:140px"><h3>Emails Sent</h3><div id="statEmails" style="font-size:32px;font-weight:700">0</div></div>
+      </div>
+    </div>
+
+    <!-- Create Form -->
+    <div id="tab-create" class="tab">
+      <h2>Create Form</h2>
+      <p class="sub">Build a form for any category — freelancers, partners, clients, etc.</p>
+      <div class="card">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input id="catName" list="catSuggestions" placeholder="Select or type a category">
+          <datalist id="catSuggestions">
+            <option value="Freelancer Onboarding">
+            <option value="Partner Registration">
+            <option value="Client Intake">
+            <option value="Vendor Application">
+            <option value="Internship Application">
+            <option value="Job Application">
+            <option value="Collaboration Request">
+            <option value="Project Proposal">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Team Member (who is referring)</label>
+          <input id="teamMember" list="memberSuggestions" placeholder="Select or type team member name">
+          <datalist id="memberSuggestions">
+            <option value="Aarav">
+            <option value="Ishita">
+            <option value="Rohan">
+            <option value="Priya">
+            <option value="Vikram">
+            <option value="Ananya">
+            <option value="Karan">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Form Fields</label>
+          <div id="fieldsList"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Field Label</label>
+            <input id="fieldLabel" list="fieldSuggestions" placeholder="Select or type field name">
+            <datalist id="fieldSuggestions">
+              <option value="Full Name">
+              <option value="Email Address">
+              <option value="Phone Number">
+              <option value="Previous Work">
+              <option value="Portfolio Link">
+              <option value="Years of Experience">
+              <option value="Skills">
+              <option value="Cover Letter">
+              <option value="Education">
+              <option value="LinkedIn Profile">
+              <option value="Availability">
+              <option value="Expected Rate">
+              <option value="References">
+              <option value="Current Company">
+              <option value="Job Title">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Email Template (sent on approval)</label>
+          <select id="formTemplate">
+            <option value="standard">Standard Approval</option>
+            <option value="freelancer">Freelancer Welcome</option>
+            <option value="partner">Partner Welcome</option>
+            <option value="client">Client Onboarding</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+            <label>Field Type</label>
+            <select id="fieldType">
+              <option value="text">Text</option>
+              <option value="email">Email</option>
+              <option value="tel">Phone</option>
+              <option value="textarea">Long Text</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="addField()">+ Add Field</button>
+          <button class="btn btn-primary btn-sm" onclick="saveForm()">Save Form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Forms -->
+    <div id="tab-forms" class="tab">
+      <h2>My Forms</h2>
+      <p class="sub">All created forms. Share the link to collect applications.</p>
+      <div id="formsList"></div>
+    </div>
+
+    <!-- Applications -->
+    <div id="tab-applications" class="tab">
+      <h2>Applications</h2>
+      <p class="sub">Submitted applications from your forms.</p>
+      <div id="appsContainer"></div>
+    </div>
+
+    <!-- Emails Sent -->
+    <div id="tab-emails" class="tab">
+      <h2>Emails Sent</h2>
+      <p class="sub">Log of all approval emails sent from this panel.</p>
+      <div id="emailsList"></div>
+    </div>
+
+    <!-- Settings -->
+    <div id="tab-settings" class="tab">
+      <h2>Settings</h2>
+      <p class="sub">Configure SMTP and email templates.</p>
+      <div id="configStatus"></div>
+      <div id="savedConfigInfo"></div>
+      <div class="card">
+        <h3>SMTP Configuration</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Use Gmail App Password for security. <a href="https://support.google.com/accounts/answer/185833" target="_blank" style="color:#fff;">How to get App Password →</a></p>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input id="smtpEmail" placeholder="alorialabs@gmail.com">
+        </div>
+        <div class="form-group">
+          <label>App Password</label>
+          <input id="smtpPassword" type="password" placeholder="16-character app password">
+          <span id="pwToggle" style="font-size:11px;color:#888;cursor:pointer;" onclick="togglePassword()">Show</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveSmtpConfig()">Save Config</button>
+        <button class="btn btn-outline btn-sm mt-8" onclick="testSmtp()" id="testBtn">Test Connection</button>
+      </div>
+
+      <!-- Email Templates -->
+      <div class="card">
+        <h3>Email Templates</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Choose or edit the email sent on approval. Use variables: <code style="color:#fff;background:#111;padding:2px 6px;border-radius:4px;">{{applicant_name}}</code> <code style="color:#fff;background:#111;padding:2px 6px;border-radius:4px;">{{category}}</code> <code style="color:#fff;background:#111;padding:2px 6px;border-radius:4px;">{{team_member}}</code></p>
+
+        <div class="form-group">
+          <label>Select Template</label>
+          <select id="templateSelect" onchange="loadTemplate()">
+            <option value="standard">Standard Approval</option>
+            <option value="freelancer">Freelancer Welcome</option>
+            <option value="partner">Partner Welcome</option>
+            <option value="client">Client Onboarding</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Subject</label>
+          <input id="templateSubject" placeholder="Your Application Has Been Approved - Aloria Labs">
+        </div>
+        <div class="form-group">
+          <label>Email Body (HTML)</label>
+          <textarea id="templateBody" rows="6" style="font-family:monospace;font-size:12px;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveCurrentTemplate()">Save Template</button>
+        <button class="btn btn-outline btn-sm mt-8" onclick="resetToDefault()">Reset to Default</button>
+      </div>
+
+      <!-- Category Mapping -->
+      <div class="card">
+        <h3>Category Mapping</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Choose which template to use for each form category.</p>
+        <div id="categoryMapping"></div>
+        <button class="btn btn-primary btn-sm mt-8" onclick="saveCategoryMapping()">Save Mapping</button>
+      </div>
+
+      <div class="card">
+        <h3>How to Set Up</h3>
+        <ol style="color:var(--muted);font-size:13px;line-height:1.8;padding-left:18px;">
+          <li>Make sure <strong style="color:#fff;">email_server.py</strong> is running (command: <code style="color:#fff;">python email_server.py</code>)</li>
+          <li>Enable 2FA on your Gmail account</li>
+          <li>Generate an <a href="https://support.google.com/accounts/answer/185833" target="_blank" style="color:#fff;">App Password</a></li>
+          <li>Enter your Gmail and App Password here and save</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Application Modal -->
+<div class="modal" id="viewModal">
+  <div class="modal-box">
+    <h3>Application Details</h3>
+    <div id="viewContent"></div>
+    <button class="btn btn-outline btn-sm mt-16" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API_URL = 'http://localhost:5000';
+
+  let smtpConfig = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
+  let forms = JSON.parse(localStorage.getItem('aloria_forms') || '[]');
+  let applications = JSON.parse(localStorage.getItem('aloria_apps') || '[]');
+  let emailLog = JSON.parse(localStorage.getItem('aloria_email_log') || '[]');
+  let fields = [];
+  let sendingEmail = false;
+
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + el.dataset.tab).classList.add('active');
+      render();
+      if (el.dataset.tab === 'settings') renderSettings();
+      if (el.dataset.tab === 'emails') renderEmailLog();
+    });
+  });
+
+  function addField() {
+    const label = document.getElementById('fieldLabel').value.trim();
+    const type = document.getElementById('fieldType').value;
+    if (!label) return toast('Enter a field label');
+    fields.push({ label, type });
+    document.getElementById('fieldLabel').value = '';
+    renderFields();
+  }
+
+  function removeField(i) {
+    fields.splice(i, 1);
+    renderFields();
+  }
+
+  function renderFields() {
+    const el = document.getElementById('fieldsList');
+    if (!fields.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0;">No fields added yet</div>';
+      return;
+    }
+    el.innerHTML = fields.map((f, i) =>
+      `<div class="field-item"><span class="name">${f.label}</span><span class="type">${f.type}</span><button class="remove" onclick="removeField(${i})">×</button></div>`
+    ).join('');
+  }
+
+  function saveForm() {
+    const name = document.getElementById('catName').value.trim();
+    const member = document.getElementById('teamMember').value.trim();
+    const tpl = document.getElementById('formTemplate').value;
+    if (!name) return toast('Enter a category name');
+    if (!fields.length) return toast('Add at least one field');
+    const form = { id: Date.now().toString(36), name, teamMember: member || null, template: tpl, fields: [...fields], created: new Date().toISOString() };
+    forms.push(form);
+    localStorage.setItem('aloria_forms', JSON.stringify(forms));
+    document.getElementById('catName').value = '';
+    document.getElementById('teamMember').value = '';
+    document.getElementById('formTemplate').value = 'standard';
+    fields = [];
+    renderFields();
+    toast('Form created! Share link copied.');
+    render();
+    const link = window.location.origin + '/admin.html?apply=' + form.id;
+    navigator.clipboard.writeText(link);
+  }
+
+  function render() {
+    renderForms();
+    renderApps();
+    document.getElementById('statForms').textContent = forms.length;
+    document.getElementById('statApps').textContent = applications.length;
+    document.getElementById('statPending').textContent = applications.filter(a => a.status !== 'approved').length;
+    document.getElementById('statEmails').textContent = emailLog.length;
+  }
+
+  function renderForms() {
+    const el = document.getElementById('formsList');
+    if (!forms.length) { el.innerHTML = '<div class="empty">No forms created yet.</div>'; return; }
+    el.innerHTML = forms.map(f => {
+      const memberInfo = f.teamMember ? `<span style="color:#888;font-size:12px;"> · from ${f.teamMember}</span>` : '';
+      const tplNames = { standard: 'Standard', freelancer: 'Freelancer', partner: 'Partner', client: 'Client', custom: 'Custom' };
+      const tplName = tplNames[f.template] || 'Standard';
+      return `<div class="form-card">
+        <div class="info">
+          <h4>${f.name}${memberInfo}</h4>
+          <p>${f.fields.length} fields · ${applications.filter(a => a.formId === f.id).length} applications · <span style="color:#888;">Template: ${tplName}</span></p>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-sm" onclick="copyLink('${f.id}')">Copy Link</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteForm('${f.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderApps() {
+    const el = document.getElementById('appsContainer');
+    if (!applications.length) { el.innerHTML = '<div class="empty">No applications yet.</div>'; return; }
+    let html = '<table><thead><tr><th>Form</th><th>Applicant</th><th>Referred By</th><th>Date</th><th>Status</th><th>Email</th><th></th></tr></thead><tbody>';
+    applications.forEach(a => {
+      const form = forms.find(f => f.id === a.formId);
+      const firstVal = a.values[0] || '-';
+      const date = new Date(a.submitted).toLocaleDateString();
+      const emailed = emailLog.some(e => e.applicationId === a.id) ? '<span class="badge sent">Sent</span>' : '<span style="color:#444;">—</span>';
+      html += `<tr>
+        <td data-label="Form">${form ? form.name : 'Unknown'}</td>
+        <td data-label="Applicant">${firstVal}</td>
+        <td data-label="Referred">${form && form.teamMember ? form.teamMember : '-'}</td>
+        <td data-label="Date">${date}</td>
+        <td data-label="Status"><span class="badge ${a.status === 'approved' ? 'approved' : 'pending'}">${a.status || 'pending'}</span></td>
+        <td data-label="Email">${emailed}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="viewApp('${a.id}')">View</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  function copyLink(id) {
+    const link = window.location.origin + '/admin.html?apply=' + id;
+    navigator.clipboard.writeText(link);
+    toast('Link copied!');
+  }
+
+  function deleteForm(id) {
+    if (!confirm('Delete this form and all its applications?')) return;
+    forms = forms.filter(f => f.id !== id);
+    applications = applications.filter(a => a.formId !== id);
+    localStorage.setItem('aloria_forms', JSON.stringify(forms));
+    localStorage.setItem('aloria_apps', JSON.stringify(applications));
+    render();
+    toast('Form deleted');
+  }
+
+  function findEmailValue(app, form) {
+    if (!form) return '';
+    for (let i = 0; i < form.fields.length; i++) {
+      const f = form.fields[i];
+      if (f.type === 'email' || f.label.toLowerCase().includes('email')) {
+        return app.values[i] || '';
+      }
+    }
+    return '';
+  }
+
+  function viewApp(id) {
+    const app = applications.find(a => a.id === id);
+    if (!app) return;
+    const form = forms.find(f => f.id === app.formId);
+    const emailVal = findEmailValue(app, form);
+    let html = '';
+    const isApproved = app.status === 'approved';
+    const alreadyEmailed = emailLog.some(e => e.applicationId === id);
+
+    html += `<div class="form-group"><label>Status</label><div style="padding:8px 12px;background:#111;border-radius:6px;font-size:13px;">${isApproved ? '<span style="color:#44ff88;font-weight:600;">✓ Approved</span>' : '<span style="color:#ffff44;">⏳ Pending</span>'}</div></div>`;
+    if (form) {
+      if (form.teamMember) {
+        html += `<div class="form-group"><label>Referred By</label><div style="padding:8px 12px;background:#111;border-radius:6px;font-size:13px;">${form.teamMember}</div></div>`;
+      }
+      form.fields.forEach((f, i) => {
+        html += `<div class="form-group"><label>${f.label}</label><div style="padding:8px 12px;background:#111;border-radius:6px;font-size:13px;">${app.values[i] || '-'}</div></div>`;
+      });
+    }
+    html += `<div class="form-group"><label>Submitted</label><div style="padding:8px 12px;background:#111;border-radius:6px;font-size:13px;">${new Date(app.submitted).toLocaleString()}</div></div>`;
+
+    if (!isApproved) {
+      const canEmail = smtpConfig.email && smtpConfig.password;
+      const disableAttr = sendingEmail ? 'disabled style="opacity:0.5;"' : '';
+      const emailInfo = emailVal ? `<div style="font-size:11px;color:#888;margin-top:4px;">Email will be sent to: ${emailVal}</div>` : '<div style="font-size:11px;color:#ff4444;margin-top:4px;">⚠ No email field found in this form</div>';
+      html += `<div class="btn btn-success btn-sm mt-16" style="padding:0;border:none;background:none;display:block;width:100%;">
+        <button onclick="approveApp('${app.id}')" ${disableAttr} style="width:100%;padding:8px 18px;background:#1a1a1a;border:1px solid #44ff88;color:#44ff88;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;${sendingEmail ? 'opacity:0.5;' : ''}">${sendingEmail ? '⏳ Sending...' : '✓ Approve & Send Email'}</button>
+        ${emailInfo}
+      </div>`;
+      if (!canEmail) {
+        html += `<div style="font-size:11px;color:#ffff44;margin-top:6px;">⚠ SMTP not configured. Go to Settings tab.</div>`;
+      }
+    } else {
+      html += `<div style="margin-top:12px;padding:8px 12px;background:#111;border-radius:6px;font-size:12px;">
+        <div style="color:#888;">To: <span style="color:#fff;">${emailVal || 'No email found'}</span></div>
+        <div style="color:#888;margin-top:2px;">SMTP: <span style="color:${(smtpConfig.email && smtpConfig.password) ? '#44ff88' : '#ff4444'};">${smtpConfig.email || 'Not configured'}</span></div>
+      </div>`;
+      if (alreadyEmailed) {
+        html += `<div style="margin-top:12px;padding:8px 12px;background:rgba(68,170,255,0.1);border-radius:6px;font-size:12px;color:#44aaff;">✉ Approval email already sent.</div>`;
+      } else {
+        const canEmail = smtpConfig.email && smtpConfig.password;
+        html += `<button class="btn btn-primary btn-sm mt-16" onclick="sendApprovalEmail('${app.id}')" ${canEmail ? '' : 'disabled style="opacity:0.5;"'}>✉ Resend Approval Email</button>`;
+        if (!canEmail) {
+          html += `<div style="font-size:11px;color:#ffff44;margin-top:6px;">⚠ SMTP not configured.</div>`;
+        }
+      }
+      if (emailVal) {
+        html += `<div style="font-size:11px;color:#888;margin-top:6px;">To: ${emailVal}</div>`;
+      }
+    }
+
+    document.getElementById('viewContent').innerHTML = html;
+    document.getElementById('viewModal').classList.add('open');
+  }
+
+  async function approveApp(id) {
+    const app = applications.find(a => a.id === id);
+    if (!app) return;
+    app.status = 'approved';
+    localStorage.setItem('aloria_apps', JSON.stringify(applications));
+    toast('Application approved!');
+
+    await sendApprovalEmail(id);
+
+    viewApp(id);
+    render();
+  }
+
+  async function sendApprovalEmail(id) {
+    const app = applications.find(a => a.id === id);
+    if (!app) return;
+    const form = forms.find(f => f.id === app.formId);
+    const emailVal = findEmailValue(app, form);
+    // Find name field - look for "name" in label, fallback to first field
+    let applicantName = 'Applicant';
+    if (form) {
+      for (let i = 0; i < form.fields.length; i++) {
+        if (form.fields[i].label.toLowerCase().includes('name')) {
+          applicantName = app.values[i] || 'Applicant';
+          break;
+        }
+      }
+      if (applicantName === 'Applicant') applicantName = app.values[0] || 'Applicant';
+    }
+    const category = form ? form.name : 'Application';
+    const teamMember = form && form.teamMember ? form.teamMember : 'Aloria Labs';
+
+    if (!emailVal) {
+      toast('No email address found in this application');
+      return;
+    }
+
+    if (!smtpConfig.email || !smtpConfig.password) {
+      toast('SMTP not configured. Go to Settings.');
+      return;
+    }
+
+    if (emailLog.some(e => e.applicationId === id)) {
+      toast('Email already sent for this application');
+      return;
+    }
+
+    // Look up template — form's own template first, then category mapping, then default
+    const templateMap = JSON.parse(localStorage.getItem('aloria_template_map') || '{}');
+    const templates = loadTemplates();
+    const defaultTpl = getDefaultTemplate('standard');
+    let templateKey = form && form.template ? form.template : (templateMap[category] || 'standard');
+    let tpl = templates[templateKey] || defaultTpl;
+    let subject = tpl.subject;
+    let body = tpl.body;
+
+    // Replace variables
+    const vars = { applicant_name: applicantName, category, team_member: teamMember, to_email: emailVal };
+    Object.keys(vars).forEach(k => {
+      subject = subject.replace(new RegExp('{{' + k + '}}', 'g'), vars[k]);
+      body = body.replace(new RegExp('{{' + k + '}}', 'g'), vars[k]);
+    });
+
+    sendingEmail = true;
+    viewApp(id);
+
+    try {
+      const res = await fetch(`${API_URL}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to_email: emailVal,
+          applicant_name: applicantName,
+          category,
+          team_member: teamMember,
+          subject,
+          html_body: body
+        })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        const logEntry = {
+          id: Date.now().toString(36), applicationId: id, to: emailVal,
+          applicantName, category,
+          teamMember,
+          templateUsed: templateKey,
+          sentAt: new Date().toISOString(), status: 'sent'
+        };
+        emailLog.push(logEntry);
+        localStorage.setItem('aloria_email_log', JSON.stringify(emailLog));
+        toast('Approval email sent to ' + emailVal);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      toast('Email failed: ' + err.message);
+      const logEntry = {
+        id: Date.now().toString(36), applicationId: id, to: emailVal,
+        applicantName, category,
+        teamMember,
+        sentAt: new Date().toISOString(), status: 'failed', error: err.message
+      };
+      emailLog.push(logEntry);
+      localStorage.setItem('aloria_email_log', JSON.stringify(emailLog));
+    }
+
+    sendingEmail = false;
+    viewApp(id);
+    render();
+  }
+
+  function closeModal() {
+    document.getElementById('viewModal').classList.remove('open');
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 2500);
+  }
+
+  // ========== SETTINGS (SMTP) ==========
+  function renderSettings() {
+    const cfg = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
+    document.getElementById('smtpEmail').value = cfg.email || '';
+    document.getElementById('smtpPassword').value = cfg.password || '';
+
+    // Saved config info
+    const infoEl = document.getElementById('savedConfigInfo');
+    if (cfg.email) {
+      const maskedPw = cfg.password ? cfg.password.slice(0, 4) + '••••••••••••' : '';
+      const tested = cfg.tested === true ? '<span style="color:#44ff88;">✓ Working</span>' : '<span style="color:#ffff44;">⚠ Not Tested</span>';
+      infoEl.innerHTML = `<div class="config-done" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><strong>${cfg.email}</strong> · Password: ${maskedPw}</span>
+        <span>${tested}</span>
+      </div>`;
+    } else {
+      infoEl.innerHTML = '';
+    }
+
+    const statusEl = document.getElementById('configStatus');
+    if (cfg.email && cfg.password) {
+      if (cfg.tested === true) {
+        statusEl.innerHTML = '<div class="config-done">✓ SMTP configured and working. Emails will be sent on approve.</div>';
+      } else {
+        statusEl.innerHTML = '<div class="config-missing">⚠ SMTP saved but not tested. Click "Test Connection" to verify.</div>';
+      }
+    } else {
+      statusEl.innerHTML = '<div class="config-missing">⚠ SMTP not configured. Auto-email on approve will not work.</div>';
+    }
+  }
+
+  function togglePassword() {
+    const pw = document.getElementById('smtpPassword');
+    const toggle = document.getElementById('pwToggle');
+    if (pw.type === 'password') {
+      pw.type = 'text';
+      toggle.textContent = 'Hide';
+    } else {
+      pw.type = 'password';
+      toggle.textContent = 'Show';
+    }
+  }
+
+  function saveSmtpConfig() {
+    const email = document.getElementById('smtpEmail').value.trim();
+    const password = document.getElementById('smtpPassword').value.trim();
+    if (!email || !password) return toast('Fill all fields');
+
+    fetch(`${API_URL}/save-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, smtp_server: 'smtp.gmail.com', smtp_port: 587 })
+    }).then(r => r.json()).then(d => {
+      if (d.success) {
+        const existing = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
+        smtpConfig = { email, password, tested: existing.tested || false };
+        localStorage.setItem('aloria_smtp', JSON.stringify(smtpConfig));
+        toast('SMTP config saved!');
+        renderSettings();
+      }
+    }).catch(() => {
+      toast('Python server not running! Start email_server.py first.');
+    });
+  }
+
+  let testingConnection = false;
+
+  function testSmtp() {
+    if (testingConnection) return;
+    testingConnection = true;
+    const btn = document.getElementById('testBtn');
+    btn.textContent = '⏳ Testing...';
+    btn.disabled = true;
+
+    fetch(`${API_URL}/test`, { method: 'POST' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const cfg = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
+          cfg.tested = true;
+          localStorage.setItem('aloria_smtp', JSON.stringify(cfg));
+          smtpConfig = cfg;
+          toast('Connection working! Test email sent.');
+          renderSettings();
+        } else {
+          toast('Test failed: ' + d.error);
+          const cfg = JSON.parse(localStorage.getItem('aloria_smtp') || '{}');
+          cfg.tested = false;
+          localStorage.setItem('aloria_smtp', JSON.stringify(cfg));
+          smtpConfig = cfg;
+          renderSettings();
+        }
+      })
+      .catch(() => {
+        toast('Python server not running!');
+      })
+      .finally(() => {
+        testingConnection = false;
+        btn.textContent = 'Test Connection';
+        btn.disabled = false;
+      });
+  }
+
+  // ========== EMAIL TEMPLATES ==========
+  function getDefaultTemplate(key) {
+    const templates = {
+      standard: {
+        subject: 'Your Application Has Been Approved - Aloria Labs',
+        body: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Inter',Arial,sans-serif;background:#000;color:#fff;margin:0;padding:0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:40px 20px;"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;">
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:#666;padding-bottom:8px;">ALORIA LABS</td></tr>
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:32px;font-weight:800;color:#fff;padding-bottom:24px;">Application Approved</td></tr>
+<tr><td style="color:#aaa;font-size:15px;line-height:1.6;padding-bottom:20px;">Dear <strong style="color:#fff;">{{applicant_name}}</strong>,<br><br>Congratulations! Your application has been <strong style="color:#44ff88;">approved</strong> by Aloria Labs.</td></tr>
+<tr><td style="padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:10px;">
+<table width="100%"><tr><td style="color:#666;font-size:12px;padding:4px 0;">Category</td><td style="color:#fff;font-size:14px;text-align:right;">{{category}}</td></tr>
+<tr><td style="color:#666;font-size:12px;padding:4px 0;">Referred By</td><td style="color:#fff;font-size:14px;text-align:right;">{{team_member}}</td></tr></table>
+</td></tr>
+<tr><td style="color:#888;font-size:14px;line-height:1.6;padding-top:12px;">Our team will reach out shortly with next steps.<br><br>Best,<br><strong style="color:#fff;">Aloria Labs Team</strong></td></tr>
+</table></td></tr></table></body></html>`
+      },
+      freelancer: {
+        subject: 'Welcome to the Aloria Freelancer Network!',
+        body: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Inter',Arial,sans-serif;background:#000;color:#fff;margin:0;padding:0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:40px 20px;"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;">
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:#666;padding-bottom:8px;">ALORIA LABS</td></tr>
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:32px;font-weight:800;color:#fff;padding-bottom:24px;">Welcome Aboard!</td></tr>
+<tr><td style="color:#aaa;font-size:15px;line-height:1.6;padding-bottom:20px;">Hey <strong style="color:#fff;">{{applicant_name}}</strong>,<br><br>You've been onboarded to the Aloria Labs freelancer network via <strong style="color:#fff;">{{team_member}}</strong>.</td></tr>
+<tr><td style="padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:10px;">
+<table width="100%"><tr><td style="color:#666;font-size:12px;padding:4px 0;">Category</td><td style="color:#fff;font-size:14px;text-align:right;">{{category}}</td></tr></table>
+</td></tr>
+<tr><td style="color:#888;font-size:14px;line-height:1.6;padding-top:12px;">We'll share project details and next steps soon.<br><br>Best,<br><strong style="color:#fff;">Aloria Labs Team</strong></td></tr>
+</table></td></tr></table></body></html>`
+      },
+      partner: {
+        subject: 'Partnership Approved - Aloria Labs',
+        body: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Inter',Arial,sans-serif;background:#000;color:#fff;margin:0;padding:0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:40px 20px;"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;">
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:#666;padding-bottom:8px;">ALORIA LABS</td></tr>
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:32px;font-weight:800;color:#fff;padding-bottom:24px;">Partnership Confirmed</td></tr>
+<tr><td style="color:#aaa;font-size:15px;line-height:1.6;padding-bottom:20px;">Dear <strong style="color:#fff;">{{applicant_name}}</strong>,<br><br>Your partnership with Aloria Labs has been approved! Sponsored by <strong style="color:#fff;">{{team_member}}</strong>.</td></tr>
+<tr><td style="padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:10px;">
+<table width="100%"><tr><td style="color:#666;font-size:12px;padding:4px 0;">Category</td><td style="color:#fff;font-size:14px;text-align:right;">{{category}}</td></tr></table>
+</td></tr>
+<tr><td style="color:#888;font-size:14px;line-height:1.6;padding-top:12px;">Let's build something great together.<br><br>Best,<br><strong style="color:#fff;">Aloria Labs Team</strong></td></tr>
+</table></td></tr></table></body></html>`
+      },
+      client: {
+        subject: 'Onboarding Started - Aloria Labs',
+        body: `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family:'Inter',Arial,sans-serif;background:#000;color:#fff;margin:0;padding:0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#000;padding:40px 20px;"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="background:#0a0a0a;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:40px;">
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:#666;padding-bottom:8px;">ALORIA LABS</td></tr>
+<tr><td align="center" style="font-family:'Outfit',Arial,sans-serif;font-size:32px;font-weight:800;color:#fff;padding-bottom:24px;">Client Onboarding</td></tr>
+<tr><td style="color:#aaa;font-size:15px;line-height:1.6;padding-bottom:20px;">Hi <strong style="color:#fff;">{{applicant_name}}</strong>,<br><br>Your client intake has been approved. You were referred by <strong style="color:#fff;">{{team_member}}</strong>.</td></tr>
+<tr><td style="padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:10px;">
+<table width="100%"><tr><td style="color:#666;font-size:12px;padding:4px 0;">Category</td><td style="color:#fff;font-size:14px;text-align:right;">{{category}}</td></tr></table>
+</td></tr>
+<tr><td style="color:#888;font-size:14px;line-height:1.6;padding-top:12px;">We'll begin work shortly and keep you updated.<br><br>Best,<br><strong style="color:#fff;">Aloria Labs Team</strong></td></tr>
+</table></td></tr></table></body></html>`
+      }
+    };
+    return templates[key] || templates.standard;
+  }
+
+  function loadTemplates() {
+    const saved = JSON.parse(localStorage.getItem('aloria_templates') || '{}');
+    const keys = ['standard', 'freelancer', 'partner', 'client', 'custom'];
+    keys.forEach(k => {
+      if (!saved[k]) {
+        saved[k] = k === 'custom' ? { subject: '', body: '' } : getDefaultTemplate(k);
+      }
+    });
+    localStorage.setItem('aloria_templates', JSON.stringify(saved));
+    return saved;
+  }
+
+  function loadTemplate() {
+    const key = document.getElementById('templateSelect').value;
+    const templates = loadTemplates();
+    const tpl = templates[key] || { subject: '', body: '' };
+    document.getElementById('templateSubject').value = tpl.subject;
+    document.getElementById('templateBody').value = tpl.body;
+  }
+
+  function saveCurrentTemplate() {
+    const key = document.getElementById('templateSelect').value;
+    const subject = document.getElementById('templateSubject').value.trim();
+    const body = document.getElementById('templateBody').value.trim();
+    if (!subject || !body) return toast('Subject and body are required');
+    const templates = loadTemplates();
+    templates[key] = { subject, body };
+    localStorage.setItem('aloria_templates', JSON.stringify(templates));
+    toast('Template saved!');
+  }
+
+  function resetToDefault() {
+    const key = document.getElementById('templateSelect').value;
+    if (key === 'custom') return toast('Custom template has no default');
+    const def = getDefaultTemplate(key);
+    document.getElementById('templateSubject').value = def.subject;
+    document.getElementById('templateBody').value = def.body;
+    const templates = loadTemplates();
+    templates[key] = def;
+    localStorage.setItem('aloria_templates', JSON.stringify(templates));
+    toast('Reset to default');
+  }
+
+  function renderCategoryMapping() {
+    const el = document.getElementById('categoryMapping');
+    const allCats = [...new Set(forms.map(f => f.name))];
+    const map = JSON.parse(localStorage.getItem('aloria_template_map') || '{}');
+    if (!allCats.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">No forms created yet. Create a form first.</div>';
+      return;
+    }
+    let html = '';
+    allCats.forEach(cat => {
+      const selected = map[cat] || 'standard';
+      html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="flex:1;font-size:13px;min-width:140px;">${cat}</span>
+        <select class="map-select" data-cat="${cat}" style="width:auto;flex:1;min-width:130px;">
+          <option value="standard" ${selected === 'standard' ? 'selected' : ''}>Standard Approval</option>
+          <option value="freelancer" ${selected === 'freelancer' ? 'selected' : ''}>Freelancer Welcome</option>
+          <option value="partner" ${selected === 'partner' ? 'selected' : ''}>Partner Welcome</option>
+          <option value="client" ${selected === 'client' ? 'selected' : ''}>Client Onboarding</option>
+          <option value="custom" ${selected === 'custom' ? 'selected' : ''}>Custom</option>
+        </select>
+      </div>`;
+    });
+    el.innerHTML = html;
+  }
+
+  function saveCategoryMapping() {
+    const selects = document.querySelectorAll('.map-select');
+    const map = {};
+    selects.forEach(s => {
+      map[s.dataset.cat] = s.value;
+    });
+    localStorage.setItem('aloria_template_map', JSON.stringify(map));
+    toast('Category mapping saved!');
+  }
+
+  // Override renderSettings to include templates & mapping
+  const origRenderSettings = renderSettings;
+  renderSettings = function() {
+    origRenderSettings();
+    loadTemplate();
+    renderCategoryMapping();
+  };
+  function renderEmailLog() {
+    const el = document.getElementById('emailsList');
+    if (!emailLog.length) {
+      el.innerHTML = '<div class="empty">No emails sent yet.</div>';
+      return;
+    }
+    let html = '<table><thead><tr><th>To</th><th>Applicant</th><th>Category</th><th>Referred By</th><th>Template</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+    [...emailLog].reverse().forEach(e => {
+      const date = new Date(e.sentAt).toLocaleString();
+      const statusBadge = e.status === 'sent' ? '<span class="badge sent">Sent</span>' : '<span class="badge failed">Failed</span>';
+      const tplName = e.templateUsed ? e.templateUsed.charAt(0).toUpperCase() + e.templateUsed.slice(1) : 'Standard';
+      html += `<tr>
+        <td data-label="To">${e.to}</td>
+        <td data-label="Name">${e.applicantName}</td>
+        <td data-label="Category">${e.category}</td>
+        <td data-label="Referred">${e.teamMember}</td>
+        <td data-label="Template">${tplName}</td>
+        <td data-label="Date">${date}</td>
+        <td data-label="Status">${statusBadge}</td>
+      </tr>`;
+      if (e.error) {
+        html += `<tr><td colspan="6" style="color:#ff4444;font-size:12px;padding:0 12px 8px;">Error: ${e.error}</td></tr>`;
+      }
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  // ========== PUBLIC FORM ==========
+  (function init() {
+    const params = new URLSearchParams(window.location.search);
+    const applyId = params.get('apply');
+    if (applyId) {
+      const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
+      if (submitted.includes(applyId)) {
+        document.getElementById('adminApp').innerHTML = `
+          <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
+            <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+              <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
+              <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Already Submitted</h2>
+              <p style="color:#888;margin-top:8px;">You have already submitted this application.</p>
+            </div>
+          </div>`;
+        return;
+      }
+      const form = forms.find(f => f.id === applyId);
+      if (form) {
+        showPublicForm(form);
+      } else {
+        document.getElementById('adminApp').innerHTML = '<div style="padding:40px;text-align:center;color:#666;"><h2>Form not found</h2><p>This form may have been deleted.</p></div>';
+      }
+    }
+  })();
+
+  function showPublicForm(form) {
+    const app = document.getElementById('adminApp');
+    const subtitle = form.teamMember ? `${form.name} — from ${form.teamMember}` : form.name;
+    app.innerHTML = `
+      <div style="max-width:560px;margin:40px auto;padding:0 20px;">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:3px;color:#666;">ALORIA LABS</div>
+          <h1 style="font-family:'Outfit',sans-serif;font-size:28px;margin-top:8px;">${subtitle}</h1>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div id="publicFormFields"></div>
+          <button class="btn btn-primary mt-16" onclick="submitPublicForm('${form.id}')">Submit Application</button>
+        </div>
+        <div style="text-align:center;margin-top:16px;font-size:12px;color:#444;">Powered by Aloria Labs</div>
+      </div>
+    `;
+    const container = document.getElementById('publicFormFields');
+    container.innerHTML = form.fields.map((f, i) => {
+      const tag = f.type === 'textarea' ? 'textarea' : 'input';
+      let typeAttr = ['text','email','tel'].includes(f.type) ? `type="${f.type}"` : '';
+      if (f.type === 'tel') typeAttr += ' maxlength="10" pattern="[0-9]{10}" inputmode="numeric"';
+      const rows = f.type === 'textarea' ? 'rows="3"' : '';
+      return `<div class="form-group">
+        <label>${f.label}${f.type === 'tel' ? ' <span style="color:#888;font-size:11px;">(10 digits)</span>' : ''}</label>
+        <${tag} id="pf_${i}" ${typeAttr} ${rows} placeholder="${f.label}" style="width:100%;padding:10px 12px;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;font-family:'Inter',sans-serif;outline:none;"></${tag}>
+      </div>`;
+    }).join('');
+  }
+
+  function submitPublicForm(formId) {
+    const form = forms.find(f => f.id === formId);
+    if (!form) return;
+    const submitted = JSON.parse(localStorage.getItem('aloria_submitted_forms') || '[]');
+    if (submitted.includes(formId)) return toast('Already submitted');
+    const values = form.fields.map((f, i) => {
+      const el = document.getElementById('pf_' + i);
+      return el ? el.value.trim() : '';
+    });
+    if (values.some(v => !v)) return toast('Please fill all fields');
+    // Validate phone fields
+    for (let i = 0; i < form.fields.length; i++) {
+      if (form.fields[i].type === 'tel' && !/^\d{10}$/.test(values[i])) {
+        return toast('Phone number must be exactly 10 digits');
+      }
+    }
+    const app = { id: Date.now().toString(36), formId, values, submitted: new Date().toISOString(), status: 'pending' };
+    applications.push(app);
+    localStorage.setItem('aloria_apps', JSON.stringify(applications));
+    // Mark as submitted so refresh doesn't show form again
+    submitted.push(formId);
+    localStorage.setItem('aloria_submitted_forms', JSON.stringify(submitted));
+    document.getElementById('publicFormFields').innerHTML = '<div style="text-align:center;padding:20px;color:#44ff88;"><div style="font-size:40px;margin-bottom:8px;">✓</div><div style="font-weight:600;">Application submitted!</div><div style="color:#666;font-size:13px;margin-top:4px;">We will review and get back to you.</div></div>';
+    document.querySelector('.btn-primary').style.display = 'none';
+  }
+
+  render();
+</script>
+</body>
+</html>
