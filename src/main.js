@@ -682,24 +682,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Theme Toggle
-  const themeBtn = document.getElementById('themeToggle');
-  if (themeBtn) {
-    const saved = localStorage.getItem('aloria_theme');
-    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
-    themeBtn.addEventListener('click', () => {
-      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      if (isLight) {
-        document.documentElement.removeAttribute('data-theme');
-        localStorage.setItem('aloria_theme', 'dark');
-        themeBtn.textContent = '☀';
-      } else {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('aloria_theme', 'light');
-        themeBtn.textContent = '🌙';
-      }
-    });
-    if (saved === 'light') themeBtn.textContent = '🌙';
-    else themeBtn.textContent = '☀';
-  }
 });
