@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root { --bg: #000; --bg2: #0a0a0a; --border: rgba(255,255,255,0.1); --text: #fff; --muted: #666; --accent: #fff; --card: #0d0d0d; }
+    [data-theme="light"] { --bg: #fff; --bg2: #f5f5f5; --border: rgba(0,0,0,0.12); --text: #111; --muted: #888; --accent: #000; --card: #fafafa; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
     .app { display: flex; min-height: 100vh; }
@@ -145,6 +146,39 @@
     .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 20px; margin-bottom: 4px; }
     .login-box p { color: #888; font-size: 13px; margin-bottom: 20px; }
     .login-box .error { color: #ff4444; font-size: 12px; margin-top: 8px; display: none; }
+
+    /* Light theme overrides */
+    [data-theme="light"] body { background: var(--bg); color: var(--text); }
+    [data-theme="light"] input, [data-theme="light"] textarea, [data-theme="light"] select { background: #fff; color: #111; border-color: rgba(0,0,0,0.15); }
+    [data-theme="light"] input:focus, [data-theme="light"] textarea:focus { border-color: #000; }
+    [data-theme="light"] label { color: #555; }
+    [data-theme="light"] .btn-outline { color: #111; border-color: rgba(0,0,0,0.15); }
+    [data-theme="light"] .btn-outline:hover { background: rgba(0,0,0,0.05); }
+    [data-theme="light"] .toast { background: #fff; border-color: rgba(0,0,0,0.1); color: #111; }
+    [data-theme="light"] .nav-item:hover { background: rgba(0,0,0,0.03); }
+    [data-theme="light"] .nav-item.active { background: rgba(0,0,0,0.05); }
+    [data-theme="light"] .login-box { background: #fafafa; border-color: rgba(0,0,0,0.12); }
+    [data-theme="light"] .modal-box { background: #fff; border-color: rgba(0,0,0,0.12); }
+    [data-theme="light"] .modal { background: rgba(0,0,0,0.3); }
+    [data-theme="light"] .field-item { background: #f5f5f5; border-color: rgba(0,0,0,0.08); }
+    [data-theme="light"] .config-done { background: rgba(68,255,136,0.08); border-color: rgba(68,255,136,0.2); color: #00aa44; }
+    [data-theme="light"] .config-missing { background: rgba(255,255,68,0.1); border-color: rgba(255,255,68,0.2); color: #886600; }
+    [data-theme="light"] tr:hover td { background: rgba(0,0,0,0.02); }
+    [data-theme="light"] td { border-bottom-color: rgba(0,0,0,0.05); }
+    [data-theme="light"] ::selection { background: rgba(0,0,0,0.12); }
+
+    /* Admin theme toggle */
+    .admin-theme-btn {
+      position: fixed; top: 12px; right: 12px; z-index: 200;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.08); border: 1px solid var(--border);
+      color: var(--text); font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.3s;
+    }
+    .admin-theme-btn:hover { background: rgba(255,255,255,0.15); }
+    [data-theme="light"] .admin-theme-btn { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.12); }
+    [data-theme="light"] .admin-theme-btn:hover { background: rgba(0,0,0,0.12); }
   </style>
 </head>
 <body>
@@ -158,6 +192,8 @@
     <div class="error" id="loginError">Wrong password</div>
   </div>
 </div>
+
+<button id="adminThemeToggle" class="admin-theme-btn" aria-label="Toggle theme">☀</button>
 
 <div class="app" id="adminApp">
   <div class="sidebar">
@@ -572,6 +608,28 @@
       toast('Firestore Error: ' + e.message);
     }
   };
+
+  // Theme Toggle
+  const adminThemeBtn = document.getElementById('adminThemeToggle');
+  if (adminThemeBtn) {
+    const savedTheme = localStorage.getItem('aloria_theme');
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      adminThemeBtn.textContent = '🌙';
+    }
+    adminThemeBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('aloria_theme', 'dark');
+        adminThemeBtn.textContent = '☀';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('aloria_theme', 'light');
+        adminThemeBtn.textContent = '🌙';
+      }
+    });
+  }
 
   function render() {
     renderForms();
