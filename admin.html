@@ -166,6 +166,7 @@
     <div class="nav-item" data-tab="create"><span>✚</span><span>Create Form</span></div>
     <div class="nav-item" data-tab="forms"><span>📋</span><span>My Forms</span></div>
     <div class="nav-item" data-tab="applications"><span>📩</span><span>Applications</span></div>
+    <div class="nav-item" data-tab="agreements"><span>📝</span><span>Agreements</span></div>
     <div class="nav-item" data-tab="emails"><span>✉</span><span>Emails Sent</span></div>
     <div class="nav-item" data-tab="settings"><span>⚙</span><span>Settings</span></div>
   </div>
@@ -180,6 +181,7 @@
         <div class="card" style="flex:1;min-width:140px"><h3>Applications</h3><div id="statApps" style="font-size:32px;font-weight:700">0</div></div>
         <div class="card" style="flex:1;min-width:140px"><h3>Pending</h3><div id="statPending" style="font-size:32px;font-weight:700">0</div></div>
         <div class="card" style="flex:1;min-width:140px"><h3>Emails Sent</h3><div id="statEmails" style="font-size:32px;font-weight:700">0</div></div>
+        <div class="card" style="flex:1;min-width:140px"><h3>Agreements</h3><div id="statAgreements" style="font-size:32px;font-weight:700">0</div></div>
       </div>
     </div>
 
@@ -287,6 +289,32 @@
       <h2>Emails Sent</h2>
       <p class="sub">Log of all approval emails sent from this panel.</p>
       <div id="emailsList"></div>
+    </div>
+
+    <!-- Agreements -->
+    <div id="tab-agreements" class="tab">
+      <h2>Agreements</h2>
+      <p class="sub">Create and manage freelancer/partner agreements.</p>
+      <div class="card">
+        <h3>Create Agreement</h3>
+        <div class="form-group">
+          <label>Agreement Title</label>
+          <input id="agreeTitle" value="Freelancer Agreement" placeholder="Agreement title">
+        </div>
+        <div class="form-group">
+          <label>Link to Application (optional)</label>
+          <select id="agreeApplication"><option value="">None</option></select>
+        </div>
+        <div class="form-group">
+          <label>Agreement Content</label>
+          <textarea id="agreeContent" rows="12" style="font-family:monospace;font-size:12px;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="createAgreement()">Create & Copy Link</button>
+      </div>
+      <div class="card">
+        <h3>Review Agreements</h3>
+        <div id="agreementsList"><div class="empty">No agreements yet.</div></div>
+      </div>
     </div>
 
     <!-- Settings -->
@@ -420,7 +448,7 @@
   }
 
   function checkLogin() {
-    const isPublicForm = window.location.search.includes('apply=');
+    const isPublicForm = window.location.search.includes('apply=') || window.location.search.includes('agree=');
     if (isPublicForm) {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('adminApp').style.display = '';
@@ -456,6 +484,7 @@
   let forms = [];
   let applications = [];
   let emailLog = [];
+  let agreements = [];
   let fields = [];
   let dataLoaded = false;
 
@@ -464,26 +493,30 @@
     let initialLoads = 0;
     function onLoad() {
       initialLoads++;
-      if (initialLoads >= 3) {
+      if (initialLoads >= 4) {
         dataLoaded = true;
-        if (!window.location.search.includes('apply=')) render();
+        if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render();
       }
     }
     db.collection('forms').onSnapshot(snapshot => {
       forms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      if (dataLoaded) { if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render(); }
       else onLoad();
     }, err => console.error('Firestore forms error:', err));
     db.collection('applications').orderBy('submitted', 'desc').onSnapshot(snapshot => {
       applications = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      if (dataLoaded) { if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render(); }
       else onLoad();
     }, err => console.error('Firestore applications error:', err));
     db.collection('emailLog').orderBy('sentAt', 'desc').onSnapshot(snapshot => {
       emailLog = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      if (dataLoaded) { if (!window.location.search.includes('apply=')) render(); }
+      if (dataLoaded) { if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render(); }
       else onLoad();
     }, err => console.error('Firestore emailLog error:', err));
+    db.collection('agreements').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      agreements = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      if (dataLoaded) renderAgreements();
+    }, err => console.error('Firestore agreements error:', err));
   }
 
   let sendingEmail = false;
@@ -496,6 +529,7 @@
       document.getElementById('tab-' + el.dataset.tab).classList.add('active');
       if (el.dataset.tab === 'settings') renderSettings();
       if (el.dataset.tab === 'emails') renderEmailLog();
+      if (el.dataset.tab === 'agreements') { loadAgreementDefaults(); renderAgreements(); }
     });
   });
 
@@ -573,6 +607,173 @@
     }
   };
 
+  // ========== AGREEMENTS ==========
+  const FREELANCER_AGREEMENT = `# Freelancer Agreement
+
+**Effective Date:** [Insert Date]
+
+**Parties:**  
+This Freelancer Agreement (the "Agreement") is entered into between **Aloria Labs** ("Company," "we," "us," or "our"), a provider of digital services, and the individual or entity accepting this Agreement ("Freelancer," "you," or "your").
+
+---
+
+## 1. Introduction
+
+Aloria Labs specializes in delivering high-quality digital services, including website development, AI automations, AI chatbots, custom software solutions, frontend development, and related technology services. We partner with talented freelancers who share our commitment to excellence and client success. This Agreement governs the relationship between Aloria Labs and its freelancers, outlining rights, responsibilities, and expectations to ensure a mutually beneficial partnership.
+
+---
+
+## 2. Purpose of the Agreement
+
+The purpose of this Agreement is to clearly define the terms under which you may provide services to clients acquired through Aloria Labs. It establishes a framework for collaboration, protects confidential information, safeguards client relationships, and details the commission-based compensation model. By accepting this Agreement, you agree to conduct yourself professionally and contribute to the growth and reputation of Aloria Labs.
+
+---
+
+## 3. Acceptance of Agreement
+
+By registering on the Aloria Labs platform, submitting a proposal, or otherwise indicating acceptance (including through electronic signature or checkbox), you acknowledge that you have read, understood, and agree to be bound by this Agreement and all associated policies. If you do not agree, you must not participate in any Aloria Labs activities.
+
+---
+
+## 4. Freelancer Eligibility
+
+To participate as a freelancer with Aloria Labs, you must: be at least 18 years of age, possess the necessary skills and legal right to provide services, maintain accurate profile information, and comply with all applicable laws. Aloria Labs reserves the right to approve or reject applications at its sole discretion.
+
+---
+
+## 5. Independent Contractor Relationship
+
+You are an independent contractor and not an employee, partner, or agent of Aloria Labs. You are solely responsible for your own taxes, insurance, benefits, and compliance with local laws.
+
+---
+
+## 6. Scope of Services
+
+Freelancers may provide services to clients introduced through the Aloria Labs platform, including but not limited to website development, AI automations, chatbots, software development, frontend engineering, and maintenance services. The specific scope for each project will be defined in project briefs managed by Aloria Labs.
+
+---
+
+## 7. Commission Structure
+
+Freelancers earn commissions on recurring revenue from clients they onboard:
+- **First Month:** Commission after deducting direct infrastructure costs.
+- **Ongoing Months:** 25% of monthly subscription revenue as long as the client remains active and you remain an active freelancer in good standing.
+
+Commissions are paid monthly subject to verification and deduction of applicable costs.
+
+---
+
+## 8. Payment Terms
+
+Payments are processed monthly via the method specified in your account. You are responsible for providing accurate payment details and complying with tax requirements.
+
+---
+
+## 9. Client Ownership
+
+All clients acquired through Aloria Labs are the exclusive property of Aloria Labs. You may not solicit or service these clients outside the platform during the term of this Agreement and for a reasonable period thereafter.
+
+---
+
+## 10. Confidentiality
+
+You agree to maintain strict confidentiality of all non-public information, including pricing, client data, internal documents, source code, AI prompts, and strategies. This obligation survives termination indefinitely.
+
+---
+
+## 11. Intellectual Property
+
+All work product created for Aloria Labs clients remains the property of Aloria Labs or the client as specified. You grant Aloria Labs a perpetual, royalty-free license to use any contributions you make.
+
+---
+
+## 12. Suspension & Termination
+
+Aloria Labs may suspend or terminate your account for fraud, policy violations, unethical conduct, or breach of this Agreement. You may terminate with 30 days' written notice provided all client obligations are fulfilled.
+
+---
+
+## 13. Limitation of Liability
+
+Aloria Labs shall not be liable for indirect or consequential damages. Total liability shall not exceed commissions paid in the twelve months preceding the claim.
+
+---
+
+## 14. Governing Law
+
+This Agreement shall be governed by the laws of India. Any disputes shall be resolved exclusively in the courts of Mumbai, India.
+
+---
+
+## 15. Digital Acceptance
+
+By checking the box and signing below, you confirm that you have read, understood, and agree to this entire Freelancer Agreement.
+
+---
+
+**Full Name:** _________________________________
+
+**Date:** _________________________________
+
+☐ I have read, understood, and agree to the Freelancer Agreement.`;
+
+  function loadAgreementDefaults() {
+    const titleEl = document.getElementById('agreeTitle');
+    const contentEl = document.getElementById('agreeContent');
+    if (titleEl && !titleEl.value) titleEl.value = 'Freelancer Agreement';
+    if (contentEl && !contentEl.value) contentEl.value = FREELANCER_AGREEMENT;
+    // Populate application dropdown
+    const sel = document.getElementById('agreeApplication');
+    if (sel) {
+      sel.innerHTML = '<option value="">None</option>' + applications.map(a => {
+        const form = forms.find(f => f.id === a.formId);
+        const name = form ? form.name : 'Unknown';
+        const firstVal = a.values[0] || '';
+        return `<option value="${a.id}">${name} - ${firstVal}</option>`;
+      }).join('');
+    }
+  }
+
+  function createAgreement() {
+    const title = document.getElementById('agreeTitle').value.trim();
+    const content = document.getElementById('agreeContent').value.trim();
+    const applicationId = document.getElementById('agreeApplication').value;
+    if (!title || !content) return toast('Fill title and content');
+    if (!db) return toast('Database not connected');
+    const linkId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const agreement = {
+      title, content, applicationId: applicationId || null,
+      status: 'pending', signedAt: null, signedBy: null,
+      linkId, createdAt: new Date().toISOString()
+    };
+    db.collection('agreements').add(agreement).then(() => {
+      const link = window.location.origin + '/admin.html?agree=' + linkId;
+      navigator.clipboard.writeText(link);
+      toast('Agreement created! Link copied.');
+    }).catch(e => toast('Error: ' + e.message));
+  }
+
+  function renderAgreements() {
+    const el = document.getElementById('agreementsList');
+    if (!el) return;
+    if (!agreements.length) { el.innerHTML = '<div class="empty">No agreements yet.</div>'; return; }
+    el.innerHTML = agreements.map(a => {
+      const app = applications.find(x => x.id === a.applicationId);
+      const appName = app ? (forms.find(f => f.id === app.formId)?.name || 'Unknown') + ' - ' + (app.values[0] || '') : 'None';
+      const statusBadge = a.status === 'signed' ? '<span class="badge sent">✓ Signed</span>' : '<span class="badge pending">⏳ Pending</span>';
+      const signedInfo = a.status === 'signed' ? `<div style="font-size:11px;color:#888;margin-top:4px;">Signed by ${a.signedBy} on ${new Date(a.signedAt).toLocaleDateString()}</div>` : '';
+      const link = window.location.origin + '/admin.html?agree=' + a.linkId;
+      return `<div class="card" style="padding:16px;">
+        <div style="font-weight:600;font-size:14px;">${a.title}</div>
+        <div style="font-size:12px;color:#888;margin-top:4px;">Application: ${appName} · Created ${new Date(a.createdAt).toLocaleDateString()}</div>
+        ${signedInfo}
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">${statusBadge}
+          <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('${link}');toast('Link copied')">Copy Link</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function render() {
     renderForms();
     renderApps();
@@ -580,6 +781,7 @@
     document.getElementById('statApps').textContent = applications.length;
     document.getElementById('statPending').textContent = applications.filter(a => a.status !== 'approved').length;
     document.getElementById('statEmails').textContent = emailLog.length;
+    document.getElementById('statAgreements').textContent = agreements.length;
   }
 
   function renderForms() {
@@ -1134,6 +1336,7 @@
     const params = new URLSearchParams(window.location.search);
     const applyId = params.get('apply');
     const formData = params.get('data');
+    const agreeId = params.get('agree');
     if (applyId || formData) {
       let form = formData ? decodeFormData(formData) : null;
       if (form) {
@@ -1151,6 +1354,18 @@
         }
         setTimeout(checkFormLoaded, 200);
       }
+    } else if (agreeId) {
+      function checkAgreement() {
+        const agree = agreements.find(a => a.linkId === agreeId);
+        if (agree) {
+          showPublicAgreement(agree);
+        } else if (dataLoaded) {
+          document.getElementById('adminApp').innerHTML = '<div style="padding:40px;text-align:center;color:#666;"><h2>Agreement not found</h2><p>This agreement may have been deleted.</p></div>';
+        } else {
+          setTimeout(checkAgreement, 200);
+        }
+      }
+      setTimeout(checkAgreement, 200);
     }
   })();
 
@@ -1224,6 +1439,79 @@
       document.getElementById('publicFormFields').innerHTML = '<div style="text-align:center;padding:20px;color:#44ff88;"><div style="font-size:40px;margin-bottom:8px;">✓</div><div style="font-weight:600;">Application submitted!</div><div style="color:#666;font-size:13px;margin-top:4px;">We will review and get back to you.</div></div>';
       document.querySelector('.btn-primary').style.display = 'none';
     }).catch(e => toast('Error submitting application'));
+  }
+
+  // ========== PUBLIC AGREEMENT VIEW ==========
+  function showPublicAgreement(agree) {
+    if (agree.status === 'signed') {
+      document.getElementById('adminApp').innerHTML = `
+        <div style="max-width:700px;margin:40px auto;padding:0 20px;text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
+          <div style="margin-top:32px;padding:32px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+            <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
+            <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Agreement Already Signed</h2>
+            <p style="color:#888;margin-top:8px;">Signed by ${agree.signedBy} on ${new Date(agree.signedAt).toLocaleDateString()}</p>
+          </div>
+        </div>`;
+      return;
+    }
+    const mdToHtml = (md) => {
+      return md.replace(/^### (.+)$/gm, '<h3 style="margin:20px 0 8px;font-size:15px;">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 style="margin:24px 0 10px;font-size:17px;">$1</h2>')
+        .replace(/^# (.+)$/gm, '<h1 style="margin:28px 0 12px;font-size:20px;">$1</h1>')
+        .replace(/^---$/gm, '<hr style="margin:16px 0;border:none;border-top:1px solid rgba(255,255,255,0.1);">')
+        .replace(/^\*\*(.+?)\*\*$/gm, '<strong>$1</strong>')
+        .replace(/^\* (.+)$/gm, '<li style="margin:2px 0 2px 16px;">$1</li>')
+        .replace(/\n\n/g, '</p><p style="margin:8px 0;line-height:1.6;font-size:13px;color:#ccc;">')
+        .replace(/^☐ (.+)$/gm, '<label style="display:flex;align-items:center;gap:8px;margin:12px 0;cursor:pointer;font-size:13px;"><input type="checkbox" id="agreeCheckbox"> $1</label>')
+        .replace(/^_+/gm, '<div style="border-bottom:1px solid #444;margin:8px 0;width:200px;"></div>');
+    };
+    const htmlContent = mdToHtml(agree.content);
+    document.getElementById('adminApp').innerHTML = `
+      <div style="max-width:700px;margin:20px auto;padding:0 16px;padding-bottom:60px;">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;color:#666;">ALORIA LABS</div>
+          <h1 style="font-family:'Outfit',sans-serif;font-size:22px;margin-top:6px;">${agree.title}</h1>
+        </div>
+        <div class="card" style="padding:24px;max-height:60vh;overflow-y:auto;line-height:1.6;">
+          <div id="agreementContent" style="font-size:13px;color:#ccc;">${htmlContent}</div>
+        </div>
+        <div class="card" style="padding:20px;margin-top:16px;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input id="signName" placeholder="Enter your full name">
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="agreeCheckbox"> I have read, understood, and agree to the terms above
+            </label>
+          </div>
+          <button class="btn btn-primary mt-8" onclick="signAgreement('${agree.linkId}')" id="signBtn">Sign & Accept</button>
+        </div>
+      </div>`;
+  }
+
+  function signAgreement(linkId) {
+    const name = document.getElementById('signName').value.trim();
+    const checked = document.getElementById('agreeCheckbox').checked;
+    if (!name) return toast('Enter your full name');
+    if (!checked) return toast('Please accept the agreement terms');
+    if (!db) return toast('Database not connected');
+    const agree = agreements.find(a => a.linkId === linkId);
+    if (!agree || !agree._id) return toast('Agreement not found');
+    db.collection('agreements').doc(agree._id).update({
+      status: 'signed', signedBy: name, signedAt: new Date().toISOString()
+    }).then(() => {
+      document.getElementById('adminApp').innerHTML = `
+        <div style="max-width:560px;margin:40px auto;padding:0 20px;text-align:center;">
+          <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#666;">ALORIA LABS</div>
+          <div style="margin-top:32px;padding:40px;background:#0d0d0d;border:1px solid rgba(255,255,255,0.1);border-radius:12px;">
+            <div style="font-size:48px;color:#44ff88;margin-bottom:12px;">✓</div>
+            <h2 style="font-family:'Outfit',sans-serif;font-size:24px;">Agreement Signed Successfully</h2>
+            <p style="color:#888;margin-top:8px;">Signed by ${name} on ${new Date().toLocaleDateString()}</p>
+          </div>
+        </div>`;
+    }).catch(e => toast('Error: ' + e.message));
   }
 </script>
 </body>
