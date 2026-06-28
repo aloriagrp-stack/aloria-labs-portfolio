@@ -1101,7 +1101,8 @@ By checking the box and signing below, you confirm that you have read, understoo
             '<button class="btn btn-outline btn-sm" onclick="removeRoomMember(\'' + id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')" style="color:#ff4444;border-color:#ff4444;">Remove</button>' +
           '</div>'
         ).join('') : '<div style="color:#666;font-size:13px;">No members yet.</div>')
-      + '</div></div>';
+      + '</div></div>' +
+      '<div style="margin-top:16px;border-top:1px solid #222;padding-top:12px;"><button class="btn btn-outline btn-sm" onclick="deleteRoom(\'' + id + '\')" style="color:#ff4444;border-color:#ff4444;width:100%;">Delete Room</button></div>';
     document.getElementById('roomModalBody').innerHTML = html;
     document.getElementById('roomModal').classList.add('open');
   }
@@ -1140,6 +1141,23 @@ By checking the box and signing below, you confirm that you have read, understoo
     const val = parseInt(document.getElementById('roomCountOffset').value) || 0;
     if (!db) return;
     db.collection('rooms').doc(id).update({ memberCountOffset: val }).then(() => toast('Count offset updated to ' + val)).catch(e => toast('Error: ' + e.message));
+  }
+
+  function deleteRoom(id) {
+    if (!confirm('Permanently delete this room? Users will lose access immediately.')) return;
+    if (!db) return;
+    const r=roomsList.find(x=>x._id===id);
+    if (!r) return;
+    // delete all messages for this room first
+    const promises=[db.collection('rooms').doc(id).delete()];
+    // also delete messages
+    db.collection('messages').where('roomId','==',r._id).get().then(snap=>{
+      snap.docs.forEach(d=>promises.push(db.collection('messages').doc(d.id).delete()));
+      Promise.all(promises).then(()=>{
+        toast('Room "'+r.name+'" deleted');
+        closeRoomModal();
+      }).catch(e=>toast('Error: '+e.message));
+    }).catch(e=>toast('Error: '+e.message));
   }
 
   function render() {
