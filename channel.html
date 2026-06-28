@@ -142,15 +142,14 @@
 
   <div class="overlay" id="loginOverlay">
     <div id="loadingState" style="color:#666;font-size:14px;">Loading...</div>
-  </div>
-
-  <div class="box" id="loginBox" style="display:none;">
-    <h2>👤 Login</h2>
-    <p class="sub">Enter your username & password</p>
-    <input id="loginUsername" placeholder="Username" autofocus>
-    <input id="loginPassword" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
-    <button class="btn-primary" onclick="doLogin()">Login</button>
-    <div class="error" id="loginError">Invalid username or password</div>
+    <div class="box" id="loginBox" style="display:none;">
+      <h2>👤 Login</h2>
+      <p class="sub">Enter your username & password</p>
+      <input id="loginUsername" placeholder="Username" autofocus>
+      <input id="loginPassword" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
+      <button class="btn-primary" onclick="doLogin()">Login</button>
+      <div class="error" id="loginError">Invalid username or password</div>
+    </div>
   </div>
 
 <div class="modal" id="joinModal">
@@ -309,6 +308,7 @@
 
   function showHome() {
     document.body.classList.remove('in-chat');
+    document.getElementById('loginOverlay').classList.add('hidden');
     document.getElementById('app').classList.add('active');
     document.getElementById('homeView').style.display='';
     document.getElementById('chatView').style.display='none';
