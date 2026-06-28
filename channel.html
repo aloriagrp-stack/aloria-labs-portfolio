@@ -479,18 +479,14 @@
         contentHtml='<div class="text">'+linkify(m.content)+'</div>';
       }
       let reactionsHtml='';
-      const allEmojis=new Set();
-      if (m.reactions) Object.keys(m.reactions).forEach(e=>allEmojis.add(e));
-      if (m.reactionOffsets) Object.keys(m.reactionOffsets).filter(e=>m.reactionOffsets[e]>0).forEach(e=>allEmojis.add(e));
-      if (allEmojis.size) {
-        reactionsHtml='<div class="reactions">'+[...allEmojis].map(emoji=>{
-          const users=m.reactions?.[emoji]||[];
-          const offset=m.reactionOffsets?.[emoji]||0;
-          const total=users.length+offset;
-          if (total<1) return '';
-          const active=users.includes(currentUser.name)?' active':'';
-          return '<span class="r'+active+'" onclick="toggleReaction(\''+m._id+'\',\''+emoji+'\')">'+emoji+' <span class="cnt">'+total+'</span></span>';
-        }).filter(Boolean).join('')+'</div>';
+      if (m.reactions) {
+        const entries=Object.entries(m.reactions).filter(([_,v])=>v.length>0);
+        if (entries.length) {
+          reactionsHtml='<div class="reactions">'+entries.map(([emoji,users])=>{
+            const active=users.includes(currentUser.name)?' active':'';
+            return '<span class="r'+active+'" onclick="toggleReaction(\''+m._id+'\',\''+emoji+'\')">'+emoji+' <span class="cnt">'+users.length+'</span></span>';
+          }).join('')+'</div>';
+        }
       }
       return '<div class="msg '+cls+'" data-msgid="'+m._id+'" ondblclick="toggleReaction(\''+m._id+'\',\'👍\')" onmousedown="startLongPress(event,\''+m._id+'\')" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event,\''+m._id+'\')" ontouchend="clearLongPress()"><div class="meta"><strong>'+label+'</strong><span>'+time+'</span></div>'+contentHtml+reactionsHtml+'</div>';
     }).join('');
