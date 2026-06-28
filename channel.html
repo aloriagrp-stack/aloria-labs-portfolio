@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Room Chat - Aloria Labs</title>
+  <title>Chat Rooms - Aloria Labs</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -14,49 +14,53 @@
     :root { --bg: #000; --bg2: #0a0a0a; --border: rgba(255,255,255,0.1); --text: #fff; --muted: #666; --card: #0d0d0d; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; display: flex; flex-direction: column; }
-    .login-overlay {
+    .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
       display: flex; align-items: center; justify-content: center; z-index: 999;
     }
-    .login-overlay.hidden { display: none; }
-    .login-box { background: #0d0d0d; border: 1px solid var(--border); border-radius: 12px; padding: 36px 32px; max-width: 380px; width: 90%; text-align: center; }
-    .login-box h2 { font-family: 'Outfit', sans-serif; font-size: 22px; margin-bottom: 4px; }
-    .login-box .sub { color: #888; font-size: 13px; margin-bottom: 24px; }
-    .login-box input { width: 100%; padding: 11px 14px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 10px; }
-    .login-box input:focus { border-color: #fff; }
-    .login-box .error { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
+    .overlay.hidden { display: none; }
+    .box { background: #0d0d0d; border: 1px solid var(--border); border-radius: 12px; padding: 36px 32px; max-width: 380px; width: 90%; text-align: center; }
+    .box h2 { font-family: 'Outfit', sans-serif; font-size: 22px; margin-bottom: 4px; }
+    .box .sub { color: #888; font-size: 13px; margin-bottom: 24px; }
+    .box input { width: 100%; padding: 11px 14px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; margin-bottom: 10px; }
+    .box input:focus { border-color: #fff; }
+    .box .error { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.2s; width: 100%; }
     .btn:hover { opacity: 0.85; }
     .btn-primary { background: #fff; color: #000; }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
     .btn-sm { padding: 8px 16px; font-size: 12px; width: auto; }
-    .btn-danger { background: #ff4444; color: #fff; }
     #app { display: none; flex-direction: column; height: 100vh; }
     #app.active { display: flex; }
     .header {
       background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px;
       display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
     }
-    .header .logo { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+    .header .logo { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; }
     .header .right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
-    .content { display: flex; flex: 1; min-height: 0; }
-    .sidebar-rooms {
-      width: 220px; background: var(--bg2); border-right: 1px solid var(--border);
-      padding: 16px; flex-shrink: 0; overflow-y: auto;
+    /* Home */
+    .home { display: flex; align-items: center; justify-content: center; flex: 1; padding: 40px 20px; }
+    .home-inner { max-width: 500px; width: 100%; text-align: center; }
+    .home-inner .greeting { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+    .home-inner .greeting strong { color: var(--text); }
+    .home-inner .title { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .home-inner .desc { color: var(--muted); font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+    .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .home-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s;
     }
-    .sidebar-rooms h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
-    .room-tab {
-      padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s;
-      margin-bottom: 4px; border: 1px solid transparent;
-    }
-    .room-tab:hover { background: rgba(255,255,255,0.04); }
-    .room-tab.active { background: rgba(255,255,255,0.06); border-color: var(--border); }
-    .room-tab .name { font-size: 13px; font-weight: 500; }
-    .room-tab .count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .home-card:hover { border-color: #fff; background: #111; }
+    .home-card .icon { font-size: 36px; margin-bottom: 12px; }
+    .home-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .home-card p { font-size: 12px; color: var(--muted); }
+    .home-card.locked { opacity: 0.4; cursor: not-allowed; }
+    .home-card.locked:hover { border-color: var(--border); background: var(--card); }
+    /* Chat */
     .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .chat-header h2 { font-size: 16px; font-weight: 600; }
-    .chat-header .meta { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 16px; }
+    .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
+    .chat-header .info h2 { font-size: 16px; font-weight: 600; }
+    .chat-header .info .meta { font-size: 12px; color: var(--muted); margin-top: 2px; display: flex; gap: 16px; }
     .messages { flex: 1; overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 6px; }
     .msg { padding: 10px 14px; border-radius: 8px; max-width: 80%; }
     .msg.other { background: #111; align-self: flex-start; }
@@ -72,73 +76,100 @@
     .input-area .disabled-msg { text-align: center; color: #666; font-size: 13px; padding: 10px; }
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
-    .empty-state p { font-size: 13px; }
-    .no-room { display: flex; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px; color: var(--muted); }
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 50; align-items: center; justify-content: center; }
+    .modal.open { display: flex; }
+    .modal-box { background: #111; border: 1px solid var(--border); border-radius: 12px; padding: 28px 24px; max-width: 400px; width: 90%; }
+    .modal-box h3 { font-family: 'Outfit', sans-serif; font-size: 18px; margin-bottom: 4px; }
+    .modal-box .sub { color: #888; font-size: 13px; margin-bottom: 20px; }
     .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 13px; display: none; z-index: 100; }
     @media (max-width: 640px) {
-      .sidebar-rooms { display: none; }
-      .sidebar-rooms.open { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; background: var(--bg); padding: 60px 20px; }
+      .home-cards { grid-template-columns: 1fr; }
       .messages { padding: 12px 16px; }
       .input-area { padding: 10px 12px; }
       .chat-header { padding: 12px 16px; }
       .msg { max-width: 95%; }
       .toast { bottom: 16px; right: 10px; left: 10px; text-align: center; }
-      .mobile-menu-btn { display: block !important; }
     }
-    .mobile-menu-btn { display: none; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 4px; }
   </style>
 </head>
 <body>
 
-<div class="login-overlay" id="loginOverlay">
-  <!-- Step 1: User Login -->
-  <div class="login-box" id="stepUserLogin">
+<!-- Login overlay -->
+<div class="overlay" id="loginOverlay">
+  <div class="box">
     <h2>👤 Login</h2>
     <p class="sub">Enter your username & password</p>
     <input id="loginUsername" placeholder="Username" autofocus>
-    <input id="loginPassword" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') step1Login()">
-    <button class="btn-primary" onclick="step1Login()">Login</button>
-    <div class="error" id="step1Error">Invalid username or password</div>
-  </div>
-  <!-- Step 2: Room Access -->
-  <div class="login-box" id="stepRoomAccess" style="display:none;">
-    <h2>🚪 Join Room</h2>
-    <p class="sub">Enter Room ID & Passcode</p>
-    <input id="loginRoomId" placeholder="Room ID" autofocus>
-    <input id="loginPasscode" type="password" placeholder="Room Passcode" onkeydown="if(event.key==='Enter') step2Join()">
-    <button class="btn-primary" onclick="step2Join()">Join Room</button>
-    <div class="error" id="step2Error">Invalid Room ID or Passcode</div>
-    <div style="margin-top:16px;text-align:center;font-size:12px;color:#666;"><a href="#" onclick="backToStep1()" style="color:#fff;">← Change user</a></div>
+    <input id="loginPassword" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-primary" onclick="doLogin()">Login</button>
+    <div class="error" id="loginError">Invalid username or password</div>
   </div>
 </div>
 
+<!-- Join Room modal -->
+<div class="modal" id="joinModal">
+  <div class="modal-box">
+    <h3>🚪 Join a Room</h3>
+    <p class="sub">Enter Room ID & Passcode</p>
+    <input id="joinRoomId" placeholder="Room ID" autofocus>
+    <input id="joinPasscode" type="password" placeholder="Passcode" onkeydown="if(event.key==='Enter') doJoinRoom()">
+    <button class="btn-primary" onclick="doJoinRoom()">Join</button>
+    <div class="error" id="joinError" style="display:none;">Invalid Room ID or Passcode</div>
+    <div style="margin-top:14px;text-align:center;"><button class="btn btn-outline btn-sm" onclick="closeJoinModal()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- App -->
 <div id="app">
   <div class="header">
-    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileRooms()">☰</button>
     <div class="logo">💬 CHAT</div>
     <div class="right">
       <span id="userDisplay"></span>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Leave</button>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     </div>
   </div>
-  <div class="content">
-    <div class="sidebar-rooms" id="roomList"></div>
-    <div class="chat-area">
-      <div class="chat-header" id="chatHeader" style="display:none;">
+
+  <!-- Home -->
+  <div id="homeView" class="home">
+    <div class="home-inner">
+      <div class="greeting">Welcome back, <strong id="homeUserName"></strong></div>
+      <div class="title">Your Rooms</div>
+      <div class="desc">Join a room to start chatting, or create your own private room.</div>
+      <div class="home-cards">
+        <div class="home-card" onclick="openJoinModal()">
+          <div class="icon">🚪</div>
+          <h3>Join a Room</h3>
+          <p>Enter Room ID and passcode to join</p>
+        </div>
+        <div class="home-card locked" onclick="toast('This feature is locked')">
+          <div class="icon">🔒</div>
+          <h3>Create a Room</h3>
+          <p>Locked — contact admin</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div id="chatView" class="chat-area" style="display:none;">
+    <div class="chat-header">
+      <div class="info">
         <h2 id="currentRoomName"></h2>
         <div class="meta">
           <span id="currentRoomMembers">0 members</span>
           <span id="currentRoomStatus"></span>
         </div>
       </div>
-      <div class="messages" id="messagesList"></div>
-      <div class="input-area" id="inputArea">
-        <div class="input-row" id="sendRow">
-          <input id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
-          <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
-        </div>
-        <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
+      <button class="btn btn-outline btn-sm" onclick="leaveRoom()">← Back</button>
+    </div>
+    <div class="messages" id="messagesList"></div>
+    <div class="input-area" id="inputArea">
+      <div class="input-row" id="sendRow">
+        <input id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
+        <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
       </div>
+      <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
     </div>
   </div>
 </div>
@@ -147,179 +178,152 @@
 
 <script>
   let db = null;
-  let currentUser = null; // { _id, name, username, isAdmin }
+  let currentUser = null;
   let currentRoomId = null;
   let currentRoomDoc = null;
   let roomsList = [];
   let messagesList = [];
-  let chatUsersCache = [];
+  let unsubRooms = null;
+  let unsubMessages = null;
 
   if (typeof firebase !== 'undefined') {
     try {
-      const firebaseConfig = {
-        apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo",
-        authDomain: "aloria-labs.firebaseapp.com",
-        projectId: "aloria-labs",
-        storageBucket: "aloria-labs.firebasestorage.app",
-        messagingSenderId: "121783687697",
-        appId: "1:121783687697:web:6d8cdeee052ebbc455afb0",
-        measurementId: "G-FTR9NBQCFP"
-      };
-      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      const cfg = { apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo", authDomain: "aloria-labs.firebaseapp.com", projectId: "aloria-labs", storageBucket: "aloria-labs.firebasestorage.app", messagingSenderId: "121783687697", appId: "1:121783687697:web:6d8cdeee052ebbc455afb0", measurementId: "G-FTR9NBQCFP" };
+      if (!firebase.apps.length) firebase.initializeApp(cfg);
       db = firebase.firestore();
     } catch(e) { console.error('Firebase init failed:', e); }
   }
 
-  function toast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg; el.style.display = '';
-    setTimeout(() => el.style.display = 'none', 3000);
-  }
+  function toast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.display = ''; setTimeout(() => el.style.display = 'none', 3000); }
 
-  // Step 1: User login
-  function step1Login() {
+  // ========== AUTH ==========
+  function doLogin() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
     if (!username || !password) return toast('Fill all fields');
     if (!db) return toast('Database not connected');
-
     db.collection('chatUsers').get().then(snapshot => {
       const users = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      chatUsersCache = users;
       const user = users.find(u => u.username === username && u.password === password);
-      if (!user) {
-        document.getElementById('step1Error').style.display = '';
-        return;
-      }
-      document.getElementById('step1Error').style.display = 'none';
+      if (!user) { document.getElementById('loginError').style.display = ''; return; }
+      document.getElementById('loginError').style.display = 'none';
       currentUser = { _id: user._id, name: user.name, username: user.username };
-      document.getElementById('stepUserLogin').style.display = 'none';
-      document.getElementById('stepRoomAccess').style.display = '';
-      document.getElementById('loginRoomId').focus();
-      toast('Logged in as ' + user.name + ' — now enter room details');
-    }).catch(e => toast('Error: ' + e.message));
-  }
-
-  function backToStep1() {
-    currentUser = null;
-    document.getElementById('stepRoomAccess').style.display = 'none';
-    document.getElementById('stepUserLogin').style.display = '';
-    document.getElementById('loginUsername').focus();
-  }
-
-  // Step 2: Room join
-  function step2Join() {
-    const roomId = document.getElementById('loginRoomId').value.trim();
-    const passcode = document.getElementById('loginPasscode').value.trim();
-    if (!roomId || !passcode) return toast('Fill all fields');
-    if (!db) return toast('Database not connected');
-    if (!currentUser) return toast('Login first');
-
-    db.collection('rooms').get().then(snapshot => {
-      const rooms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      const room = rooms.find(r => r.roomId === roomId && r.passcode === passcode);
-      if (!room) {
-        document.getElementById('step2Error').style.display = '';
-        return;
-      }
-      document.getElementById('step2Error').style.display = 'none';
-      currentUser.isAdmin = (room.admins || []).includes(currentUser._id);
-
-      // Add member if not already
-      const members = room.members || [];
-      if (!members.find(m => m.name === currentUser.name)) {
-        members.push({ name: currentUser.name, userId: currentUser._id, joinedAt: new Date().toISOString() });
-        db.collection('rooms').doc(room._id).update({ members });
-      }
-
-      document.getElementById('loginOverlay').classList.add('hidden');
-      document.getElementById('app').classList.add('active');
-      document.getElementById('userDisplay').innerHTML = '👤 <strong>' + currentUser.name + '</strong>' + (currentUser.isAdmin ? ' <span style="color:#44ff88;font-size:11px;">(admin)</span>' : '') + ' <span style="color:#666;">· ' + room.name + '</span>';
-      selectRoom(room._id);
-      startListeners();
+      localStorage.setItem('aloria_chat_user', JSON.stringify(currentUser));
+      showHome();
     }).catch(e => toast('Error: ' + e.message));
   }
 
   function logout() {
     currentUser = null; currentRoomId = null; currentRoomDoc = null;
-    roomsList = []; messagesList = [];
+    localStorage.removeItem('aloria_chat_user');
+    localStorage.removeItem('aloria_chat_room');
+    stopListeners();
     document.getElementById('app').classList.remove('active');
     document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('stepUserLogin').style.display = '';
-    document.getElementById('stepRoomAccess').style.display = 'none';
     document.getElementById('loginUsername').value = '';
     document.getElementById('loginPassword').value = '';
-    document.getElementById('loginRoomId').value = '';
-    document.getElementById('loginPasscode').value = '';
+  }
+
+  // ========== HOME ==========
+  function showHome() {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('app').classList.add('active');
+    document.getElementById('homeView').style.display = '';
+    document.getElementById('chatView').style.display = 'none';
+    document.getElementById('homeUserName').textContent = currentUser.name;
+    document.getElementById('userDisplay').innerHTML = '👤 <strong>' + currentUser.name + '</strong>';
+    stopListeners();
+    currentRoomId = null;
+  }
+
+  // ========== JOIN ROOM MODAL ==========
+  function openJoinModal() {
+    document.getElementById('joinModal').classList.add('open');
+    document.getElementById('joinRoomId').value = '';
+    document.getElementById('joinPasscode').value = '';
+    document.getElementById('joinError').style.display = 'none';
+    setTimeout(() => document.getElementById('joinRoomId').focus(), 100);
+  }
+  function closeJoinModal() { document.getElementById('joinModal').classList.remove('open'); }
+
+  function doJoinRoom() {
+    const roomId = document.getElementById('joinRoomId').value.trim();
+    const passcode = document.getElementById('joinPasscode').value.trim();
+    if (!roomId || !passcode) return toast('Fill all fields');
+    if (!db) return toast('Database not connected');
+    if (!currentUser) return toast('Login first');
+    db.collection('rooms').get().then(snapshot => {
+      const rooms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      const room = rooms.find(r => r.roomId === roomId && r.passcode === passcode);
+      if (!room) { document.getElementById('joinError').style.display = ''; return; }
+      document.getElementById('joinError').style.display = 'none';
+      closeJoinModal();
+      currentUser.isAdmin = (room.admins || []).includes(currentUser._id);
+      const members = room.members || [];
+      if (!members.find(m => m.name === currentUser.name)) {
+        members.push({ name: currentUser.name, userId: currentUser._id, joinedAt: new Date().toISOString() });
+        db.collection('rooms').doc(room._id).update({ members });
+      }
+      enterRoom(room);
+    }).catch(e => toast('Error: ' + e.message));
+  }
+
+  // ========== ROOM CHAT ==========
+  function enterRoom(room) {
+    currentRoomId = room._id;
+    currentRoomDoc = room;
+    localStorage.setItem('aloria_chat_room', JSON.stringify({ roomId: room._id, name: room.name }));
+    document.getElementById('homeView').style.display = 'none';
+    document.getElementById('chatView').style.display = '';
+    document.getElementById('currentRoomName').textContent = room.name;
+    document.getElementById('currentRoomMembers').textContent = (room.members || []).length + ' members';
+    document.getElementById('currentRoomStatus').textContent = room.allowUserMessages !== false ? '💬 Open' : '🔇 Read-only';
+    const userCanSend = room.allowUserMessages !== false || currentUser.isAdmin;
+    document.getElementById('sendRow').style.display = userCanSend ? '' : 'none';
+    document.getElementById('disabledMsg').style.display = userCanSend ? 'none' : '';
+    document.getElementById('userDisplay').innerHTML = '👤 <strong>' + currentUser.name + '</strong>' + (currentUser.isAdmin ? ' <span style="color:#44ff88;font-size:11px;">(admin)</span>' : '') + ' · ' + room.name;
+    startListeners();
+  }
+
+  function leaveRoom() {
+    currentRoomId = null; currentRoomDoc = null;
+    localStorage.removeItem('aloria_chat_room');
+    stopListeners();
+    showHome();
   }
 
   function startListeners() {
-    if (!db) return;
-    db.collection('rooms').onSnapshot(snapshot => {
+    stopListeners();
+    if (!db || !currentRoomId) return;
+    unsubRooms = db.collection('rooms').onSnapshot(snapshot => {
       roomsList = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
-      renderRooms();
-      if (currentRoomId) {
-        const room = roomsList.find(r => r._id === currentRoomId);
-        if (room) { currentRoomDoc = room; updateRoomHeader(room); updateInputPermission(room); }
-        else { currentRoomId = null; document.getElementById('chatHeader').style.display = 'none'; document.getElementById('messagesList').innerHTML = '<div class="no-room">Room deleted</div>'; }
+      const room = roomsList.find(r => r._id === currentRoomId);
+      if (room) {
+        currentRoomDoc = room;
+        document.getElementById('currentRoomMembers').textContent = (room.members || []).length + ' members';
+        document.getElementById('currentRoomStatus').textContent = room.allowUserMessages !== false ? '💬 Open' : '🔇 Read-only';
+        const canSend = room.allowUserMessages !== false || currentUser.isAdmin;
+        document.getElementById('sendRow').style.display = canSend ? '' : 'none';
+        document.getElementById('disabledMsg').style.display = canSend ? 'none' : '';
       }
     });
-    db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+    unsubMessages = db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
       messagesList = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
       renderMessages();
     });
   }
 
-  function renderRooms() {
-    const el = document.getElementById('roomList');
-    const userRoom = roomsList.find(r => r._id === currentRoomId);
-    const allowed = userRoom ? [userRoom] : [];
-    el.innerHTML = '<h3>Rooms</h3>' + allowed.map(r =>
-      '<div class="room-tab' + (currentRoomId === r._id ? ' active' : '') + '" onclick="selectRoom(\'' + r._id + '\')">' +
-        '<div class="name">' + r.name + '</div>' +
-        '<div class="count">' + (r.members || []).length + ' members</div>' +
-      '</div>'
-    ).join('');
-    if (!allowed.length) el.innerHTML += '<div style="color:#666;font-size:13px;padding:10px;">No rooms</div>';
-  }
-
-  function selectRoom(id) {
-    currentRoomId = id;
-    currentRoomDoc = roomsList.find(r => r._id === id) || null;
-    renderRooms();
-    const room = currentRoomDoc;
-    if (!room) return;
-    updateRoomHeader(room);
-    updateInputPermission(room);
-    renderMessages();
-    const mb = document.getElementById('mobileMenuBtn');
-    if (mb) mb.click();
-  }
-
-  function updateRoomHeader(room) {
-    document.getElementById('chatHeader').style.display = '';
-    document.getElementById('currentRoomName').textContent = room.name;
-    document.getElementById('currentRoomMembers').textContent = (room.members || []).length + ' members';
-    document.getElementById('currentRoomStatus').textContent = room.allowUserMessages !== false ? '💬 Open' : '🔇 Read-only';
-  }
-
-  function updateInputPermission(room) {
-    const userCanSend = room.allowUserMessages !== false || currentUser.isAdmin;
-    document.getElementById('sendRow').style.display = userCanSend ? '' : 'none';
-    document.getElementById('disabledMsg').style.display = userCanSend ? 'none' : '';
+  function stopListeners() {
+    if (unsubRooms) { unsubRooms(); unsubRooms = null; }
+    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+    roomsList = []; messagesList = [];
   }
 
   function renderMessages() {
     const el = document.getElementById('messagesList');
-    if (!currentRoomId) {
-      el.innerHTML = '<div class="no-room">Select a room to start chatting</div>';
-      return;
-    }
+    if (!currentRoomId) return;
     const msgs = messagesList.filter(m => m.roomId === currentRoomId);
-    if (!msgs.length) {
-      el.innerHTML = '<div class="empty-state"><h3>No messages yet</h3><p>Be the first to say something!</p></div>';
-      return;
-    }
+    if (!msgs.length) { el.innerHTML = '<div class="empty-state"><h3>No messages yet</h3><p>Be the first to say something!</p></div>'; return; }
     el.innerHTML = msgs.map(m => {
       const time = new Date(m.createdAt).toLocaleString();
       const isMe = m.senderId === currentUser.name;
@@ -328,10 +332,7 @@
       if (isMe) cls = 'me';
       else if (isAdmin) cls = 'admin';
       const label = isAdmin ? '📢 Admin' : (isMe ? 'You' : m.senderId);
-      return '<div class="msg ' + cls + '">' +
-        '<div class="meta"><strong>' + label + '</strong><span>' + time + '</span></div>' +
-        '<div class="text">' + m.content + '</div>' +
-      '</div>';
+      return '<div class="msg ' + cls + '"><div class="meta"><strong>' + label + '</strong><span>' + time + '</span></div><div class="text">' + m.content + '</div></div>';
     }).join('');
     el.scrollTop = el.scrollHeight;
   }
@@ -342,19 +343,34 @@
     if (!content) return;
     if (!currentRoomId) return toast('Select a room first');
     if (!db) return toast('Database not connected');
-    db.collection('messages').add({
-      roomId: currentRoomId,
-      senderId: currentUser.name,
-      isAdminMsg: !!currentUser.isAdmin,
-      content,
-      createdAt: new Date().toISOString()
-    }).then(() => { input.value = ''; }).catch(e => toast('Error: ' + e.message));
+    db.collection('messages').add({ roomId: currentRoomId, senderId: currentUser.name, isAdminMsg: !!currentUser.isAdmin, content, createdAt: new Date().toISOString() })
+      .then(() => { input.value = ''; }).catch(e => toast('Error: ' + e.message));
   }
 
-  function toggleMobileRooms() {
-    document.getElementById('roomList').classList.toggle('open');
-  }
+  // ========== INIT ==========
+  (function init() {
+    const saved = localStorage.getItem('aloria_chat_user');
+    if (saved) {
+      try {
+        currentUser = JSON.parse(saved);
+        document.getElementById('loginOverlay').classList.add('hidden');
+        const savedRoom = localStorage.getItem('aloria_chat_room');
+        if (savedRoom) {
+          const roomData = JSON.parse(savedRoom);
+          db.collection('rooms').get().then(snapshot => {
+            const rooms = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+            const room = rooms.find(r => r._id === roomData.roomId);
+            if (room) {
+              currentUser.isAdmin = (room.admins || []).includes(currentUser._id);
+              enterRoom(room);
+            } else { showHome(); }
+          }).catch(() => showHome());
+        } else { showHome(); }
+        return;
+      } catch(e) { localStorage.removeItem('aloria_chat_user'); }
+    }
+    document.getElementById('loginOverlay').classList.remove('hidden');
+  })();
 </script>
-
 </body>
 </html>
