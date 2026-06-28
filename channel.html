@@ -76,7 +76,7 @@
     .msg.admin { background: rgba(255,255,255,0.04); align-self: flex-start; }
     .msg .meta { display: flex; justify-content: space-between; gap: 16px; font-size: 10px; color: #666; margin-bottom: 4px; }
     .msg .meta strong { color: var(--text); font-size: 11px; }
-    .msg .text { font-size: 13px; line-height: 1.5; }
+    .msg .text { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
     .msg .text a { color: #66bbff; text-decoration: underline; }
     .msg .text a:hover { color: #99ddff; }
     .msg .media { margin-top: 6px; border-radius: 8px; overflow: hidden; max-width: 100%; }
@@ -99,8 +99,8 @@
     .msg .poll-voted { font-size: 11px; color: var(--muted); margin-top: 4px; }
     .input-area { padding: 6px 16px 10px; border-top: 1px solid var(--border); background: var(--bg2); flex-shrink: 0; }
     .input-area .input-row { display: flex; gap: 6px; align-items: center; }
-    .input-area input { flex: 1; padding: 8px 12px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
-    .input-area input:focus { border-color: #fff; }
+    .input-area input, .input-area textarea { flex: 1; padding: 8px 12px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; field-sizing: content; min-height: 36px; max-height: 120px; }
+    .input-area input:focus, .input-area textarea:focus { border-color: #fff; }
     .file-preview { display: none; align-items: center; gap: 8px; padding: 6px 0; }
     .file-preview.show { display: flex; }
     .file-preview .thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
@@ -238,7 +238,7 @@
           </div>
           <input type="file" id="fileInput" accept="" style="display:none;">
         </div>
-        <input id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
+        <textarea id="messageInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
         <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
       </div>
       <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
