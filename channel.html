@@ -33,21 +33,30 @@
     #app.active { display: flex; }
     .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .header .logo { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800; }
-    .header .right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
-    .home { display: flex; align-items: center; justify-content: center; flex: 1; padding: 40px 20px; }
-    .home-inner { max-width: 500px; width: 100%; text-align: center; }
-    .home-inner .greeting { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
-    .home-inner .greeting strong { color: var(--text); }
-    .home-inner .title { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-    .home-inner .desc { color: var(--muted); font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
-    .home-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .home-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; }
-    .home-card:hover { border-color: #fff; background: #111; }
-    .home-card .icon { font-size: 36px; margin-bottom: 12px; }
-    .home-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-    .home-card p { font-size: 12px; color: var(--muted); }
-    .home-card.locked { opacity: 0.4; cursor: not-allowed; }
-    .home-card.locked:hover { border-color: var(--border); background: var(--card); }
+    .header .right { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+    .home { display: flex; flex-direction: column; flex: 1; padding: 24px 32px; }
+    .home .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .home .top h2 { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 700; }
+    .home .top .greeting { color: var(--muted); font-size: 13px; }
+    .home .top .greeting strong { color: var(--text); }
+    .rooms-table { width: 100%; border-collapse: collapse; }
+    .rooms-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); font-weight: 500; }
+    .rooms-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .rooms-table tr { cursor: pointer; transition: background 0.15s; }
+    .rooms-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .room-row .name { font-weight: 500; }
+    .empty-rooms { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-rooms h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+    .empty-rooms p { font-size: 13px; margin-bottom: 20px; }
+    /* Dropdown */
+    .dropdown { position: relative; }
+    .dropdown-menu { display: none; position: absolute; top: 100%; right: 0; margin-top: 4px; background: #1a1a1a; border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 200px; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item { padding: 10px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 10px; color: var(--text); transition: background 0.15s; }
+    .dropdown-item:hover { background: rgba(255,255,255,0.06); }
+    .dropdown-item .icon { font-size: 16px; }
+    .dropdown-item.locked { opacity: 0.35; cursor: not-allowed; }
+    .dropdown-item.locked:hover { background: transparent; }
     .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
     .chat-header { padding: 16px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
     .chat-header .info h2 { font-size: 16px; font-weight: 600; }
@@ -100,11 +109,16 @@
     .emoji-picker .e:hover { background: rgba(255,255,255,0.08); }
     .toast { position: fixed; bottom: 20px; right: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 13px; display: none; z-index: 100; }
     @media (max-width: 640px) {
-      .home-cards { grid-template-columns: 1fr; }
+      .home { padding: 16px; }
+      .home .top { flex-direction: column; align-items: flex-start; gap: 4px; }
       .messages { padding: 12px 16px; }
       .input-area { padding: 8px 12px 12px; }
       .chat-header { padding: 12px 16px; }
       .msg { max-width: 95%; }
+      .rooms-table th { display: none; }
+      .rooms-table tr { display: block; background: #0d0d0d; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+      .rooms-table td { display: flex; justify-content: space-between; padding: 5px 0; border: none; font-size: 12px; }
+      .rooms-table td:before { content: attr(data-label); font-size: 10px; color: #888; text-transform: uppercase; margin-right: 8px; font-weight: 500; flex-shrink: 0; }
       .toast { bottom: 16px; right: 10px; left: 10px; text-align: center; }
     }
   </style>
@@ -155,28 +169,25 @@
     <div class="logo">💬 CHAT</div>
     <div class="right">
       <span id="userDisplay"></span>
+      <div class="dropdown">
+        <button class="btn btn-outline btn-sm" onclick="toggleDropdown()" style="font-size:16px;padding:6px 10px;">⚙️</button>
+        <div class="dropdown-menu" id="settingsDropdown">
+          <div class="dropdown-item" onclick="openJoinModal();closeDropdown()"><span class="icon">🚪</span> Join a Room</div>
+          <div class="dropdown-item locked" onclick="toast('This feature is locked');closeDropdown()"><span class="icon">🔒</span> Create a Room</div>
+        </div>
+      </div>
       <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     </div>
   </div>
 
   <div id="homeView" class="home">
-    <div class="home-inner">
-      <div class="greeting">Welcome back, <strong id="homeUserName"></strong></div>
-      <div class="title">Your Rooms</div>
-      <div class="desc">Join a room to start chatting, or create your own private room.</div>
-      <div class="home-cards">
-        <div class="home-card" onclick="openJoinModal()">
-          <div class="icon">🚪</div>
-          <h3>Join a Room</h3>
-          <p>Enter Room ID and passcode to join</p>
-        </div>
-        <div class="home-card locked" onclick="toast('This feature is locked')">
-          <div class="icon">🔒</div>
-          <h3>Create a Room</h3>
-          <p>Locked — contact admin</p>
-        </div>
+    <div class="top">
+      <div>
+        <div class="greeting">Welcome back, <strong id="homeUserName"></strong></div>
+        <h2>Your Rooms</h2>
       </div>
     </div>
+    <div id="joinedRoomsContainer"></div>
   </div>
 
   <div id="chatView" class="chat-area" style="display:none;">
@@ -215,6 +226,7 @@
   let currentUser = null;
   let currentRoomId = null;
   let currentRoomDoc = null;
+  let joinedRooms = [];
   let roomsList = [];
   let messagesList = [];
   let unsubRooms = null;
@@ -266,7 +278,32 @@
     document.getElementById('chatView').style.display='none';
     document.getElementById('homeUserName').textContent=currentUser.name;
     document.getElementById('userDisplay').innerHTML='👤 <strong>'+currentUser.name+'</strong>';
-    stopListeners(); currentRoomId=null;
+    currentRoomId=null;
+    // Listen to rooms for joined rooms table updates
+    if (unsubRooms) unsubRooms();
+    if (db) {
+      unsubRooms=db.collection('rooms').onSnapshot(s=>{
+        roomsList=s.docs.map(d=>({...d.data(),_id:d.id}));
+        renderJoinedRooms();
+      });
+    }
+    if (unsubMessages) { unsubMessages(); unsubMessages=null; }
+  }
+
+  function renderJoinedRooms() {
+    const el=document.getElementById('joinedRoomsContainer');
+    const joined=joinedRooms.map(j=>{
+      const room=roomsList.find(r=>r._id===j.roomId);
+      if (!room) return null;
+      return { ...j, name: room.name, members: (room.members||[]).length, status: room.allowUserMessages!==false };
+    }).filter(Boolean);
+    if (!joined.length) {
+      el.innerHTML='<div class="empty-rooms"><h3>No rooms joined yet</h3><p>Tap ⚙️ in the top right to join a room.</p><button class="btn btn-primary btn-sm" onclick="openJoinModal()" style="width:auto;display:inline-flex;">🚪 Join a Room</button></div>';
+      return;
+    }
+    el.innerHTML='<table class="rooms-table"><thead><tr><th>Room</th><th>Members</th><th>Status</th></tr></thead><tbody>'+
+      joined.map(r=>'<tr class="room-row" onclick="enterRoomById(\''+r.roomId+'\')"><td data-label="Room"><span class="name">'+r.name+'</span></td><td data-label="Members">'+r.members+' members</td><td data-label="Status">'+(r.status?'💬 Open':'🔇 Read-only')+'</td></tr>').join('')+
+    '</tbody></table>';
   }
 
   // ========== JOIN ROOM ==========
@@ -277,6 +314,25 @@
     setTimeout(()=>document.getElementById('joinRoomId').focus(),100);
   }
   function closeJoinModal() { document.getElementById('joinModal').classList.remove('open'); }
+
+  function addJoinedRoom(id,name) {
+    if (!joinedRooms.find(j=>j.roomId===id)) {
+      joinedRooms.push({roomId:id,name});
+      localStorage.setItem('aloria_joined_rooms',JSON.stringify(joinedRooms));
+    }
+  }
+
+  function enterRoomById(roomId) {
+    const room=roomsList.find(r=>r._id===roomId);
+    if (room) {
+      currentUser.isAdmin=(room.admins||[]).includes(currentUser._id);
+      enterRoom(room);
+    } else toast('Room not found');
+  }
+
+  function toggleDropdown() { document.getElementById('settingsDropdown').classList.toggle('open'); }
+  function closeDropdown() { document.getElementById('settingsDropdown').classList.remove('open'); }
+  document.addEventListener('click',function(e){ if (!e.target.closest('.dropdown')) closeDropdown(); });
 
   function doJoinRoom() {
     const ri=document.getElementById('joinRoomId').value.trim();
@@ -289,6 +345,7 @@
       if (!r) { document.getElementById('joinError').style.display=''; return; }
       document.getElementById('joinError').style.display='none'; closeJoinModal();
       currentUser.isAdmin=(r.admins||[]).includes(currentUser._id);
+      addJoinedRoom(r._id,r.name);
       const m=r.members||[];
       if (!m.find(x=>x.name===currentUser.name)) {
         m.push({name:currentUser.name,userId:currentUser._id,joinedAt:new Date().toISOString()});
@@ -503,6 +560,8 @@
   // ========== INIT ==========
   (function init() {
     try {
+      const jr=localStorage.getItem('aloria_joined_rooms');
+      if (jr) { try { joinedRooms=JSON.parse(jr); } catch(e) { joinedRooms=[]; } }
       const saved=localStorage.getItem('aloria_chat_user');
       if (saved) {
         currentUser=JSON.parse(saved);
@@ -512,6 +571,7 @@
           const rd=JSON.parse(savedRoom);
           db.collection('rooms').get().then(s=>{
             const rs=s.docs.map(d=>({...d.data(),_id:d.id}));
+            roomsList=rs;
             const r=rs.find(x=>x._id===rd.roomId);
             if (r) { currentUser.isAdmin=(r.admins||[]).includes(currentUser._id); enterRoom(r); }
             else showHome();
