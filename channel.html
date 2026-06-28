@@ -191,9 +191,10 @@
         <div class="dropdown-menu" id="settingsDropdown">
           <div class="dropdown-item" onclick="openJoinModal();closeDropdown()"><span class="icon">🚪</span> Join a Room</div>
           <div class="dropdown-item locked" onclick="toast('This feature is locked');closeDropdown()"><span class="icon">🔒</span> Create a Room</div>
+          <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+          <div class="dropdown-item" onclick="closeDropdown();doLogout()" style="color:#ff4444;"><span class="icon">🚪</span> Logout</div>
         </div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
     </div>
   </div>
 
@@ -289,13 +290,21 @@
     }).catch(e=>toast('Error: '+e.message));
   }
 
-  function logout() {
-    currentUser=null; currentRoomId=null; currentRoomDoc=null;
-    localStorage.removeItem('aloria_chat_user'); localStorage.removeItem('aloria_chat_room');
-    stopListeners();
-    document.getElementById('app').classList.remove('active');
+  function doLogout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    document.getElementById('loadingState').textContent='Logging out...';
+    document.getElementById('loadingState').style.display='';
+    document.getElementById('loginBox').style.display='none';
     document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value='';
+    document.getElementById('app').classList.remove('active');
+    currentUser=null; currentRoomId=null; currentRoomDoc=null;
+    localStorage.removeItem('aloria_chat_user'); localStorage.removeItem('aloria_chat_room'); localStorage.removeItem('aloria_joined_rooms');
+    stopListeners();
+    setTimeout(()=>{
+      document.getElementById('loadingState').style.display='none';
+      document.getElementById('loginBox').style.display='';
+      document.getElementById('loginUsername').value=''; document.getElementById('loginPassword').value='';
+    },500);
   }
 
   function showHome() {
