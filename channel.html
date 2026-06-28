@@ -87,6 +87,9 @@
     .msg .reactions .r.active { background: rgba(255,255,255,0.12); }
     .msg .reactions .r .cnt { font-size: 10px; color: #aaa; }
     .msg .reactions .r:hover { background: rgba(255,255,255,0.1); }
+    .msg .msg-del { display:none; position:absolute; top:4px; right:4px; width:20px; height:20px; line-height:18px; text-align:center; font-size:14px; color:#ff4444; cursor:pointer; border-radius:50%; background:rgba(0,0,0,0.6); z-index:2; }
+    .msg:hover .msg-del { display:block; }
+    .msg .msg-del:hover { background:#ff4444; color:#fff; }
     .msg .poll { margin-top: 8px; }
     .msg .poll-option { padding: 8px 12px; margin: 4px 0; background: #111; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 13px; position: relative; overflow: hidden; }
     .msg .poll-option:hover { border-color: #fff; }
@@ -488,7 +491,7 @@
           }).join('')+'</div>';
         }
       }
-      return '<div class="msg '+cls+'" data-msgid="'+m._id+'" ondblclick="toggleReaction(\''+m._id+'\',\'👍\')" onmousedown="startLongPress(event,\''+m._id+'\')" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event,\''+m._id+'\')" ontouchend="clearLongPress()"><div class="meta"><strong>'+label+'</strong><span>'+time+'</span></div>'+contentHtml+reactionsHtml+'</div>';
+      return '<div class="msg '+cls+'" data-msgid="'+m._id+'" ondblclick="toggleReaction(\''+m._id+'\',\'👍\')" onmousedown="startLongPress(event,\''+m._id+'\')" onmouseup="clearLongPress()" onmouseleave="clearLongPress()" ontouchstart="startLongPress(event,\''+m._id+'\')" ontouchend="clearLongPress()"'+(currentUser.isAdmin?' oncontextmenu="event.preventDefault();showMsgMenu(event,\''+m._id+'\')"':'')+'><div class="meta"><strong>'+label+'</strong><span>'+time+'</span></div>'+(currentUser.isAdmin?'<span class="msg-del" onclick="deleteMsg(\''+m._id+'\')" title="Delete for everyone">×</span>':'')+contentHtml+reactionsHtml+'</div>';
     }).join('');
     el.scrollTop=el.scrollHeight;
   }
@@ -618,6 +621,12 @@
     if (idx>-1) reactions[emoji].splice(idx,1);
     else reactions[emoji].push(currentUser.name);
     db.collection('messages').doc(msgId).update({reactions}).catch(e=>toast('Error: '+e.message));
+  }
+
+  function deleteMsg(msgId) {
+    if (!confirm('Delete this message for everyone?')) return;
+    if (!db) return;
+    db.collection('messages').doc(msgId).delete().then(()=>toast('Message deleted')).catch(e=>toast('Error: '+e.message));
   }
 
   // ========== LONG PRESS EMOJI PICKER ==========
