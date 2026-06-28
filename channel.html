@@ -99,6 +99,11 @@
     .input-area .input-row { display: flex; gap: 6px; align-items: center; }
     .input-area input { flex: 1; padding: 8px 12px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
     .input-area input:focus { border-color: #fff; }
+    .file-preview { display: none; align-items: center; gap: 8px; padding: 6px 0; }
+    .file-preview.show { display: flex; }
+    .file-preview .thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); }
+    .file-preview .fname { font-size: 11px; color: var(--muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-preview .remove { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
     .input-area .disabled-msg { text-align: center; color: #666; font-size: 13px; padding: 10px; }
     .input-tools { display: flex; gap: 4px; align-items: center; }
     .inline-url-input { display: none; padding: 6px 8px; background: #111; border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 12px; flex: 1; outline: none; }
@@ -229,6 +234,11 @@
         <input id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
         <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
       </div>
+      <div class="file-preview" id="filePreview">
+        <img class="thumb" id="previewThumb" src="">
+        <span class="fname" id="previewName"></span>
+        <button class="remove" onclick="clearFile()">×</button>
+      </div>
       <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
     </div>
   </div>
@@ -250,6 +260,8 @@
   let unsubMessages = null;
   let pendingReactMsgId = null;
   let longPressTimer = null;
+  let selectedFile = null;
+  let selectedFileType = '';
   let mediaType = '';
 
   if (typeof firebase !== 'undefined') {
@@ -479,9 +491,44 @@
   function sendMsg() {
     const inp=document.getElementById('messageInput');
     const c=inp.value.trim();
-    if (!c||!currentRoomId||!db) return;
-    db.collection('messages').add({roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,content:c,type:'text',createdAt:new Date().toISOString()})
-      .then(()=>inp.value='').catch(e=>toast('Error: '+e.message));
+    if ((!c||!c.trim())&&!selectedFile) return;
+    if (!currentRoomId||!db) return;
+
+    if (selectedFile) {
+      // Upload file then send with text
+      const file=selectedFile; const type=selectedFileType;
+      clearFile();
+      if (type==='video') {
+        const video=document.createElement('video');
+        video.preload='metadata';
+        const url=URL.createObjectURL(file);
+        video.src=url;
+        video.onloadedmetadata=function(){
+          URL.revokeObjectURL(url);
+          if (video.duration>60) { toast('Video too long! Max 1 minute.'); return; }
+          doSendWithFile(file,type,c);
+        };
+        video.onerror=function(){ URL.revokeObjectURL(url); toast('Invalid video'); };
+      } else {
+        doSendWithFile(file,type,c);
+      }
+    } else {
+      db.collection('messages').add({roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,content:c,type:'text',createdAt:new Date().toISOString()})
+        .then(()=>inp.value='').catch(e=>toast('Error: '+e.message));
+    }
+  }
+
+  function doSendWithFile(file,type,text) {
+    toast('Uploading...');
+    const path='rooms/'+currentRoomId+'/'+Date.now()+'_'+file.name;
+    const ref=storage.ref(path);
+    ref.put(file).then(s=>s.ref.getDownloadURL()).then(url=>{
+      db.collection('messages').add({
+        roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
+        content:text||'',type:type,mediaUrl:url,createdAt:new Date().toISOString()
+      }).then(()=>{ document.getElementById('messageInput').value=''; toast(type==='image'?'Image sent':'Video sent'); })
+       .catch(e=>toast('Error: '+e.message));
+    }).catch(e=>toast('Upload failed: '+e.message));
   }
 
   // ========== CLIP ATTACHMENT ==========
@@ -495,38 +542,33 @@
     input.accept=type==='image'?'image/*':'video/*';
     input.value='';
     input.click();
-    input.onchange=function(){ uploadFile(this.files[0],type); };
+    input.onchange=function(){
+      const file=this.files[0];
+      if (!file) return;
+      selectedFile=file; selectedFileType=type;
+      showPreview(file,type);
+    };
   }
 
-  function uploadFile(file,type) {
-    if (!file||!currentRoomId||!db||!storage) return;
-    if (type==='video') {
-      // Check duration
-      const video=document.createElement('video');
-      video.preload='metadata';
-      const url=URL.createObjectURL(file);
-      video.src=url;
-      video.onloadedmetadata=function(){
-        URL.revokeObjectURL(url);
-        if (video.duration>60) { toast('Video too long! Max 1 minute.'); return; }
-        doUpload(file,type);
-      };
-      video.onerror=function(){ URL.revokeObjectURL(url); toast('Invalid video file'); };
+  function showPreview(file,type) {
+    const el=document.getElementById('filePreview');
+    const thumb=document.getElementById('previewThumb');
+    const name=document.getElementById('previewName');
+    if (type==='image') {
+      const reader=new FileReader();
+      reader.onload=function(e){ thumb.src=e.target.result; };
+      reader.readAsDataURL(file);
+      thumb.style.display='';
     } else {
-      doUpload(file,type);
+      thumb.style.display='none';
     }
+    name.textContent=file.name+(type==='video'?' (video)':'');
+    el.classList.add('show');
   }
 
-  function doUpload(file,type) {
-    toast('Uploading...');
-    const path='rooms/'+currentRoomId+'/'+Date.now()+'_'+file.name;
-    const ref=storage.ref(path);
-    ref.put(file).then(snapshot=>snapshot.ref.getDownloadURL()).then(url=>{
-      db.collection('messages').add({
-        roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
-        content:'',type:type,mediaUrl:url,createdAt:new Date().toISOString()
-      }).then(()=>toast(type==='image'?'Image sent':'Video sent')).catch(e=>toast('Error: '+e.message));
-    }).catch(e=>toast('Upload failed: '+e.message));
+  function clearFile() {
+    selectedFile=null; selectedFileType='';
+    document.getElementById('filePreview').classList.remove('show');
   }
 
   // ========== POLLS ==========
