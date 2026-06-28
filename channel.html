@@ -7,7 +7,6 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -231,7 +230,7 @@
           <button class="clip-btn" onclick="toggleClipMenu()">📎</button>
           <div class="clip-menu" id="clipMenu">
             <div class="clip-item" onclick="pickFile('image')"><span>🖼️</span> Image from Gallery</div>
-            <div class="clip-item" onclick="pickFile('video')"><span>🎬</span> Video from Gallery (max 1 min)</div>
+            <div class="clip-item" onclick="pickVideoUrl()"><span>🎬</span> Video URL</div>
             <div class="clip-item" id="clipPollItem" style="display:none;" onclick="openPollModal();closeClipMenu()"><span>📊</span> Create Poll</div>
           </div>
           <input type="file" id="fileInput" accept="" style="display:none;">
@@ -249,7 +248,6 @@
 <script>
   const EMOJIS = ['👍','❤️','😂','😮','😢','😡','🔥','🎉','💯','👏','🙏','💀','🤡','✅','❌','⭐','💪','🥳'];
   let db = null;
-  let storage = null;
   let currentUser = null;
   let currentRoomId = null;
   let currentRoomDoc = null;
@@ -269,7 +267,6 @@
       const cfg = { apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo", authDomain: "aloria-labs.firebaseapp.com", projectId: "aloria-labs", storageBucket: "aloria-labs.firebasestorage.app", messagingSenderId: "121783687697", appId: "1:121783687697:web:6d8cdeee052ebbc455afb0", measurementId: "G-FTR9NBQCFP" };
       if (!firebase.apps.length) firebase.initializeApp(cfg);
       db = firebase.firestore();
-      try { storage = firebase.storage(); } catch(e) { console.error('Storage init failed:', e); }
     } catch(e) { console.error('Firebase init failed:', e); }
   }
 
@@ -495,43 +492,24 @@
     if (!currentRoomId||!db) return;
 
     if (selectedFile) {
-      // Upload file then send with text
       const file=selectedFile; const type=selectedFileType;
       clearFile();
-      if (type==='video') {
-        const video=document.createElement('video');
-        video.preload='metadata';
-        const url=URL.createObjectURL(file);
-        video.src=url;
-        video.onloadedmetadata=function(){
-          URL.revokeObjectURL(url);
-          if (video.duration>60) { toast('Video too long! Max 1 minute.'); return; }
-          doSendWithFile(file,type,c);
-        };
-        video.onerror=function(){ URL.revokeObjectURL(url); toast('Invalid video'); };
-      } else {
-        doSendWithFile(file,type,c);
-      }
+      toast('Processing image...');
+      const reader=new FileReader();
+      reader.onload=function(e){
+        const dataUrl=e.target.result;
+        if (dataUrl.length>900000) { toast('Image too large! Compress and try again.'); return; }
+        db.collection('messages').add({
+          roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
+          content:c||'',type:'image',mediaUrl:dataUrl,createdAt:new Date().toISOString()
+        }).then(()=>{ inp.value=''; toast('Sent!'); }).catch(e=>toast('Error: '+e.message));
+      };
+      reader.onerror=function(){ toast('Failed to read file'); };
+      reader.readAsDataURL(file);
     } else {
       db.collection('messages').add({roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,content:c,type:'text',createdAt:new Date().toISOString()})
         .then(()=>inp.value='').catch(e=>toast('Error: '+e.message));
     }
-  }
-
-  function doSendWithFile(file,type,text) {
-    if (!storage) { toast('Storage not available - enable Firebase Storage in console'); return; }
-    toast('Uploading...');
-    const path='rooms/'+currentRoomId+'/'+Date.now()+'_'+file.name;
-    try {
-    const ref=storage.ref(path);
-    ref.put(file).then(s=>s.ref.getDownloadURL()).then(url=>{
-      db.collection('messages').add({
-        roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
-        content:text||'',type:type,mediaUrl:url,createdAt:new Date().toISOString()
-      }).then(()=>{ document.getElementById('messageInput').value=''; toast('Sent!'); })
-       .catch(e=>toast('Error: '+e.message));
-    }).catch(e=>toast('Upload failed: '+e.message));
-    } catch(e) { toast('Upload error: '+e.message); }
   }
 
   // ========== CLIP ATTACHMENT ==========
@@ -572,6 +550,17 @@
   function clearFile() {
     selectedFile=null; selectedFileType='';
     document.getElementById('filePreview').classList.remove('show');
+  }
+
+  function pickVideoUrl() {
+    closeClipMenu();
+    const url=prompt('Paste video URL (YouTube, etc.):');
+    if (!url||!url.trim()) return;
+    if (!currentRoomId||!db) return;
+    db.collection('messages').add({
+      roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
+      content:'',type:'video',mediaUrl:url.trim(),createdAt:new Date().toISOString()
+    }).catch(e=>toast('Error: '+e.message));
   }
 
   // ========== POLLS ==========
