@@ -1070,7 +1070,7 @@ By checking the box and signing below, you confirm that you have read, understoo
     if (!roomsList.length) { el.innerHTML = '<div class="empty">No rooms yet.</div>'; return; }
     el.innerHTML = roomsList.map(r =>
       '<div class="form-card">' +
-        '<div class="info"><h4>' + r.name + '</h4><p>ID: <code style="color:#888;">' + r.roomId + '</code> · Members: ' + (r.members || []).length + ' · Messages: ' + (r.allowUserMessages !== false ? '✅ Users can send' : '❌ Only admins') + '</p></div>' +
+        '<div class="info"><h4>' + r.name + '</h4><p>ID: <code style="color:#888;">' + r.roomId + '</code> · Members: ' + ((r.members||[]).length + (r.memberCountOffset||0)) + ' · Messages: ' + (r.allowUserMessages !== false ? '✅ Users can send' : '❌ Only admins') + '</p></div>' +
         '<div class="actions"><button class="btn btn-outline btn-sm" onclick="openRoomModal(\'' + r._id + '\')">Manage</button></div>' +
       '</div>'
     ).join('');
@@ -1086,6 +1086,7 @@ By checking the box and signing below, you confirm that you have read, understoo
       '<div class="form-group"><label>Room ID</label><input value="' + r.roomId + '" disabled></div>' +
       '<div class="form-group"><label>Passcode</label><div style="display:flex;gap:8px;"><input id="roomNewPasscode" value="' + r.passcode + '" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="changeRoomPasscode(\'' + id + '\')">Update</button></div></div>' +
       '<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="roomToggleUserMsg" ' + (r.allowUserMessages !== false ? 'checked' : '') + ' onchange="toggleRoomUserMsg(\'' + id + '\')" style="width:auto;"> Allow users to send messages</label></div>' +
+      '<div class="form-group"><label>Member Count Offset (fake extra members)</label><div style="display:flex;gap:8px;"><input id="roomCountOffset" type="number" value="' + (r.memberCountOffset||0) + '" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="updateCountOffset(\'' + id + '\')">Set</button></div><div style="font-size:11px;color:#666;margin-top:4px;">Displayed = ' + members.length + ' (real) + offset = ' + (members.length + (r.memberCountOffset||0)) + '</div></div>' +
       '<div class="form-group"><label>Room Admins (chatUsers)</label><div id="roomAdminCheckboxes">' +
         (chatUsers.length ? chatUsers.map(u =>
           '<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px;cursor:pointer;">' +
@@ -1133,6 +1134,12 @@ By checking the box and signing below, you confirm that you have read, understoo
     if (!r || !db) return;
     const members = (r.members || []).filter(m => m.name !== memberName);
     db.collection('rooms').doc(roomId).update({ members }).then(() => toast(memberName + ' removed')).catch(e => toast('Error: ' + e.message));
+  }
+
+  function updateCountOffset(id) {
+    const val = parseInt(document.getElementById('roomCountOffset').value) || 0;
+    if (!db) return;
+    db.collection('rooms').doc(id).update({ memberCountOffset: val }).then(() => toast('Count offset updated to ' + val)).catch(e => toast('Error: ' + e.message));
   }
 
   function render() {

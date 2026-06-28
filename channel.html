@@ -331,7 +331,7 @@
     const joined=joinedRooms.map(j=>{
       const room=roomsList.find(r=>r._id===j.roomId);
       if (!room) return null;
-      return { ...j, name: room.name, members: (room.members||[]).length, status: room.allowUserMessages!==false };
+      return { ...j, name: room.name, members: ((room.members||[]).length+(room.memberCountOffset||0)), status: room.allowUserMessages!==false };
     }).filter(Boolean);
     if (!joined.length) {
       el.innerHTML='<div class="empty-rooms"><h3>No rooms joined yet</h3><p>Tap ⚙️ in the top right to join a room.</p><button class="btn btn-primary btn-sm" onclick="openJoinModal()" style="width:auto;display:inline-flex;">🚪 Join a Room</button></div>';
@@ -399,7 +399,7 @@
     document.getElementById('homeView').style.display='none';
     document.getElementById('chatView').style.display='';
     document.getElementById('currentRoomName').textContent=room.name;
-    document.getElementById('currentRoomMembers').textContent=(room.members||[]).length+' members';
+    document.getElementById('currentRoomMembers').textContent=((room.members||[]).length+(room.memberCountOffset||0))+' members';
     document.getElementById('currentRoomStatus').textContent=room.allowUserMessages!==false?'💬 Open':'🔇 Read-only';
     const canSend=room.allowUserMessages!==false||currentUser.isAdmin;
     document.getElementById('sendRow').style.display=canSend?'':'none';
@@ -425,7 +425,7 @@
       const r=roomsList.find(x=>x._id===currentRoomId);
       if (r) {
         currentRoomDoc=r;
-        document.getElementById('currentRoomMembers').textContent=(r.members||[]).length+' members';
+        document.getElementById('currentRoomMembers').textContent=((r.members||[]).length+(r.memberCountOffset||0))+' members';
         document.getElementById('currentRoomStatus').textContent=r.allowUserMessages!==false?'💬 Open':'🔇 Read-only';
         const canSend=r.allowUserMessages!==false||currentUser.isAdmin;
         document.getElementById('sendRow').style.display=canSend?'':'none';
