@@ -221,6 +221,11 @@
     </div>
     <div class="messages" id="messagesList"></div>
     <div class="input-area" id="inputArea">
+      <div class="file-preview" id="filePreview">
+        <img class="thumb" id="previewThumb" src="">
+        <span class="fname" id="previewName"></span>
+        <button class="remove" onclick="clearFile()">×</button>
+      </div>
       <div class="input-row" id="sendRow">
         <div class="clip-wrap" id="clipWrap" style="display:none;">
           <button class="clip-btn" onclick="toggleClipMenu()">📎</button>
@@ -233,11 +238,6 @@
         </div>
         <input id="messageInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMsg()">
         <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
-      </div>
-      <div class="file-preview" id="filePreview">
-        <img class="thumb" id="previewThumb" src="">
-        <span class="fname" id="previewName"></span>
-        <button class="remove" onclick="clearFile()">×</button>
       </div>
       <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
     </div>
@@ -266,10 +266,10 @@
 
   if (typeof firebase !== 'undefined') {
     try {
-      const cfg = { apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo", authDomain: "aloria-labs.firebaseapp.com", projectId: "aloria-labs", storageBucket: "aloria-labs.appspot.com", messagingSenderId: "121783687697", appId: "1:121783687697:web:6d8cdeee052ebbc455afb0", measurementId: "G-FTR9NBQCFP" };
+      const cfg = { apiKey: "AIzaSyBfO8sGush-BnDDSXshq7Hqu5c_491ZrCo", authDomain: "aloria-labs.firebaseapp.com", projectId: "aloria-labs", storageBucket: "aloria-labs.firebasestorage.app", messagingSenderId: "121783687697", appId: "1:121783687697:web:6d8cdeee052ebbc455afb0", measurementId: "G-FTR9NBQCFP" };
       if (!firebase.apps.length) firebase.initializeApp(cfg);
       db = firebase.firestore();
-      storage = firebase.storage();
+      try { storage = firebase.storage(); } catch(e) { console.error('Storage init failed:', e); }
     } catch(e) { console.error('Firebase init failed:', e); }
   }
 
@@ -519,16 +519,19 @@
   }
 
   function doSendWithFile(file,type,text) {
+    if (!storage) { toast('Storage not available - enable Firebase Storage in console'); return; }
     toast('Uploading...');
     const path='rooms/'+currentRoomId+'/'+Date.now()+'_'+file.name;
+    try {
     const ref=storage.ref(path);
     ref.put(file).then(s=>s.ref.getDownloadURL()).then(url=>{
       db.collection('messages').add({
         roomId:currentRoomId,senderId:currentUser.name,isAdminMsg:!!currentUser.isAdmin,
         content:text||'',type:type,mediaUrl:url,createdAt:new Date().toISOString()
-      }).then(()=>{ document.getElementById('messageInput').value=''; toast(type==='image'?'Image sent':'Video sent'); })
+      }).then(()=>{ document.getElementById('messageInput').value=''; toast('Sent!'); })
        .catch(e=>toast('Error: '+e.message));
     }).catch(e=>toast('Upload failed: '+e.message));
+    } catch(e) { toast('Upload error: '+e.message); }
   }
 
   // ========== CLIP ATTACHMENT ==========
