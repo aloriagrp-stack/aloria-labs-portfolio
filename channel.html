@@ -120,6 +120,7 @@
     @media (max-width: 640px) {
       .home { padding: 16px; }
       .home .top { flex-direction: column; align-items: flex-start; gap: 4px; }
+      body.in-chat .header { display: none; }
       .messages { padding: 12px 16px; }
       .input-area { padding: 8px 4px 10px; }
       .chat-header { padding: 10px 12px; }
@@ -289,7 +290,7 @@
   }
 
   function showHome() {
-    document.getElementById('loginOverlay').classList.add('hidden');
+    document.body.classList.remove('in-chat');
     document.getElementById('app').classList.add('active');
     document.getElementById('homeView').style.display='';
     document.getElementById('chatView').style.display='none';
@@ -375,6 +376,7 @@
   // ========== ROOM CHAT ==========
   function enterRoom(room) {
     currentRoomId=room._id; currentRoomDoc=room;
+    document.body.classList.add('in-chat');
     localStorage.setItem('aloria_chat_room',JSON.stringify({roomId:room._id,name:room.name}));
     document.getElementById('homeView').style.display='none';
     document.getElementById('chatView').style.display='';
@@ -635,7 +637,7 @@
     document.getElementById('loginBox').style.display='';
   })();
 
-  function hideOverlay() { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('app').classList.add('active'); }
+  function hideOverlay() { document.body.classList.remove('in-chat'); document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('app').classList.add('active'); }
 </script>
 </body>
 </html>
