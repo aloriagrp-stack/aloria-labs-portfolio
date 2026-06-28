@@ -150,12 +150,22 @@
 <body>
 
 <div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
+  <div class="login-box" id="adminLoginBox">
     <h2>🔐 Admin Login</h2>
     <p>Enter password to access the panel</p>
     <input type="password" id="loginPassword" placeholder="Enter password" style="margin-bottom:12px;" autofocus>
     <button class="btn-primary" id="loginBtn" style="width:100%;">Login</button>
     <div class="error" id="loginError">Wrong password</div>
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:#666;">or <a href="#" onclick="showUserLogin()" style="color:#fff;">Login as User →</a></div>
+  </div>
+  <div class="login-box" id="userLoginBox" style="display:none;">
+    <h2>👤 User Login</h2>
+    <p>Enter your username and password</p>
+    <input id="userLoginUsername" placeholder="Username" style="width:100%;padding:10px 12px;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;margin-bottom:8px;outline:none;">
+    <input id="userLoginPassword" type="password" placeholder="Password" style="width:100%;padding:10px 12px;background:#111;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;margin-bottom:12px;outline:none;">
+    <button class="btn-primary" id="userLoginBtn" style="width:100%;">Login</button>
+    <div class="error" id="userLoginError" style="display:none;">Invalid username or password</div>
+    <div style="margin-top:16px;text-align:center;font-size:13px;color:#666;"><a href="#" onclick="showAdminLogin()" style="color:#fff;">← Admin Login</a></div>
   </div>
 </div>
 
@@ -167,6 +177,8 @@
     <div class="nav-item" data-tab="forms"><span>📋</span><span>My Forms</span></div>
     <div class="nav-item" data-tab="applications"><span>📩</span><span>Applications</span></div>
     <div class="nav-item" data-tab="agreements"><span>📝</span><span>Agreements</span></div>
+    <div class="nav-item" data-tab="updates"><span>📢</span><span>Updates</span></div>
+    <div class="nav-item" data-tab="rooms"><span>🚪</span><span>Rooms</span></div>
     <div class="nav-item" data-tab="emails"><span>✉</span><span>Emails Sent</span></div>
     <div class="nav-item" data-tab="settings"><span>⚙</span><span>Settings</span></div>
   </div>
@@ -317,6 +329,71 @@
       </div>
     </div>
 
+    <!-- Updates / Channels -->
+    <div id="tab-updates" class="tab">
+      <h2>Updates & Channels</h2>
+      <p class="sub">Create channels, manage users, and post updates.</p>
+      <div id="adminChannelControls">
+      <div class="card">
+        <h3>Create Channel</h3>
+        <div class="form-group"><label>Channel Name</label><input id="channelName" placeholder="e.g. Freelancer Updates"></div>
+        <div class="form-group"><label>Description</label><input id="channelDesc" placeholder="What is this channel for?"></div>
+        <button class="btn btn-primary btn-sm" onclick="createChannel()">Create Channel</button>
+      </div>
+      <div class="card">
+        <h3>Manage Users</h3>
+        <div class="form-group"><label>Full Name</label><input id="chatUserName" placeholder="John Doe"></div>
+        <div class="form-group"><label>Username</label><input id="chatUserUsername" placeholder="johndoe"></div>
+        <div class="form-group"><label>Password</label><input id="chatUserPassword" type="text" placeholder="password123"></div>
+        <div class="form-group"><label>Assign to Channels</label><div id="channelCheckboxes"></div></div>
+        <button class="btn btn-primary btn-sm" onclick="createChatUser()">Create User</button>
+      </div>
+      <div class="card">
+        <h3>Users</h3>
+        <div id="chatUserList"></div>
+      </div>
+      </div>
+      <div class="card">
+        <h3>Channel Chat</h3>
+        <div class="form-group"><label>Select Channel</label><select id="chatChannelSelect" onchange="loadChannelChat()"><option value="">Select...</option></select></div>
+        <div id="chatMessages" style="max-height:400px;overflow-y:auto;margin:12px 0;padding:8px;background:#080808;border-radius:8px;min-height:100px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="chatMessageInput" placeholder="Type a message..." style="flex:1;">
+          <button class="btn btn-primary btn-sm" onclick="sendChannelMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rooms -->
+    <div id="tab-rooms" class="tab">
+      <h2>Rooms</h2>
+      <p class="sub">Create password-protected chat rooms. Users join via <code>channel.html</code> with Room ID + Passcode.</p>
+      <div class="card">
+        <h3>Create Room</h3>
+        <div class="form-group"><label>Room Name</label><input id="roomName" placeholder="e.g. Freelancer Discussion"></div>
+        <div class="form-group"><label>Room ID (unique, no spaces)</label><input id="roomId" placeholder="e.g. freelancer-discussion"></div>
+        <div class="form-group"><label>Passcode</label><input id="roomPasscode" placeholder="e.g. secret123"></div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="roomAllowUserMsg" checked style="width:auto;"> Allow users to send messages
+          </label>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="createRoom()">Create Room</button>
+      </div>
+      <div class="card">
+        <h3>All Rooms</h3>
+        <div id="roomsList"></div>
+      </div>
+      <!-- Room Detail Modal -->
+      <div class="modal" id="roomModal">
+        <div class="modal-box" style="max-width:600px;">
+          <h3 id="roomModalTitle">Room</h3>
+          <div id="roomModalBody"></div>
+          <button class="btn btn-outline btn-sm mt-16" onclick="closeRoomModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings -->
     <div id="tab-settings" class="tab">
       <h2>Settings</h2>
@@ -352,7 +429,7 @@
           <input id="newAdminPw" type="password" placeholder="New password">
         </div>
         <button class="btn btn-primary btn-sm" onclick="changeAdminPassword()">Change Password</button>
-        <button class="btn btn-outline btn-sm mt-8" onclick="logoutAdmin()" style="color:#ff4444;border-color:#ff4444;">Logout</button>
+        <button class="btn btn-outline btn-sm mt-8" id="logoutBtn" onclick="logoutAdmin()" style="color:#ff4444;border-color:#ff4444;">Logout</button>
       </div>
 
       <!-- Email Templates -->
@@ -454,6 +531,25 @@
       document.getElementById('adminApp').style.display = '';
       return true;
     }
+    const userSession = sessionStorage.getItem('aloria_user');
+    if (userSession) {
+      try {
+        window.__chatUser = JSON.parse(userSession);
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('adminApp').style.display = '';
+        document.querySelectorAll('.nav-item').forEach(n => {
+          if (n.dataset.tab !== 'updates') n.style.display = 'none';
+        });
+        document.getElementById('adminChannelControls').style.display = 'none';
+        document.getElementById('logoutBtn').textContent = '👤 ' + window.__chatUser.name + ' (Logout)';
+        document.querySelector('.sidebar .logo').textContent = 'CHAT';
+        document.querySelector('.nav-item').classList.remove('active');
+        document.querySelector('[data-tab="updates"]').classList.add('active');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-updates').classList.add('active');
+        return true;
+      } catch(e) { sessionStorage.removeItem('aloria_user'); }
+    }
     if (localStorage.getItem('aloria_admin_logged_in') === 'true') {
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('adminApp').style.display = '';
@@ -477,6 +573,44 @@
   document.getElementById('loginPassword').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') document.getElementById('loginBtn').click();
   });
+  document.getElementById('userLoginBtn').addEventListener('click', doUserLogin);
+  document.getElementById('userLoginPassword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('userLoginBtn').click();
+  });
+  document.getElementById('userLoginUsername').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('userLoginBtn').click();
+  });
+
+  function showUserLogin() {
+    document.getElementById('adminLoginBox').style.display = 'none';
+    document.getElementById('userLoginBox').style.display = '';
+  }
+  function showAdminLogin() {
+    document.getElementById('adminLoginBox').style.display = '';
+    document.getElementById('userLoginBox').style.display = 'none';
+  }
+  function doUserLogin() {
+    const username = document.getElementById('userLoginUsername').value.trim();
+    const password = document.getElementById('userLoginPassword').value.trim();
+    const user = chatUsers.find(u => u.username === username && u.password === password);
+    if (!user) {
+      document.getElementById('userLoginError').style.display = '';
+      return;
+    }
+    document.getElementById('userLoginError').style.display = 'none';
+    sessionStorage.setItem('aloria_user', JSON.stringify(user));
+    window.__chatUser = user;
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('adminApp').style.display = '';
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.dataset.tab !== 'updates') n.style.display = 'none';
+    });
+    document.getElementById('adminChannelControls').style.display = 'none';
+    document.getElementById('logoutBtn').textContent = '👤 ' + user.name + ' (Logout)';
+    document.querySelector('.sidebar .logo').textContent = 'CHAT';
+    const updatesTab = document.querySelector('[data-tab="updates"]');
+    if (updatesTab) { updatesTab.click(); }
+  }
 
   checkLogin();
 
@@ -485,6 +619,10 @@
   let applications = [];
   let emailLog = [];
   let agreements = [];
+  let chatUsers = [];
+  let channelsList = [];
+  let messagesList = [];
+  let roomsList = [];
   let fields = [];
   let dataLoaded = false;
 
@@ -493,7 +631,7 @@
     let initialLoads = 0;
     function onLoad() {
       initialLoads++;
-      if (initialLoads >= 4) {
+      if (initialLoads >= 8) {
         dataLoaded = true;
         if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render();
       }
@@ -518,6 +656,26 @@
       if (dataLoaded) { renderAgreements(); if (!window.location.search.includes('apply=') && !window.location.search.includes('agree=')) render(); }
       else onLoad();
     }, err => console.error('Firestore agreements error:', err));
+    db.collection('chatUsers').onSnapshot(snapshot => {
+      chatUsers = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      if (dataLoaded) renderChannelUsers();
+      else onLoad();
+    }, err => console.error('Firestore chatUsers error:', err));
+    db.collection('channels').onSnapshot(snapshot => {
+      channelsList = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      if (dataLoaded) { renderChannelCheckboxes(); renderChannelSelect(); }
+      else onLoad();
+    }, err => console.error('Firestore channels error:', err));
+    db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+      messagesList = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      if (dataLoaded) renderChatMessages();
+      else onLoad();
+    }, err => console.error('Firestore messages error:', err));
+    db.collection('rooms').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      roomsList = snapshot.docs.map(d => ({ ...d.data(), _id: d.id }));
+      if (dataLoaded) renderRooms();
+      else onLoad();
+    }, err => console.error('Firestore rooms error:', err));
   }
 
   let sendingEmail = false;
@@ -531,6 +689,8 @@
       if (el.dataset.tab === 'settings') renderSettings();
       if (el.dataset.tab === 'emails') renderEmailLog();
       if (el.dataset.tab === 'agreements') { loadAgreementDefaults(); renderAgreements(); }
+      if (el.dataset.tab === 'updates') { renderChannelCheckboxes(); renderChannelSelect(); renderChannelUsers(); }
+      if (el.dataset.tab === 'rooms') renderRooms();
     });
   });
 
@@ -773,6 +933,206 @@ By checking the box and signing below, you confirm that you have read, understoo
         </div>
       </div>`;
     }).join('');
+  }
+
+  // ========== CHANNELS & UPDATES ==========
+  let currentChannelId = null;
+
+  function createChannel() {
+    const name = document.getElementById('channelName').value.trim();
+    const desc = document.getElementById('channelDesc').value.trim();
+    if (!name) return toast('Enter channel name');
+    if (!db) return toast('Database not connected');
+    db.collection('channels').add({ name, description: desc || '', createdBy: 'admin', createdAt: new Date().toISOString() })
+      .then(() => { document.getElementById('channelName').value = ''; document.getElementById('channelDesc').value = ''; toast('Channel created'); })
+      .catch(e => toast('Error: ' + e.message));
+  }
+
+  function renderChannelCheckboxes() {
+    const el = document.getElementById('channelCheckboxes');
+    if (!el) return;
+    if (!channelsList.length) { el.innerHTML = '<div style="color:#666;font-size:12px;">No channels yet.</div>'; return; }
+    el.innerHTML = channelsList.map(c => `<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px;cursor:pointer;"><input type="checkbox" class="channel-cb" value="${c._id}" style="width:16px;height:16px;cursor:pointer;"> ${c.name}</label>`).join('');
+  }
+
+  function renderChannelSelect() {
+    const el = document.getElementById('chatChannelSelect');
+    if (!el) return;
+    let channels = channelsList;
+    if (window.__chatUser) {
+      channels = channelsList.filter(c => (window.__chatUser.channels || []).includes(c._id));
+    }
+    el.innerHTML = '<option value="">Select a channel...</option>' + channels.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+  }
+
+  function renderChannelUsers() {
+    const el = document.getElementById('chatUserList');
+    if (!el) return;
+    if (!chatUsers.length) { el.innerHTML = '<div class="empty">No users yet.</div>'; return; }
+    el.innerHTML = chatUsers.map(u => {
+      const channelNames = (u.channels || []).map(id => { const c = channelsList.find(x => x._id === id); return c ? c.name : '?'; }).join(', ') || 'None';
+      return `<div style="padding:8px 12px;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:6px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;">
+        <div><strong>${u.name}</strong> <span style="color:#888;font-size:12px;">@${u.username}</span><div style="font-size:11px;color:#666;">Channels: ${channelNames}</div></div>
+        <button class="btn btn-outline btn-sm" onclick="deleteChatUser('${u._id}')">Delete</button>
+      </div>`;
+    }).join('');
+  }
+
+  function createChatUser() {
+    const name = document.getElementById('chatUserName').value.trim();
+    const username = document.getElementById('chatUserUsername').value.trim();
+    const password = document.getElementById('chatUserPassword').value.trim();
+    const cbs = document.querySelectorAll('.channel-cb:checked');
+    const channels = Array.from(cbs).map(cb => cb.value);
+    if (!name || !username || !password) return toast('Fill all fields');
+    if (!db) return toast('Database not connected');
+    if (chatUsers.find(u => u.username === username)) return toast('Username already taken');
+    db.collection('chatUsers').add({ name, username, password, channels, createdAt: new Date().toISOString() })
+      .then(() => { document.getElementById('chatUserName').value = ''; document.getElementById('chatUserUsername').value = ''; document.getElementById('chatUserPassword').value = ''; toast('User created'); })
+      .catch(e => toast('Error: ' + e.message));
+  }
+
+  function deleteChatUser(id) {
+    if (!confirm('Delete this user?')) return;
+    if (!db) return;
+    db.collection('chatUsers').doc(id).delete().then(() => toast('User deleted')).catch(e => toast('Error: ' + e.message));
+  }
+
+  function loadChannelChat() {
+    const sel = document.getElementById('chatChannelSelect');
+    currentChannelId = sel.value;
+    renderChatMessages();
+  }
+
+  function renderChatMessages() {
+    const el = document.getElementById('chatMessages');
+    if (!el) return;
+    if (!currentChannelId) { el.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">Select a channel to view messages</div>'; return; }
+    const msgs = messagesList.filter(m => m.channelId === currentChannelId);
+    if (!msgs.length) { el.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">No messages yet. Start the conversation!</div>'; return; }
+    el.innerHTML = msgs.map(m => {
+      const time = new Date(m.createdAt).toLocaleString();
+      const isAdmin = m.senderId === 'admin';
+      const isMe = window.__chatUser && m.senderId === window.__chatUser._id;
+      const senderLabel = isAdmin ? '📢 Admin' : (isMe ? '👤 You' : '👤 ' + m.senderName);
+      const bg = isAdmin ? 'rgba(255,255,255,0.06)' : (isMe ? 'rgba(0,200,100,0.08)' : '#111');
+      return `<div style="padding:8px 12px;margin:4px 0;background:${bg};border-radius:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;">
+          <span><strong style="color:#fff;">${senderLabel}</strong></span>
+          <span>${time}</span>
+        </div>
+        <div style="margin-top:4px;font-size:13px;line-height:1.4;">${m.content}</div>
+      </div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function sendChannelMessage() {
+    const input = document.getElementById('chatMessageInput');
+    const content = input.value.trim();
+    if (!content) return;
+    if (!currentChannelId) return toast('Select a channel first');
+    if (!db) return toast('Database not connected');
+    const user = window.__chatUser;
+    db.collection('messages').add({
+      channelId: currentChannelId,
+      senderId: user ? user._id : 'admin',
+      senderName: user ? user.name : 'Admin',
+      content,
+      createdAt: new Date().toISOString()
+    }).then(() => { input.value = ''; }).catch(e => toast('Error: ' + e.message));
+  }
+
+  // ========== ROOMS ==========
+  function createRoom() {
+    const name = document.getElementById('roomName').value.trim();
+    const roomId = document.getElementById('roomId').value.trim();
+    const passcode = document.getElementById('roomPasscode').value.trim();
+    const allowUserMsg = document.getElementById('roomAllowUserMsg').checked;
+    if (!name || !roomId || !passcode) return toast('Fill all fields');
+    if (!/^[a-z0-9-]+$/.test(roomId)) return toast('Room ID: only lowercase letters, numbers, hyphens');
+    if (!db) return toast('Database not connected');
+    if (roomsList.find(r => r.roomId === roomId)) return toast('Room ID already exists');
+    db.collection('rooms').add({
+      roomId, name, passcode, allowUserMessages: allowUserMsg,
+      members: [], createdBy: 'admin', createdAt: new Date().toISOString()
+    }).then(() => {
+      document.getElementById('roomName').value = '';
+      document.getElementById('roomId').value = '';
+      document.getElementById('roomPasscode').value = '';
+      toast('Room created!');
+    }).catch(e => toast('Error: ' + e.message));
+  }
+
+  function renderRooms() {
+    const el = document.getElementById('roomsList');
+    if (!el) return;
+    if (!roomsList.length) { el.innerHTML = '<div class="empty">No rooms yet.</div>'; return; }
+    el.innerHTML = roomsList.map(r =>
+      '<div class="form-card">' +
+        '<div class="info"><h4>' + r.name + '</h4><p>ID: <code style="color:#888;">' + r.roomId + '</code> · Members: ' + (r.members || []).length + ' · Messages: ' + (r.allowUserMessages !== false ? '✅ Users can send' : '❌ Only admins') + '</p></div>' +
+        '<div class="actions"><button class="btn btn-outline btn-sm" onclick="openRoomModal(\'' + r._id + '\')">Manage</button></div>' +
+      '</div>'
+    ).join('');
+  }
+
+  function openRoomModal(id) {
+    const r = roomsList.find(x => x._id === id);
+    if (!r) return;
+    document.getElementById('roomModalTitle').textContent = r.name;
+    const members = r.members || [];
+    const roomAdmins = r.admins || [];
+    const html =
+      '<div class="form-group"><label>Room ID</label><input value="' + r.roomId + '" disabled></div>' +
+      '<div class="form-group"><label>Passcode</label><div style="display:flex;gap:8px;"><input id="roomNewPasscode" value="' + r.passcode + '" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="changeRoomPasscode(\'' + id + '\')">Update</button></div></div>' +
+      '<div class="form-group"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="roomToggleUserMsg" ' + (r.allowUserMessages !== false ? 'checked' : '') + ' onchange="toggleRoomUserMsg(\'' + id + '\')" style="width:auto;"> Allow users to send messages</label></div>' +
+      '<div class="form-group"><label>Room Admins (chatUsers)</label><div id="roomAdminCheckboxes">' +
+        (chatUsers.length ? chatUsers.map(u =>
+          '<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px;cursor:pointer;">' +
+            '<input type="checkbox" class="room-admin-cb" value="' + u._id + '" ' + (roomAdmins.includes(u._id) ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;" onchange="updateRoomAdmins(\'' + id + '\')"> ' + u.name + ' <span style="color:#666;">(@' + u.username + ')</span>' +
+          '</label>'
+        ).join('') : '<div style="color:#666;font-size:12px;">No chatUsers yet. Create one in Updates tab first.</div>')
+      + '</div></div>' +
+      '<div class="form-group"><label>Members (' + members.length + ')</label><div id="roomMembersList">' +
+        (members.length ? members.map(m =>
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#111;border-radius:6px;margin:4px 0;">' +
+            '<span>' + m.name + ' <span style="color:#666;font-size:11px;">(' + new Date(m.joinedAt).toLocaleDateString() + ')</span></span>' +
+            '<button class="btn btn-outline btn-sm" onclick="removeRoomMember(\'' + id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')" style="color:#ff4444;border-color:#ff4444;">Remove</button>' +
+          '</div>'
+        ).join('') : '<div style="color:#666;font-size:13px;">No members yet.</div>')
+      + '</div></div>';
+    document.getElementById('roomModalBody').innerHTML = html;
+    document.getElementById('roomModal').classList.add('open');
+  }
+
+  function closeRoomModal() { document.getElementById('roomModal').classList.remove('open'); }
+
+  function updateRoomAdmins(id) {
+    const cbs = document.querySelectorAll('.room-admin-cb:checked');
+    const admins = Array.from(cbs).map(cb => cb.value);
+    if (!db) return;
+    db.collection('rooms').doc(id).update({ admins }).catch(e => toast('Error: ' + e.message));
+  }
+
+  function changeRoomPasscode(id) {
+    const passcode = document.getElementById('roomNewPasscode').value.trim();
+    if (!passcode) return toast('Enter a passcode');
+    if (!db) return;
+    db.collection('rooms').doc(id).update({ passcode }).then(() => toast('Passcode updated')).catch(e => toast('Error: ' + e.message));
+  }
+
+  function toggleRoomUserMsg(id) {
+    const val = document.getElementById('roomToggleUserMsg').checked;
+    if (!db) return;
+    db.collection('rooms').doc(id).update({ allowUserMessages: val }).then(() => toast(val ? 'Users can now send messages' : 'Only admins can now send messages')).catch(e => toast('Error: ' + e.message));
+  }
+
+  function removeRoomMember(roomId, memberName) {
+    if (!confirm('Remove ' + memberName + ' from this room?')) return;
+    const r = roomsList.find(x => x._id === roomId);
+    if (!r || !db) return;
+    const members = (r.members || []).filter(m => m.name !== memberName);
+    db.collection('rooms').doc(roomId).update({ members }).then(() => toast(memberName + ' removed')).catch(e => toast('Error: ' + e.message));
   }
 
   function render() {
@@ -1067,6 +1427,8 @@ By checking the box and signing below, you confirm that you have read, understoo
 
   function logoutAdmin() {
     localStorage.removeItem('aloria_admin_logged_in');
+    sessionStorage.removeItem('aloria_user');
+    window.__chatUser = null;
     location.reload();
   }
 

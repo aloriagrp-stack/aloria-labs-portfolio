@@ -15,6 +15,7 @@ export default defineConfig({
         blogPost: resolve(__dirname, 'blog-post.html'),
         aloriaGroup: resolve(__dirname, 'aloria-group.html'),
         admin: resolve(__dirname, 'admin.html'),
+        channel: resolve(__dirname, 'channel.html'),
       },
     },
   },
