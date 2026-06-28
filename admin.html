@@ -177,7 +177,7 @@
     <div class="nav-item" data-tab="forms"><span>📋</span><span>My Forms</span></div>
     <div class="nav-item" data-tab="applications"><span>📩</span><span>Applications</span></div>
     <div class="nav-item" data-tab="agreements"><span>📝</span><span>Agreements</span></div>
-    <div class="nav-item" data-tab="updates"><span>📢</span><span>Updates</span></div>
+    <div class="nav-item" data-tab="updates"><span>📢</span><span>Add User</span></div>
     <div class="nav-item" data-tab="rooms"><span>🚪</span><span>Rooms</span></div>
     <div class="nav-item" data-tab="emails"><span>✉</span><span>Emails Sent</span></div>
     <div class="nav-item" data-tab="settings"><span>⚙</span><span>Settings</span></div>
@@ -329,38 +329,22 @@
       </div>
     </div>
 
-    <!-- Updates / Channels -->
+    <!-- Add User -->
     <div id="tab-updates" class="tab">
-      <h2>Updates & Channels</h2>
-      <p class="sub">Create channels, manage users, and post updates.</p>
+      <h2>Add User</h2>
       <div id="adminChannelControls">
-      <div class="card">
-        <h3>Create Channel</h3>
-        <div class="form-group"><label>Channel Name</label><input id="channelName" placeholder="e.g. Freelancer Updates"></div>
-        <div class="form-group"><label>Description</label><input id="channelDesc" placeholder="What is this channel for?"></div>
-        <button class="btn btn-primary btn-sm" onclick="createChannel()">Create Channel</button>
-      </div>
       <div class="card">
         <h3>Manage Users</h3>
         <div class="form-group"><label>Full Name</label><input id="chatUserName" placeholder="John Doe"></div>
         <div class="form-group"><label>Username</label><input id="chatUserUsername" placeholder="johndoe"></div>
         <div class="form-group"><label>Password</label><input id="chatUserPassword" type="text" placeholder="password123"></div>
-        <div class="form-group"><label>Assign to Channels</label><div id="channelCheckboxes"></div></div>
+        <div class="form-group"><label>Assign to Rooms</label><div id="channelCheckboxes"></div></div>
         <button class="btn btn-primary btn-sm" onclick="createChatUser()">Create User</button>
       </div>
       <div class="card">
         <h3>Users</h3>
         <div id="chatUserList"></div>
       </div>
-      </div>
-      <div class="card">
-        <h3>Channel Chat</h3>
-        <div class="form-group"><label>Select Channel</label><select id="chatChannelSelect" onchange="loadChannelChat()"><option value="">Select...</option></select></div>
-        <div id="chatMessages" style="max-height:400px;overflow-y:auto;margin:12px 0;padding:8px;background:#080808;border-radius:8px;min-height:100px;"></div>
-        <div style="display:flex;gap:8px;">
-          <input id="chatMessageInput" placeholder="Type a message..." style="flex:1;">
-          <button class="btn btn-primary btn-sm" onclick="sendChannelMessage()">Send</button>
-        </div>
       </div>
     </div>
 
