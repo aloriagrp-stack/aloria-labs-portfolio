@@ -135,8 +135,11 @@
 </head>
 <body>
 
-<div class="overlay" id="loginOverlay">
-  <div class="box">
+  <div class="overlay" id="loginOverlay">
+    <div id="loadingState" style="color:#666;font-size:14px;">Loading...</div>
+  </div>
+
+  <div class="box" id="loginBox" style="display:none;">
     <h2>👤 Login</h2>
     <p class="sub">Enter your username & password</p>
     <input id="loginUsername" placeholder="Username" autofocus>
@@ -144,7 +147,6 @@
     <button class="btn-primary" onclick="doLogin()">Login</button>
     <div class="error" id="loginError">Invalid username or password</div>
   </div>
-</div>
 
 <div class="modal" id="joinModal">
   <div class="modal-box">
@@ -605,36 +607,35 @@
 
   // ========== INIT ==========
   (function init() {
+    document.getElementById('loadingState').textContent='Initializing...';
     try {
       const jr=localStorage.getItem('aloria_joined_rooms');
       if (jr) { try { joinedRooms=JSON.parse(jr); } catch(e) { joinedRooms=[]; } }
       const saved=localStorage.getItem('aloria_chat_user');
-      if (saved) {
+      if (saved && db) {
         currentUser=JSON.parse(saved);
-        document.getElementById('loginOverlay').classList.add('hidden');
         const savedRoom=localStorage.getItem('aloria_chat_room');
-        if (savedRoom && db) {
+        if (savedRoom) {
+          document.getElementById('loadingState').textContent='Reconnecting to room...';
           const rd=JSON.parse(savedRoom);
           db.collection('rooms').get().then(s=>{
-            const rs=s.docs.map(d=>({...d.data(),_id:d.id}));
-            roomsList=rs;
-            const r=rs.find(x=>x._id===rd.roomId);
-            if (r) { currentUser.isAdmin=(r.admins||[]).includes(currentUser._id); enterRoom(r); }
-            else showHome();
-          }).catch(()=>showHome());
-        } else if (savedRoom && !db) {
-          showHome();
+            roomsList=s.docs.map(d=>({...d.data(),_id:d.id}));
+            const r=roomsList.find(x=>x._id===rd.roomId);
+            if (r) { currentUser.isAdmin=(r.admins||[]).includes(currentUser._id); hideOverlay(); enterRoom(r); }
+            else { hideOverlay(); showHome(); }
+          }).catch(()=>{ hideOverlay(); showHome(); });
         } else {
-          showHome();
+          hideOverlay(); showHome();
         }
         return;
       }
-    } catch(e) {
-      localStorage.removeItem('aloria_chat_user');
-      localStorage.removeItem('aloria_chat_room');
-    }
-    document.getElementById('loginOverlay').classList.remove('hidden');
+    } catch(e) { localStorage.removeItem('aloria_chat_user'); localStorage.removeItem('aloria_chat_room'); }
+    // No saved session — show login
+    document.getElementById('loadingState').style.display='none';
+    document.getElementById('loginBox').style.display='';
   })();
+
+  function hideOverlay() { document.getElementById('loginOverlay').classList.add('hidden'); document.getElementById('app').classList.add('active'); }
 </script>
 </body>
 </html>
