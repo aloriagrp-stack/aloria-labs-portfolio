@@ -58,7 +58,7 @@
     .dropdown-item .icon { font-size: 16px; }
     .dropdown-item.locked { opacity: 0.35; cursor: not-allowed; }
     .dropdown-item.locked:hover { background: transparent; }
-    .clip-wrap { position: relative; flex-shrink: 0; display: none; }
+    .clip-wrap { position: relative; flex-shrink: 0; }
     .clip-btn { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: #fff; cursor: pointer; }
     .clip-btn:hover { background: rgba(255,255,255,0.06); }
     .clip-menu { display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 6px; background: #1a1a1a; border: 1px solid var(--border); border-radius: 10px; padding: 6px; min-width: 180px; z-index: 100; box-shadow: 0 -4px 24px rgba(0,0,0,0.5); }
@@ -217,7 +217,7 @@
     <div class="messages" id="messagesList"></div>
     <div class="input-area" id="inputArea">
       <div class="input-row" id="sendRow">
-        <div class="clip-wrap" id="clipWrap">
+        <div class="clip-wrap" id="clipWrap" style="display:none;">
           <button class="clip-btn" onclick="toggleClipMenu()">📎</button>
           <div class="clip-menu" id="clipMenu">
             <div class="clip-item" onclick="pickFile('image')"><span>🖼️</span> Image from Gallery</div>
