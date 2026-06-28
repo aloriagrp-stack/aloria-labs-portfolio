@@ -238,7 +238,7 @@
           </div>
           <input type="file" id="fileInput" accept="" style="display:none;">
         </div>
-        <textarea id="messageInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!('ontouchstart'in window)){event.preventDefault();sendMsg()}"></textarea>
+        <textarea id="messageInput" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
         <button class="btn btn-primary btn-sm" onclick="sendMsg()" style="flex-shrink:0;">Send</button>
       </div>
       <div class="disabled-msg" id="disabledMsg" style="display:none;">🔇 Only admins can send messages in this room</div>
