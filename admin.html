@@ -1101,7 +1101,11 @@ By checking the box and signing below, you confirm that you have read, understoo
             '<button class="btn btn-outline btn-sm" onclick="removeRoomMember(\'' + id + '\',\'' + m.name.replace(/'/g, "\\'") + '\')" style="color:#ff4444;border-color:#ff4444;">Remove</button>' +
           '</div>'
         ).join('') : '<div style="color:#666;font-size:13px;">No members yet.</div>')
-      + '</div></div>';
+      + '</div></div>' +
+      '<div class="form-group"><label>Reaction Booster (fake reaction counts)</label>' +
+        '<button class="btn btn-outline btn-sm" onclick="loadRoomMessages(\'' + id + '\')" style="margin-bottom:8px;">Load Messages</button>' +
+        '<div id="roomReactionBooster"></div>' +
+      '</div>';
     document.getElementById('roomModalBody').innerHTML = html;
     document.getElementById('roomModal').classList.add('open');
   }
@@ -1140,6 +1144,94 @@ By checking the box and signing below, you confirm that you have read, understoo
     const val = parseInt(document.getElementById('roomCountOffset').value) || 0;
     if (!db) return;
     db.collection('rooms').doc(id).update({ memberCountOffset: val }).then(() => toast('Count offset updated to ' + val)).catch(e => toast('Error: ' + e.message));
+  }
+
+  let boostedRoomId='';
+  async function loadRoomMessages(id) {
+    boostedRoomId=id;
+    const el=document.getElementById('roomReactionBooster');
+    el.innerHTML='<div style="color:#666;font-size:13px;">Loading...</div>';
+    const r=roomsList.find(x=>x._id===id);
+    if (!r||!db) { el.innerHTML='<div style="color:#666;font-size:13px;">Error loading</div>'; return; }
+    try {
+      const snap=await db.collection('messages').where('roomId','==',r.roomId).orderBy('createdAt','desc').limit(20).get();
+      if (snap.empty) { el.innerHTML='<div style="color:#666;font-size:13px;">No messages yet.</div>'; return; }
+      el.innerHTML=snap.docs.map(d=>{
+        const m={...d.data(),_id:d.id};
+        const preview=(m.content||'(media/poll)').substring(0,60);
+        const reactions=m.reactions||{};
+        const offsets=m.reactionOffsets||{};
+        const allEmojis=[...new Set([...Object.keys(reactions),...Object.keys(offsets)])];
+        let row='<div style="padding:8px;background:#111;border-radius:6px;margin:6px 0;">';
+        row+='<div style="font-size:11px;color:#888;margin-bottom:4px;">'+new Date(m.createdAt).toLocaleString()+'</div>';
+        row+='<div style="font-size:13px;margin-bottom:6px;">'+preview+'</div>';
+        row+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">';
+        allEmojis.forEach(emoji=>{
+          const real=(reactions[emoji]||[]).length;
+          const off=offsets[emoji]||0;
+          const total=real+off;
+          row+='<div style="display:flex;align-items:center;gap:4px;background:#1a1a1a;padding:4px 8px;border-radius:6px;font-size:13px;">'+
+            '<span>'+emoji+'</span>'+
+            '<span style="color:#666;font-size:11px;">'+real+'</span>'+
+            '<span style="color:#666;font-size:11px;">+</span>'+
+            '<input id="ro'+d.id+emoji+'" type="number" value="'+off+'" style="width:50px;padding:2px 4px;font-size:12px;background:#222;border:1px solid #333;border-radius:4px;color:#fff;">'+
+            '<span style="color:#666;font-size:11px;">='+total+'</span>'+
+          '</div>';
+        });
+        row+='</div>';
+        row+='<div style="display:flex;gap:4px;">';
+        row+='<button class="btn btn-primary btn-sm" onclick="saveReactionOffsets(\''+d.id+'\',\''+r.roomId+'\')">Save</button>';
+        // quick emoji add buttons
+        const quickEmojis=['👍','❤️','😂','😮','😢','🔥'];
+        quickEmojis.forEach(emoji=>{
+          if (!allEmojis.includes(emoji)) {
+            row+='<button class="btn btn-outline btn-sm" onclick="addReactionQuick(\''+d.id+'\',\''+emoji+'\')" style="font-size:11px;padding:2px 6px;">'+emoji+'</button>';
+          }
+        });
+        row+='</div></div>';
+        return row;
+      }).join('');
+    } catch(e) {
+      el.innerHTML='<div style="color:#666;font-size:13px;">Error: '+e.message+'</div>';
+    }
+  }
+
+  function addReactionQuick(msgId, emoji) {
+    const val=prompt('Set fake count for '+emoji+':','50');
+    if (val===null) return;
+    saveReactionOffsetsSingle(msgId, emoji, parseInt(val)||0);
+  }
+
+  function saveReactionOffsetsSingle(msgId, emoji, val) {
+    if (!db) return;
+    db.collection('messages').doc(msgId).get().then(doc=>{
+      if (!doc.exists) return;
+      const m=doc.data();
+      const offsets=m.reactionOffsets||{};
+      offsets[emoji]=val;
+      db.collection('messages').doc(msgId).update({reactionOffsets:offsets}).then(()=>{
+        toast('Reaction boosted for '+emoji+' → '+val);
+        loadRoomMessages(boostedRoomId);
+      }).catch(e=>toast('Error: '+e.message));
+    });
+  }
+
+  function saveReactionOffsets(msgId, roomId) {
+    if (!db) return;
+    db.collection('messages').doc(msgId).get().then(doc=>{
+      if (!doc.exists) return;
+      const m=doc.data();
+      const offsets={};
+      const allEmojis=[...new Set([...Object.keys(m.reactions||{}),...Object.keys(m.reactionOffsets||{})])];
+      allEmojis.forEach(emoji=>{
+        const inp=document.getElementById('ro'+msgId+emoji);
+        if (inp) offsets[emoji]=parseInt(inp.value)||0;
+      });
+      db.collection('messages').doc(msgId).update({reactionOffsets:offsets}).then(()=>{
+        toast('Reaction offsets saved');
+        loadRoomMessages(boostedRoomId);
+      }).catch(e=>toast('Error: '+e.message));
+    });
   }
 
   function render() {
