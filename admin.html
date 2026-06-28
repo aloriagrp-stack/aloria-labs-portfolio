@@ -1154,7 +1154,7 @@ By checking the box and signing below, you confirm that you have read, understoo
     const r=roomsList.find(x=>x._id===id);
     if (!r||!db) { el.innerHTML='<div style="color:#666;font-size:13px;">Error loading</div>'; return; }
     try {
-      const snap=await db.collection('messages').where('roomId','==',r.roomId).orderBy('createdAt','desc').limit(20).get();
+      const snap=await db.collection('messages').where('roomId','==',r._id).orderBy('createdAt','desc').limit(20).get();
       if (snap.empty) { el.innerHTML='<div style="color:#666;font-size:13px;">No messages yet.</div>'; return; }
       el.innerHTML=snap.docs.map(d=>{
         const m={...d.data(),_id:d.id};
