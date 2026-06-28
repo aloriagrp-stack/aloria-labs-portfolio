@@ -502,13 +502,13 @@
 
   // ========== INIT ==========
   (function init() {
-    const saved=localStorage.getItem('aloria_chat_user');
-    if (saved) {
-      try {
+    try {
+      const saved=localStorage.getItem('aloria_chat_user');
+      if (saved) {
         currentUser=JSON.parse(saved);
         document.getElementById('loginOverlay').classList.add('hidden');
         const savedRoom=localStorage.getItem('aloria_chat_room');
-        if (savedRoom) {
+        if (savedRoom && db) {
           const rd=JSON.parse(savedRoom);
           db.collection('rooms').get().then(s=>{
             const rs=s.docs.map(d=>({...d.data(),_id:d.id}));
@@ -516,9 +516,16 @@
             if (r) { currentUser.isAdmin=(r.admins||[]).includes(currentUser._id); enterRoom(r); }
             else showHome();
           }).catch(()=>showHome());
-        } else showHome();
+        } else if (savedRoom && !db) {
+          showHome();
+        } else {
+          showHome();
+        }
         return;
-      } catch(e) { localStorage.removeItem('aloria_chat_user'); }
+      }
+    } catch(e) {
+      localStorage.removeItem('aloria_chat_user');
+      localStorage.removeItem('aloria_chat_room');
     }
     document.getElementById('loginOverlay').classList.remove('hidden');
   })();
