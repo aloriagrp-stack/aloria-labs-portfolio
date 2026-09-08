@@ -2,20 +2,20 @@ import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
+  server: {
+    host: true,
+    port: 5173,
+  },
   build: {
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        roiPredictor: resolve(__dirname, 'roi-predictor.html'),
-        leadAuditor: resolve(__dirname, 'lead-auditor.html'),
-        securityQuiz: resolve(__dirname, 'security-quiz.html'),
-        blogVoiceAi: resolve(__dirname, 'blog-voice-ai.html'),
-        blogRealEstateAi: resolve(__dirname, 'blog-real-estate-ai.html'),
-        blogRoiSme: resolve(__dirname, 'blog-roi-sme.html'),
-        blogPost: resolve(__dirname, 'blog-post.html'),
-        aloriaGroup: resolve(__dirname, 'aloria-group.html'),
-        admin: resolve(__dirname, 'admin.html'),
-        channel: resolve(__dirname, 'channel.html'),
+        about: resolve(__dirname, 'about.html'),
+        capabilities: resolve(__dirname, 'capabilities.html'),
+        process: resolve(__dirname, 'process.html'),
+        models: resolve(__dirname, 'models.html'),
+        faq: resolve(__dirname, 'faq.html'),
+        contact: resolve(__dirname, 'contact.html'),
       },
     },
   },

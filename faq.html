@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Enterprise FAQ — Production AI Systems Architecture | Aloria Labs</title>
+  <meta name="description" content="Technical answers to critical enterprise questions: IP ownership, data privacy, hallucination prevention, VPC deployment, and production AI ROI.">
+  <link rel="canonical" href="https://alorialabs.in/faq.html">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/src/style.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you prevent hallucinations and ensure deterministic outputs in production?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We enforce multi-tiered guardrails including structured JSON schema generation, deterministic validation harnesses, tool execution sandboxes, and verification agent loops. Before any autonomous agent writes to production databases or executes financial transactions, outputs are verified deterministically."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Where does our data live? Does Aloria Labs or model providers train on our enterprise data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "100% within your private infrastructure. We deploy to your AWS, GCP, or Azure VPC, or on-premise hardware. We utilize enterprise zero-retention API endpoints and private self-hosted open-weights models. Your proprietary data is never used for general model training."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who owns the intellectual property and code created during the engagement?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You own 100% of all intellectual property, source code, orchestration workflows, prompts, and model adapters from day one. There is zero vendor lock-in, recurring platform royalties, or proprietary runtime entrapment."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does an engagement take from kickoff to live production deployment?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Architecture Sprints take 10 to 14 business days to deliver a validated proof-of-concept and technical roadmap. Full production systems are built, integrated, and deployed in 4 to 6 weeks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does our internal engineering team maintain the system after handover?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We provide complete source code, automated CI/CD test suites, architectural runbooks, and handover training. Every production engagement includes 30 days of active post-launch support and telemetry monitoring."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do you determine whether an operational problem is suitable for AI vs traditional code?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We practice first-principles systems engineering. If your operational bottleneck can be solved more cheaply and reliably using standard databases and rule-based scripts, we will explicitly recommend that approach. We only build autonomous AI systems where unstructured reasoning or complex cognitive workflows yield massive ROI."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="subpage faq-page">
+  <!-- Ambient Glow Orbs -->
+  <div class="ambient-glow" aria-hidden="true">
+    <div class="glow-orb glow-orb-cyan"></div>
+    <div class="glow-orb glow-orb-violet"></div>
+  </div>
+
+  <!-- Particle Starfield Canvas -->
+  <div class="particle-canvas-wrapper" aria-hidden="true">
+    <canvas id="particle-canvas"></canvas>
+  </div>
+
+  <main class="subpage-main">
+    <!-- Breadcrumb -->
+    <div class="page-container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="back-home-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Home</span>
+        </a>
+        <span class="separator">/</span>
+        <span class="current">Enterprise FAQ</span>
+      </nav>
+    </div>
+
+    <!-- Page Hero -->
+    <section class="page-hero">
+      <div class="page-container">
+        <div class="hero-content">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            TECHNICAL INTELLIGENCE BRIEFING
+          </div>
+          <h1 class="page-title">
+            Enterprise Questions & Concrete Engineering Answers.
+          </h1>
+          <p class="page-subtitle">
+            Unvarnished clarity on architecture, security boundaries, client IP ownership, deployment timelines, and autonomous system reliability.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Accordion Section -->
+    <section class="faq-accordion-section">
+      <div class="page-container">
+        
+        <!-- Category 01: Architecture & Reliability -->
+        <div class="faq-category-block">
+          <div class="category-header">
+            <span class="category-index">01</span>
+            <h2 class="category-title">Architecture, Reliability & Data Security</h2>
+          </div>
+
+          <div class="faq-accordion-list">
+            
+            <details class="faq-item" open>
+              <summary class="faq-question">
+                <span class="faq-q-text">How do you prevent hallucinations and ensure deterministic outputs in production?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  We treat generative models as probabilistic reasoning components, not authoritative decision engines. To ensure deterministic reliability, we implement:
+                </p>
+                <ul>
+                  <li><strong>Strict JSON Schema Enforcement:</strong> Constrained decoding guarantees that model responses match strongly typed programmatic data contracts.</li>
+                  <li><strong>Deterministic Evaluation Harness:</strong> Systems are tested against 100+ automated edge cases before reaching staging or production.</li>
+                  <li><strong>Multi-Agent Verification Loops:</strong> Critical actions require an independent verification agent to inspect outputs against compliance policies.</li>
+                  <li><strong>Deterministic Fallback Handlers:</strong> If model confidence falls below parameterized thresholds, execution safely routes to deterministic fallback algorithms or human operators.</li>
+                </ul>
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">Where does our data live? Does Aloria Labs or foundation models train on our enterprise data?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  Your data resides 100% inside your infrastructure. We engineer systems to deploy into your private AWS, GCP, Azure VPC, or on-premise hardware clusters.
+                </p>
+                <p>
+                  We strictly enforce enterprise zero-data-retention agreements with foundation model providers and configure private open-weight models (such as Llama 3, Mistral, or Qwen) for sensitive workloads. Neither Aloria Labs nor external vendors ever use your internal business data or customer records to train public models.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">How do you decide whether a problem requires AI or standard deterministic code?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  We apply rigorous first-principles triage. If an operational bottleneck can be solved faster, cheaper, and with 100% certainty via standard relational databases, deterministic scripts, or rule-based cron workflows, we will explicitly advise against generative AI.
+                </p>
+                <p>
+                  We only deploy autonomous AI agents when the task demands handling unstructured multimodal inputs (PDFs, voice, documents), dynamic multi-step cognitive reasoning, or ambiguous contextual decision-making.
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+        <!-- Category 02: Intellectual Property & Engagement -->
+        <div class="faq-category-block">
+          <div class="category-header">
+            <span class="category-index">02</span>
+            <h2 class="category-title">IP Ownership, Legal & Engagement Terms</h2>
+          </div>
+
+          <div class="faq-accordion-list">
+            
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">Who owns the intellectual property and code created during the engagement?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  <strong>You own 100% of all intellectual property from day one.</strong> Every line of code, prompt hierarchy, system prompt, model adapter, database migration, and orchestration script is assigned directly to your entity.
+                </p>
+                <p>
+                  We do not lock you into proprietary Aloria SaaS platforms or charge recurring runtime licensing fees. If you choose to bring maintenance in-house, your engineering team can run the entire codebase independently without any third-party friction.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">Do you execute mutual Non-Disclosure Agreements (NDAs)?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  Yes. Prior to reviewing your internal workflows, codebase, API documentation, or proprietary datasets, we execute a bilateral, enterprise-grade mutual NDA.
+                </p>
+                <p>
+                  We treat your strategic initiatives, unit economics, and operational playbooks with top-tier confidentiality.
+                </p>
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">How long does an engagement take from kickoff to production deployment?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  Our timelines are engineered for high-velocity execution:
+                </p>
+                <ul>
+                  <li><strong>Architecture Sprint:</strong> 10 to 14 business days from kickoff to validated working proof-of-concept and technical architecture blueprint.</li>
+                  <li><strong>Production System:</strong> 4 to 6 calendar weeks for full end-to-end builds, complete with internal API integrations, guardrails, and VPC deployment.</li>
+                  <li><strong>Systems Partner Retainer:</strong> Ongoing 3 to 12 month embedded engineering squad for continuous scaling and architectural evolution.</li>
+                </ul>
+              </div>
+            </details>
+
+            <details class="faq-item">
+              <summary class="faq-question">
+                <span class="faq-q-text">How does our internal team maintain the system after handover?</span>
+                <span class="faq-icon-wrapper" aria-hidden="true">
+                  <svg class="faq-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                </span>
+              </summary>
+              <div class="faq-answer">
+                <p>
+                  We engineer every system with self-documenting codebases, automated integration test suites, and strict typing.
+                </p>
+                <p>
+                  At project delivery, we provide comprehensive architectural runbooks, telemetry dashboard configurations, and dedicated technical training workshops for your software engineers. Every production build also includes a 30-day post-launch warranty period for active bug fixes and performance optimization.
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Bottom Action Callout -->
+    <section class="subpage-cta-section">
+      <div class="page-container">
+        <div class="callout-box">
+          <div class="callout-glow"></div>
+          <div class="callout-content">
+            <span class="callout-eyebrow">HAVE A SPECIFIC TECHNICAL CHALLENGE?</span>
+            <h2 class="callout-title">Direct Channel to Lead AI Architects</h2>
+            <p class="callout-desc">
+              Submit your engineering context or schedule an exploratory architectural call. We respond within 24 hours under NDA.
+            </p>
+            <div class="callout-actions">
+              <a href="/contact.html" class="primary-btn">
+                <span>Initiate Intake Brief</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <a href="/capabilities.html" class="secondary-btn">
+                <span>Explore Capabilities</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Editorial Site Footer -->
+  <footer class="site-footer">
+    <div class="page-container">
+      <div class="footer-grid">
+        <div class="footer-brand-col">
+          <div class="footer-brand-header">
+            <span class="brand-text">ALORIA LABS</span>
+          </div>
+          <p class="footer-tagline">Autonomous AI Systems & Intelligent Software Infrastructure.</p>
+          <div class="footer-status-pill">
+            <span class="pulse-dot"></span>
+            <span>SYSTEMS ONLINE // ACCEPTING Q3 PARTNERSHIPS</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">Intelligence</h4>
+          <ul class="footer-links">
+            <li><a href="/about.html">About Aloria</a></li>
+            <li><a href="/capabilities.html">What We Build</a></li>
+            <li><a href="/process.html">Engineering Process</a></li>
+            <li><a href="/models.html">Engagement Models</a></li>
+            <li><a href="/faq.html">Enterprise FAQ</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">Capabilities</h4>
+          <ul class="footer-links">
+            <li><a href="/capabilities.html#autonomous-agents">Autonomous AI Agents</a></li>
+            <li><a href="/capabilities.html#ai-native-platforms">AI-Native Platforms</a></li>
+            <li><a href="/capabilities.html#workflow-automation">Workflow Automation</a></li>
+            <li><a href="/capabilities.html#private-infrastructure">Private AI Infrastructure</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4 class="footer-col-title">Direct Channel</h4>
+          <ul class="footer-links">
+            <li><a href="/contact.html">Initiate System</a></li>
+            <li><a href="https://wa.me/919318485680" target="_blank" rel="noopener">WhatsApp: +91 93184 85680</a></li>
+            <li><a href="mailto:info@alorialabs.in">info@alorialabs.in</a></li>
+            <li><a href="mailto:alorialabs@gmail.com">alorialabs@gmail.com</a></li>
+            <li><span class="footer-location">Delhi, India</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copy">&copy; 2026 Aloria Labs. All rights reserved. Autonomous Systems Division.</div>
+        <div class="footer-legal">
+          <a href="/about.html">Doctrine</a>
+          <a href="/models.html">IP Ownership Guarantee</a>
+          <a href="/contact.html">Security & NDA</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
