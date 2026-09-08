@@ -206,10 +206,10 @@ export class ParticleTextSimulation {
     const h = Math.floor(this.height);
     if (w <= 0 || h <= 0) return;
 
-    // On subpages, create pure ambient cosmic stars without typography
+    // On subpages, create pure ambient cosmic stars with organic twinkling
     if (this.isSubpage) {
       const isMobile = w < 720;
-      const starCount = isMobile ? 85 : 175;
+      const starCount = isMobile ? 160 : 300;
       const newParticles = [];
       const buckets = {
         '#ffffff': [],
@@ -231,9 +231,12 @@ export class ParticleTextSimulation {
           y: y,
           originX: x,
           originY: y,
-          vx: (Math.random() - 0.5) * 0.22,
-          vy: (Math.random() - 0.5) * 0.22,
+          vx: (Math.random() - 0.5) * 0.16,
+          vy: (Math.random() - 0.5) * 0.16,
           size: size,
+          baseAlpha: Math.random() * 0.45 + 0.35,
+          twinkleSpeed: Math.random() * 0.003 + 0.0012,
+          twinklePhase: Math.random() * Math.PI * 2,
           color: color
         };
         newParticles.push(particle);
@@ -432,14 +435,15 @@ export class ParticleTextSimulation {
         }
       }
 
-      for (const [color, bucket] of Object.entries(this.colorBuckets)) {
-        if (!bucket || bucket.length === 0) continue;
-        this.ctx.fillStyle = color;
-        for (let i = 0; i < bucket.length; i++) {
-          const p = bucket[i];
-          this.ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
-        }
+      // Render twinkling stars with soft organic alpha pulsation
+      for (let i = 0; i < len; i++) {
+        const p = this.particles[i];
+        const alpha = Math.min(1.0, Math.max(0.12, p.baseAlpha + Math.sin(now * p.twinkleSpeed + p.twinklePhase) * 0.35));
+        this.ctx.globalAlpha = alpha;
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(p.x - p.size * 0.5, p.y - p.size * 0.5, p.size, p.size);
       }
+      this.ctx.globalAlpha = 1.0;
 
       requestAnimationFrame(this.animate);
       return;
