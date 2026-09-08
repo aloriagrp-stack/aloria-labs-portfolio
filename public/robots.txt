@@ -1,4 +1,38 @@
+# ==============================================================================
+# ALORIA LABS - robots.txt (Optimized for Search & AI Answer Engines)
+# ==============================================================================
+
+# Explicitly welcome AI Answer Engines and Citation Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+# General Crawlers
 User-agent: *
 Allow: /
 
-Sitemap: https://alorialabs.com/sitemap.xml
+# Sitemap Location
+Sitemap: https://alorialabs.in/sitemap.xml

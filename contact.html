@@ -13,30 +13,61 @@
   
   <link rel="stylesheet" href="/src/style.css">
 
+  <meta name="theme-color" content="#06070a">
+  <meta name="msapplication-TileColor" content="#06070a">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Open Graph & Social for Search & AI Answer Engines -->
+  <meta property="og:site_name" content="Aloria Labs">
+  <meta property="og:title" content="Initiate System — Contact Aloria Labs">
+  <meta property="og:description" content="Engage Aloria Labs for autonomous AI systems, custom software platforms, and private infrastructure. Direct senior engineering consultation.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://alorialabs.in/contact.html">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@alorialabs">
+  <meta name="twitter:title" content="Initiate System — Contact Aloria Labs">
+  <meta name="twitter:description" content="Engage Aloria Labs for autonomous AI systems, custom software platforms, and private infrastructure.">
+
+  <!-- Structured Data (JSON-LD) for Search Engines & AI Citations (AEO) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "ContactPage",
-    "name": "Contact Aloria Labs",
-    "url": "https://alorialabs.in/contact.html",
-    "mainEntity": {
-      "@type": "Organization",
-      "name": "Aloria Labs",
-      "url": "https://alorialabs.in",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+91-9318485680",
-        "contactType": "Customer Service",
-        "email": "info@alorialabs.in",
-        "areaServed": "Global"
-      },
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "New Delhi",
-        "addressRegion": "Delhi",
-        "addressCountry": "India"
+    "@graph": [
+      {
+        "@type": "ContactPage",
+        "@id": "https://alorialabs.in/contact.html#webpage",
+        "name": "Contact Aloria Labs — AI Systems Engineering",
+        "url": "https://alorialabs.in/contact.html",
+        "description": "Connect directly with Aloria Labs senior AI systems architects for project scoping, architecture reviews, and enterprise engagements.",
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://alorialabs.in/#website"
+        },
+        "mainEntity": {
+          "@type": "Organization",
+          "@id": "https://alorialabs.in/#organization",
+          "name": "Aloria Labs",
+          "url": "https://alorialabs.in",
+          "email": "info@alorialabs.in",
+          "telephone": "+91-9318485680",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+91-9318485680",
+            "contactType": "Senior Engineering Consultation",
+            "email": "info@alorialabs.in",
+            "areaServed": "Global",
+            "availableLanguage": ["English", "Hindi"]
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "New Delhi",
+            "addressRegion": "Delhi",
+            "addressCountry": "India"
+          }
+        }
       }
-    }
+    ]
   }
   </script>
 </head>

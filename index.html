@@ -10,54 +10,78 @@
   <link rel="canonical" href="https://alorialabs.in/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
+  <!-- Theme Color & Mobile Browser Polish -->
+  <meta name="theme-color" content="#06070a" />
+  <meta name="msapplication-TileColor" content="#06070a" />
+
   <!-- Open Graph & Social for Search & AI Answer Engines -->
+  <meta property="og:site_name" content="Aloria Labs" />
   <meta property="og:title" content="Aloria Labs — Autonomous AI Systems & Intelligent Software" />
-  <meta property="og:description" content="We build intelligent systems. Autonomous AI agents, modern enterprise software, and robust digital infrastructure for ambitious businesses." />
+  <meta property="og:description" content="We build intelligent systems: Autonomous AI agents, modern enterprise software, and robust private digital infrastructure for ambitious businesses." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://alorialabs.in/" />
+  <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@alorialabs" />
   <meta name="twitter:title" content="Aloria Labs — Autonomous AI Systems & Intelligent Software" />
-  <meta name="twitter:description" content="We turn complex business problems into reliable, scalable intelligent systems." />
+  <meta name="twitter:description" content="We build intelligent systems: Autonomous AI agents, modern enterprise software, and robust private digital infrastructure." />
 
   <!-- Structured Data (JSON-LD) for Google Knowledge Graph & AI Answer Engines (AEO) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    "name": "Aloria Labs",
-    "url": "https://alorialabs.in",
-    "logo": "https://alorialabs.in/favicon.svg",
-    "description": "Aloria Labs is an AI-first technology company engineering autonomous AI systems, intelligent software platforms, enterprise workflow automation, and private AI infrastructure.",
-    "knowsAbout": [
-      "Artificial Intelligence",
-      "Autonomous AI Agents",
-      "Enterprise Software Engineering",
-      "Intelligent Workflow Automation",
-      "Private LLM Infrastructure",
-      "Retrieval-Augmented Generation (RAG)",
-      "Digital Infrastructure"
-    ],
-    "hasOfferCatalog": {
-      "@type": "OfferCatalog",
-      "name": "AI Engineering Services",
-      "itemListElement": [
-        {
-          "@type": "Offer",
-          "name": "Architecture Sprint",
-          "url": "https://alorialabs.in/models.html"
-        },
-        {
-          "@type": "Offer",
-          "name": "Full-Scale Production System",
-          "url": "https://alorialabs.in/models.html"
-        },
-        {
-          "@type": "Offer",
-          "name": "Systems Partner Retainer",
-          "url": "https://alorialabs.in/models.html"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://alorialabs.in/#website",
+        "url": "https://alorialabs.in/",
+        "name": "Aloria Labs",
+        "description": "Autonomous AI Systems & Intelligent Software Infrastructure",
+        "publisher": {
+          "@id": "https://alorialabs.in/#organization"
         }
-      ]
-    }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://alorialabs.in/#organization",
+        "name": "Aloria Labs",
+        "legalName": "Aloria Labs",
+        "url": "https://alorialabs.in/",
+        "logo": "https://alorialabs.in/favicon.svg",
+        "description": "Aloria Labs is an AI systems engineering lab architecting autonomous decision engines, bespoke enterprise platforms, and private digital infrastructure.",
+        "foundingDate": "2024",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "New Delhi",
+          "addressRegion": "Delhi",
+          "addressCountry": "India"
+        },
+        "contactPoint": [
+          {
+            "@type": "ContactPoint",
+            "telephone": "+91-9318485680",
+            "contactType": "Customer Inquiries",
+            "email": "info@alorialabs.in",
+            "areaServed": "Global",
+            "availableLanguage": ["English", "Hindi"]
+          }
+        ],
+        "sameAs": [
+          "https://github.com/alorialabs",
+          "https://twitter.com/alorialabs"
+        ],
+        "knowsAbout": [
+          "Artificial Intelligence",
+          "Autonomous AI Agents",
+          "Multi-Agent Swarms",
+          "Enterprise Software Engineering",
+          "Intelligent Workflow Automation",
+          "Private LLM Infrastructure",
+          "Retrieval-Augmented Generation (RAG)",
+          "Vector Databases"
+        ]
+      }
+    ]
   }
   </script>
 

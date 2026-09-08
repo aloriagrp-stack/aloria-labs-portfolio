@@ -13,58 +13,86 @@
   
   <link rel="stylesheet" href="/src/style.css">
 
+  <meta name="theme-color" content="#06070a">
+  <meta name="msapplication-TileColor" content="#06070a">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Open Graph & Social for Search & AI Answer Engines -->
+  <meta property="og:site_name" content="Aloria Labs">
+  <meta property="og:title" content="Enterprise FAQ — Production AI Systems Architecture | Aloria Labs">
+  <meta property="og:description" content="Technical answers to critical enterprise questions: IP ownership, data privacy, hallucination prevention, VPC deployment, and production AI ROI.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://alorialabs.in/faq.html">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@alorialabs">
+  <meta name="twitter:title" content="Enterprise FAQ — Production AI Systems Architecture | Aloria Labs">
+  <meta name="twitter:description" content="Technical answers on enterprise IP ownership, data privacy, hallucination prevention, and VPC deployment.">
+
+  <!-- Structured Data (JSON-LD) for Google & AI Answer Engines (AEO) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
+    "@graph": [
       {
-        "@type": "Question",
-        "name": "How do you prevent hallucinations and ensure deterministic outputs in production?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We enforce multi-tiered guardrails including structured JSON schema generation, deterministic validation harnesses, tool execution sandboxes, and verification agent loops. Before any autonomous agent writes to production databases or executes financial transactions, outputs are verified deterministically."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Where does our data live? Does Aloria Labs or model providers train on our enterprise data?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "100% within your private infrastructure. We deploy to your AWS, GCP, or Azure VPC, or on-premise hardware. We utilize enterprise zero-retention API endpoints and private self-hosted open-weights models. Your proprietary data is never used for general model training."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Who owns the intellectual property and code created during the engagement?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "You own 100% of all intellectual property, source code, orchestration workflows, prompts, and model adapters from day one. There is zero vendor lock-in, recurring platform royalties, or proprietary runtime entrapment."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How long does an engagement take from kickoff to live production deployment?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Architecture Sprints take 10 to 14 business days to deliver a validated proof-of-concept and technical roadmap. Full production systems are built, integrated, and deployed in 4 to 6 weeks."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How does our internal engineering team maintain the system after handover?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We provide complete source code, automated CI/CD test suites, architectural runbooks, and handover training. Every production engagement includes 30 days of active post-launch support and telemetry monitoring."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do you determine whether an operational problem is suitable for AI vs traditional code?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "We practice first-principles systems engineering. If your operational bottleneck can be solved more cheaply and reliably using standard databases and rule-based scripts, we will explicitly recommend that approach. We only build autonomous AI systems where unstructured reasoning or complex cognitive workflows yield massive ROI."
-        }
+        "@type": "FAQPage",
+        "@id": "https://alorialabs.in/faq.html#faq",
+        "name": "Aloria Labs Enterprise AI Architecture FAQ",
+        "description": "Comprehensive technical intelligence briefing answering enterprise questions on hallucination prevention, private data security, IP ownership, and deployment timelines.",
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://alorialabs.in/#website"
+        },
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do you prevent hallucinations and ensure deterministic outputs in production?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We enforce multi-tiered guardrails including structured JSON schema generation, deterministic validation harnesses, tool execution sandboxes, and verification agent loops. Before any autonomous agent writes to production databases or executes financial transactions, outputs are verified deterministically."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where does our data live? Does Aloria Labs or model providers train on our enterprise data?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "100% within your private infrastructure. We deploy to your AWS, GCP, or Azure VPC, or on-premise hardware. We utilize enterprise zero-retention API endpoints and private self-hosted open-weights models. Your proprietary data is never used for general model training."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who owns the intellectual property and code created during the engagement?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "You own 100% of all intellectual property, source code, orchestration workflows, prompts, and model adapters from day one. There is zero vendor lock-in, recurring platform royalties, or proprietary runtime entrapment."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How long does an engagement take from kickoff to live production deployment?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Architecture Sprints take 10 to 14 business days to deliver a validated proof-of-concept and technical roadmap. Full production systems are built, integrated, and deployed in 4 to 6 weeks."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does our internal engineering team maintain the system after handover?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We provide complete source code, automated CI/CD test suites, architectural runbooks, and handover training. Every production engagement includes 30 days of active post-launch support and telemetry monitoring."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do you determine whether an operational problem is suitable for AI vs traditional code?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We practice first-principles systems engineering. If your operational bottleneck can be solved more cheaply and reliably using standard databases and rule-based scripts, we will explicitly recommend that approach. We only build autonomous AI systems where unstructured reasoning or complex cognitive workflows yield massive ROI."
+            }
+          }
+        ]
       }
     ]
   }

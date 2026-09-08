@@ -13,32 +13,76 @@
   
   <link rel="stylesheet" href="/src/style.css">
 
+  <meta name="theme-color" content="#06070a">
+  <meta name="msapplication-TileColor" content="#06070a">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Open Graph & Social for Search & AI Answer Engines -->
+  <meta property="og:site_name" content="Aloria Labs">
+  <meta property="og:title" content="How We Work — 4-Week AI Engineering Process | Aloria Labs">
+  <meta property="og:description" content="Discover how Aloria Labs builds and deploys production AI systems in weeks. Our 4-phase engineering framework delivers high-value results with zero downtime.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://alorialabs.in/process.html">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@alorialabs">
+  <meta name="twitter:title" content="How We Work — 4-Week AI Engineering Process | Aloria Labs">
+  <meta name="twitter:description" content="Our 4-phase engineering framework delivers high-value AI results with zero downtime in 4-6 weeks.">
+
+  <!-- Structured Data (JSON-LD) for Search Engines & AI Citations (AEO) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "HowTo",
-    "name": "How Aloria Labs Engineers AI Systems",
-    "description": "Our 4-phase agile engineering methodology for delivering production AI agents, software platforms, and private infrastructure.",
-    "step": [
+    "@graph": [
       {
-        "@type": "HowToStep",
-        "name": "Phase 1: Discovery & Technical Blueprint",
-        "text": "Review operational workflows, evaluate technical feasibility, and design system blueprint."
-      },
-      {
-        "@type": "HowToStep",
-        "name": "Phase 2: Working Prototype & Testing",
-        "text": "Build live functional prototype and benchmark reasoning accuracy against sample data."
-      },
-      {
-        "@type": "HowToStep",
-        "name": "Phase 3: Production Build & Launch",
-        "text": "Deploy to private cloud perimeter, enforce strict RBAC security, and transfer 100% IP."
-      },
-      {
-        "@type": "HowToStep",
-        "name": "Phase 4: Monitoring & Ongoing Support",
-        "text": "Monitor live performance telemetry, optimize compute costs, and provide direct engineering support."
+        "@type": "HowTo",
+        "name": "How Aloria Labs Engineers and Deploys Enterprise AI Systems",
+        "description": "A battle-tested 4-phase agile engineering methodology for delivering production AI agents, software platforms, and private infrastructure with zero operational disruption.",
+        "totalTime": "P4W",
+        "provider": {
+          "@type": "Organization",
+          "@id": "https://alorialabs.in/#organization",
+          "name": "Aloria Labs",
+          "url": "https://alorialabs.in"
+        },
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "Phase 1: Discovery & Technical Blueprint (Days 1–5)",
+            "itemListElement": {
+              "@type": "HowToDirection",
+              "text": "Conduct deep operational audit of customer touchpoints and internal workflows. Map data boundaries, security requirements, and evaluate model feasibility before writing architecture specifications."
+            }
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Phase 2: Functional Prototype & Sandbox Benchmark (Days 6–12)",
+            "itemListElement": {
+              "@type": "HowToDirection",
+              "text": "Develop interactive prototype running deterministic reasoning pipelines and automated agent loops. Benchmark reasoning accuracy against proprietary datasets in safe sandbox."
+            }
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Phase 3: Production Build, Hardening & VPC Launch (Days 13–24)",
+            "itemListElement": {
+              "@type": "HowToDirection",
+              "text": "Engineer resilient backend services, implement enterprise RBAC and SOC2-compliant logging, deploy into private AWS/GCP/Azure VPC perimeter, and execute full IP ownership transfer."
+            }
+          },
+          {
+            "@type": "HowToStep",
+            "position": 4,
+            "name": "Phase 4: Telemetry Monitoring & Ongoing Optimization (Day 25+)",
+            "itemListElement": {
+              "@type": "HowToDirection",
+              "text": "Monitor live inference latency, semantic drift, and token expenditures via real-time telemetry. Deliver weekly performance reviews and ongoing engineering iterations."
+            }
+          }
+        ]
       }
     ]
   }
