@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "hunt": "python hunt.py"
   },
   "devDependencies": {
     "vite": "^8.0.1"
