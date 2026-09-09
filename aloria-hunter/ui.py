@@ -34,11 +34,11 @@ def print_banner():
 {C_MAGENTA} ██║  ██║███████╗╚██████╔╝██║  ██║██║██║  ██║    ██║  ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
 {C_MAGENTA} ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
 {C_WHITE}                       [ AUTONOMOUS B2B INTELLIGENCE & COLD OUTREACH ENGINE ]
-{C_DIM}                         Version 2.4 | Zero-API Engineering | Aloria Labs
+{C_DIM}                         Version 2.5 | Zero-API Engineering | Aloria Labs
     """
     print(banner_text)
 
-def print_menu_box():
+def print_menu_box(active_sender="alorialabs@gmail.com"):
     print(f"""
 {C_CYAN}  ╔═════════════════════════════════════════════════════════════════════════════════════════════════╗
   ║                                   COMMAND & CONTROL CENTER                                      ║
@@ -47,7 +47,10 @@ def print_menu_box():
   {C_WHITE}  [2]{RESET} {C_CYAN}● Silent Ghost Mode{RESET}     - {C_DIM}Runs 100% hidden in background (headless){RESET}
   {C_WHITE}  [3]{RESET} {C_MAGENTA}● 24/7 Autopilot Loop{RESET}   - {C_WHITE}Continuous perpetual wave scanner (runs day & night){RESET}
   {C_WHITE}  [4]{RESET} {C_YELLOW}● Safe Dry-Run{RESET}          - {C_WHITE}Extract leads & audit flaws without sending emails{RESET}
-  {C_WHITE}  [5]{RESET} {C_BLUE}● Hunter Intel Stats{RESET}    - {C_WHITE}View all captured leads & email delivery metrics{RESET}
+  {C_WHITE}  [5]{RESET} {C_BLUE}● Hunter Intel Stats{RESET}    - {C_WHITE}View real-time pipeline totals & database counts{RESET}
+  {C_WHITE}  [6]{RESET} {C_GREEN}● Outreach History Log{RESET}  - {C_WHITE}View all contacted leads, dates, times & chat subjects{RESET}
+  {C_WHITE}  [7]{RESET} {C_MAGENTA}● Sender Account{RESET}        - {C_DIM}Switch sender profile (Active: {C_YELLOW}{active_sender}{C_DIM}){RESET}
+  {C_WHITE}  [0]{RESET} {C_RED}● Exit Console{RESET}          - {C_DIM}Close Hunter Command Center{RESET}
   {C_WHITE}  [ENTER]{RESET}                      - {C_GREEN}Default Quick Launch (Option 1 Live Hunter){RESET}
 {C_CYAN}  ╚═════════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}
     """)
@@ -71,7 +74,6 @@ def log_crawler_step(step, total, msg):
 
 def log_discovered_place(index, total, name, website_url, phone, rating):
     if not website_url:
-        # GOLDEN LEAD
         status_tag = f"{Back.YELLOW}{Fore.BLACK} ★ GOLDEN LEAD - NO WEBSITE ★ {RESET}"
         name_str = f"{C_YELLOW}{name}{RESET}"
     else:
@@ -111,6 +113,7 @@ def log_stats_dashboard(stats):
     total = stats.get('total', 0)
     golden = stats.get('without_website', 0)
     audited = stats.get('with_website', 0)
+    total_emails = stats.get('total_emails_sent', 0)
     statuses = stats.get('statuses', {})
 
     print(f"""
@@ -120,9 +123,37 @@ def log_stats_dashboard(stats):
   {C_WHITE}  Total Discovered Leads:{RESET}       {C_CYAN}{total}{RESET}
   {C_WHITE}  Golden Leads (No Website):{RESET}    {C_YELLOW}{golden}  {Back.YELLOW}{Fore.BLACK} [PRIORITY PITCH TARGETS] {RESET}
   {C_WHITE}  Websites Audited:{RESET}             {C_BLUE}{audited}{RESET}
-  {C_WHITE}  Pipeline Status Breakdown:{RESET}    {C_GREEN}{statuses}{RESET}
+  {C_WHITE}  Outreach Emails Dispatched:{RESET}   {C_GREEN}{total_emails}{RESET}
+  {C_WHITE}  Pipeline Status Breakdown:{RESET}    {C_MAGENTA}{statuses}{RESET}
 {C_CYAN}  ╚═══════════════════════════════════════════════════════════════════════════════════════╝{RESET}
     """)
+
+def log_outreach_history_table(history_rows):
+    print(f"""
+{C_GREEN}  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+  ║                                        OUTREACH HISTORY & SENT LOGS                                           ║
+  ╠═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╣{RESET}""")
+    if not history_rows:
+        print(f"    {C_DIM}No outreach emails recorded in database yet.{RESET}\n")
+        print(f"{C_GREEN}  ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
+        return
+
+    print(f"  {C_CYAN}{'#':<3} {'DATE & TIME':<20} {'RECIPIENT EMAIL':<30} {'BUSINESS NAME':<32} {'TYPE':<10} {'STATUS'}{RESET}")
+    print(f"  {C_DIM}{'─' * 107}{RESET}")
+
+    for idx, row in enumerate(history_rows, 1):
+        dt = row.get("sent_at", "N/A")[:19]
+        recip = (row.get("recipient_email") or "N/A")[:28]
+        biz = (row.get("business_name") or "N/A")[:30]
+        p_type = row.get("pitch_type", "INITIAL")
+        status = row.get("status", "SENT")
+        
+        status_badge = f"{C_GREEN}[✓ SENT]{RESET}" if status == "SENT" else f"{C_RED}[✗ FAIL]{RESET}"
+        type_badge = f"{C_MAGENTA}{p_type}{RESET}"
+        
+        print(f"  {C_WHITE}{idx:<3}{RESET} {C_CYAN}{dt:<20}{RESET} {C_WHITE}{recip:<30}{RESET} {C_YELLOW}{biz:<32}{RESET} {type_badge:<19} {status_badge}")
+
+    print(f"{C_GREEN}  ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
 
 def log_cooldown(seconds):
     print(f"  {C_CYAN}[⏳ COOLDOWN]{RESET} {C_DIM}Sleeping {seconds}s before next sector scan...{RESET}")

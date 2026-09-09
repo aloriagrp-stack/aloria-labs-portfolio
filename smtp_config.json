@@ -1,1 +1,23 @@
-{"email": "alorialabs@gmail.com", "password": "osgd adhv gjlc qcby", "smtp_server": "smtp.gmail.com", "smtp_port": 587}
+{
+  "active_profile": "gmail",
+  "profiles": {
+    "gmail": {
+      "name": "Aloria Gmail (alorialabs@gmail.com)",
+      "email": "alorialabs@gmail.com",
+      "password": "osgd adhv gjlc qcby",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "info@alorialabs.in"
+    },
+    "info": {
+      "name": "Official Corporate (info@alorialabs.in)",
+      "email": "info@alorialabs.in",
+      "password": "",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "info@alorialabs.in"
+    }
+  }
+}

@@ -12,7 +12,7 @@ def get_connection():
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.executescript("""
     CREATE TABLE IF NOT EXISTS leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         business_name TEXT NOT NULL,
@@ -33,7 +33,19 @@ def init_db():
         follow_up_count INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(business_name, city, country)
-    )
+    );
+
+    CREATE TABLE IF NOT EXISTS outreach_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        lead_id INTEGER,
+        business_name TEXT,
+        recipient_email TEXT,
+        sender_email TEXT,
+        pitch_type TEXT,
+        subject TEXT,
+        status TEXT DEFAULT 'SENT',
+        sent_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
     """)
     conn.commit()
     conn.close()
@@ -144,6 +156,27 @@ def mark_followup_sent(lead_id, new_count):
     conn.commit()
     conn.close()
 
+def log_outreach_event(lead_id, business_name, recipient_email, sender_email, pitch_type, subject, status="SENT"):
+    conn = get_connection()
+    cursor = conn.cursor()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+    INSERT INTO outreach_logs (lead_id, business_name, recipient_email, sender_email, pitch_type, subject, status, sent_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (lead_id, business_name, recipient_email, sender_email, pitch_type, subject, status, now_str))
+    conn.commit()
+    conn.close()
+
+def get_outreach_history(limit=50):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT * FROM outreach_logs ORDER BY id DESC LIMIT ?
+    """, (limit,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
 def get_stats():
     conn = get_connection()
     cursor = conn.cursor()
@@ -151,6 +184,8 @@ def get_stats():
     row = dict(cursor.fetchone())
     cursor.execute("SELECT status, count(*) as count FROM leads GROUP BY status")
     statuses = {r['status']: r['count'] for r in cursor.fetchall()}
+    cursor.execute("SELECT count(*) as count FROM outreach_logs WHERE status='SENT'")
+    row['total_emails_sent'] = cursor.fetchone()['count']
     conn.close()
     row['statuses'] = statuses
     return row
