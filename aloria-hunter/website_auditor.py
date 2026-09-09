@@ -4,6 +4,7 @@ import requests
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import db
+import ui
 
 EMAIL_REGEX = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
 IGNORED_EMAIL_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.css', '.js')
@@ -26,7 +27,7 @@ def audit_single_website(lead):
     url = lead["website_url"]
     business_name = lead["business_name"]
 
-    print(f"\n[AUDITING] {business_name} -> {url}")
+    ui.log_audit_start(business_name, url or "N/A")
 
     if not url or not url.startswith("http"):
         # No website to audit
@@ -114,8 +115,7 @@ def audit_single_website(lead):
     primary_email = list(discovered_emails)[0] if discovered_emails else ""
     audit_text = " | ".join(vulnerabilities) if vulnerabilities else f"Site operational ({response_time}s latency)"
 
-    print(f"  --> Email Found: {primary_email or 'None found'}")
-    print(f"  --> Audit Findings: {audit_text}")
+    ui.log_audit_result(primary_email, vulnerabilities, response_time)
 
     db.update_audit(lead_id, email=primary_email, audit_summary=audit_text)
 
@@ -128,7 +128,7 @@ def audit_single_website(lead):
 
 def audit_pending_leads(limit=20):
     pending = db.get_pending_audits(limit=limit)
-    print(f"\n[AUDIT RUNNER] Found {len(pending)} pending leads with websites to audit...")
+    print(f"  {ui.C_BLUE}[⚡ AUDITOR ENGINE]{ui.RESET} Inspecting {ui.C_WHITE}{len(pending)}{ui.RESET} candidate websites for technical vulnerabilities & email extraction...")
     results = []
     for lead in pending:
         res = audit_single_website(lead)

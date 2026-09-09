@@ -5,6 +5,7 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import config
 import db
+import ui
 
 def generate_pitch(lead, email_type="INITIAL"):
     name = lead["business_name"]
@@ -145,7 +146,7 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text):
     smtp_port = smtp_conf.get("smtp_port", 587)
 
     if not password:
-        print("[!] Error: No SMTP password configured in smtp_config.json")
+        print(f"  {ui.C_RED}[!] Error: No SMTP password configured in smtp_config.json{ui.RESET}")
         return False
 
     msg = MIMEMultipart("alternative")
@@ -166,12 +167,12 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text):
             server.sendmail(sender_email, [to_email], msg.as_string())
         return True
     except Exception as e:
-        print(f"[!] SMTP sending failed for {to_email}: {e}")
+        print(f"  {ui.C_RED}[!] SMTP error for {to_email}: {e}{ui.RESET}")
         return False
 
 def dispatch_initial_emails(limit=5):
     ready_leads = db.get_leads_ready_for_initial_email(limit=limit)
-    print(f"\n[EMAIL ENGINE] Found {len(ready_leads)} leads ready for initial outreach...")
+    print(f"  {ui.C_MAGENTA}[⚡ EMAIL ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_leads)}{ui.RESET} verified leads ready for initial pitch...")
 
     sent_count = 0
     for lead in ready_leads:
@@ -180,17 +181,14 @@ def dispatch_initial_emails(limit=5):
             continue
 
         subject, plain, html = generate_pitch(lead, email_type="INITIAL")
-        print(f"[DISPATCHING INITIAL] To: {to_email} | Subject: {subject}")
-
         success = send_email_via_smtp(to_email, subject, plain, html)
         if success:
             db.mark_initial_email_sent(lead["id"])
-            print(f"  [+] Sent successfully to {lead['business_name']} ({to_email})")
+            ui.log_email_dispatch(lead["business_name"], to_email, subject, True)
             sent_count += 1
-            # Rate limit delay between emails
-            time.sleep(30)  # 30s delay in testing; can be set higher in config
+            time.sleep(30)
         else:
-            print(f"  [-] Failed to send to {to_email}")
+            ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Handshake Error")
 
     return sent_count
 
@@ -199,7 +197,7 @@ def dispatch_followups():
         interval_days=config.FOLLOW_UP_INTERVAL_DAYS,
         max_followups=config.MAX_FOLLOW_UPS
     )
-    print(f"\n[FOLLOW-UP ENGINE] Found {len(ready_followups)} leads ready for scheduled 2-day follow-up...")
+    print(f"  {ui.C_MAGENTA}[⚡ FOLLOW-UP ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_followups)}{ui.RESET} leads ready for 2-day scheduled follow-up...")
 
     sent_count = 0
     for lead in ready_followups:
@@ -209,13 +207,13 @@ def dispatch_followups():
         email_type = f"FOLLOW_UP_{new_count}"
 
         subject, plain, html = generate_pitch(lead, email_type=email_type)
-        print(f"[DISPATCHING {email_type}] To: {to_email} | Business: {lead['business_name']}")
-
         success = send_email_via_smtp(to_email, subject, plain, html)
         if success:
             db.mark_followup_sent(lead["id"], new_count)
-            print(f"  [+] Follow-up {new_count} sent successfully to {to_email}")
+            ui.log_email_dispatch(lead["business_name"], to_email, f"[Follow-up {new_count}] {subject}", True)
             sent_count += 1
             time.sleep(30)
+        else:
+            ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Error")
 
     return sent_count

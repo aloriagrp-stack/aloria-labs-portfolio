@@ -3,17 +3,14 @@ import re
 from playwright.sync_api import sync_playwright
 import config
 import db
+import ui
 
 def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None):
     if headless is None:
         headless = config.HEADLESS
 
     query = f"{niche} in {city}, {country}"
-    print(f"\n=======================================================")
-    print(f"[HUNTER CRAWLER] Starting Google Maps Autonomous Search")
-    print(f"[TARGET] Query: '{query}' | Target Count: {max_places}")
-    print(f"[MODE] Headless: {headless}")
-    print(f"=======================================================\n")
+    print(f"  {ui.C_CYAN}[⚡ GOOGLE MAPS CRAWLER]{ui.RESET} Query: '{ui.C_WHITE}{query}{ui.RESET}' │ Quota: {ui.C_YELLOW}{max_places}{ui.RESET}")
 
     discovered = []
 
@@ -32,7 +29,7 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
         try:
             import urllib.parse
             search_url = f"https://www.google.com/maps/search/{urllib.parse.quote_plus(query)}?hl=en"
-            print(f"[1/5] Direct Navigation: {search_url}...")
+            ui.log_crawler_step(1, 4, f"Navigating to {ui.C_WHITE}{search_url}{ui.RESET}")
             page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
             time.sleep(2)
 
@@ -54,7 +51,7 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                 pass
 
             # Wait for results feed
-            print("[2/5] Waiting for Google Maps feed to load...")
+            ui.log_crawler_step(2, 4, "Syncing Google Maps listings stream...")
             feed_selector = 'div[role="feed"]'
             try:
                 page.wait_for_selector(feed_selector, timeout=20000)
@@ -72,7 +69,7 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
             time.sleep(3)
 
             # Scroll the feed to load results
-            print("[4/5] Scrolling listings feed...")
+            ui.log_crawler_step(3, 4, "Streaming listings viewport...")
             for scroll_idx in range(4):
                 try:
                     feed = page.locator(feed_selector)
@@ -84,7 +81,7 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
 
             # Find all place card links in the feed
             place_links = page.locator('div[role="feed"] a[href*="/maps/place/"]').all()
-            print(f"[5/5] Discovered {len(place_links)} place listings in current viewport. Extracting details...")
+            ui.log_crawler_step(4, 4, f"Discovered {ui.C_GREEN}{len(place_links)}{ui.RESET} candidates. Extracting metadata...")
 
             seen_titles = set()
             count = 0
@@ -172,8 +169,7 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         website_url=website_url
                     )
 
-                    has_web_str = "YES" if website_url else "NO (Golden Lead!)"
-                    print(f"[{count+1}/{max_places}] {title} | Website: {has_web_str} | Phone: {phone or 'N/A'}")
+                    ui.log_discovered_place(count + 1, max_places, title, website_url, phone, rating)
 
                     discovered.append({
                         "id": lead_id,
@@ -191,11 +187,11 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                     continue
 
         except Exception as e:
-            print(f"[!] Crawler encountered exception: {e}")
+            print(f"  {ui.C_RED}[!] Crawler exception: {e}{ui.RESET}")
         finally:
             browser.close()
 
-    print(f"\n[SUMMARY] Finished search for '{query}'. Total leads recorded in database: {len(discovered)}")
+    print(f"  {ui.C_CYAN}[✓ CRAWL COMPLETE]{ui.RESET} Captured {ui.C_GREEN}{len(discovered)}{ui.RESET} leads in this wave.")
     return discovered
 
 if __name__ == "__main__":

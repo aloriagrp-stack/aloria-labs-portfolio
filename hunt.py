@@ -11,45 +11,36 @@ HUNTER_DIR = ROOT_DIR / "aloria-hunter"
 if str(HUNTER_DIR) not in sys.path:
     sys.path.insert(0, str(HUNTER_DIR))
 
+import ui
 import runner
+import db
 
 def interactive_mode():
-    print("""
-  +--------------------------------------------------------------+
-  |              ALORIA AUTONOMOUS HUNTER CONTROLLER             |
-  |         One-Click B2B Discovery & Automated Cold Outreach    |
-  +--------------------------------------------------------------+
-    """)
-    print("Choose an operating mode:")
-    print("  [1] Live Hunt (Visible Chromium Window - Watch it on screen)")
-    print("  [2] Silent Background Mode (Headless)")
-    print("  [3] 24/7 Autopilot Daemon Mode (Continuous Background Hunting)")
-    print("  [4] Safe Dry-Run (Crawl & Audit without sending emails)")
-    print("  [5] View Current Database Stats")
-    print("  [Enter] Quick Launch with Smart Defaults (Option 1)")
-    print()
+    ui.print_banner()
+    ui.print_menu_box()
 
-    choice = input("Select an option [1-5]: ").strip()
+    choice = input(f"  {ui.C_GREEN}Select an option [1-5]: {ui.RESET}").strip()
 
     if choice == "5":
-        import db
         stats = db.get_stats()
-        print("\n=== [HUNTER DATABASE STATS] ===")
-        print(f"Total Leads Discovered:    {stats['total']}")
-        print(f"Golden Leads (No Website): {stats['without_website']}")
-        print(f"Websites Audited:          {stats['with_website']}")
-        print(f"Status Breakdown:          {stats['statuses']}")
-        print("===============================\n")
+        ui.log_stats_dashboard(stats)
         return
 
-    country = input("Target Country [Default: Algeria]: ").strip() or "Algeria"
-    city = input("Target City [Default: Algiers]: ").strip() or "Algiers"
-    niche = input("Target Niche [Default: Restaurants]: ").strip() or "Restaurants"
-    limit_str = input("Max places to hunt [Default: 10]: ").strip()
-    limit = int(limit_str) if limit_str.isdigit() else 10
+    print()
+    country_in = input(f"  {ui.C_WHITE}Target Country {ui.C_DIM}[Default: Algeria]{ui.RESET}: ").strip()
+    country = country_in or "Algeria"
+
+    city_in = input(f"  {ui.C_WHITE}Target City    {ui.C_DIM}[Default: Algiers]{ui.RESET}: ").strip()
+    city = city_in or "Algiers"
+
+    niche_in = input(f"  {ui.C_WHITE}Target Niche   {ui.C_DIM}[Default: Restaurants]{ui.RESET}: ").strip()
+    niche = niche_in or "Restaurants"
+
+    limit_in = input(f"  {ui.C_WHITE}Max Places     {ui.C_DIM}[Default: 10]{ui.RESET}: ").strip()
+    limit = int(limit_in) if limit_in.isdigit() else 10
 
     if choice == "3":
-        print(f"\n[*] Starting 24/7 Autonomous Autopilot Daemon for {country}...")
+        print(f"\n{ui.C_MAGENTA}[*] Launching 24/7 Perpetual Autopilot Daemon for {country}...{ui.RESET}")
         while True:
             runner.run_hunter_cycle(
                 country=country,
@@ -59,7 +50,7 @@ def interactive_mode():
                 headless=True,
                 dry_run=False
             )
-            print("[*] Wave finished. Sleeping 2 hours before scanning next leads...")
+            print(f"\n{ui.C_CYAN}[*] Wave complete. Sleeping 2 hours before next scan wave...{ui.RESET}")
             import time
             time.sleep(7200)
     elif choice == "2":
