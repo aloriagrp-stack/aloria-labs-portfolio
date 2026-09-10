@@ -115,6 +115,8 @@ def print_clean_dashboard():
     print(f"  {C_WHITE}[D]{RESET} {C_YELLOW}● Safe Dry-Run{RESET}           {C_DIM}— Scrape & audit leads without sending emails{RESET}")
     print(f"  {C_WHITE}[A]{RESET} {C_BLUE}● Run Website Auditor{RESET}    {C_DIM}— Inspect website speeds, SSL & extract emails{RESET}")
     print(f"  {C_WHITE}[E]{RESET} {C_MAGENTA}● Dispatch Email Queue{RESET}   {C_DIM}— Send tailored Day 0 cold pitches for active business{RESET}")
+    print(f"  {C_WHITE}[W]{RESET} {C_GREEN}● WhatsApp Outreach{RESET}      {C_DIM}— Send tailored WhatsApp pitch to leads with phone numbers{RESET}")
+    print(f"  {C_WHITE}[Q]{RESET} {C_YELLOW}● WhatsApp QR Code Link{RESET}  {C_DIM}— Scan QR code once to connect your WhatsApp Web{RESET}")
     print(f"  {C_WHITE}[F]{RESET} {C_YELLOW}● Dispatch Follow-ups{RESET}    {C_DIM}— Send scheduled 2-Day & 4-Day follow-up sequence{RESET}")
     print(f"  {C_WHITE}[R]{RESET} {C_GREEN}● Full Autopilot Wave{RESET}    {C_DIM}— 1-Click Hunt ➔ Audit ➔ Pitch ➔ Follow-up cycle (Active profile){RESET}")
     print(f"  {C_WHITE}[B]{RESET} {C_GREEN}⚡ Dual Parallel Wave{RESET}    {C_DIM}— Run Aloria Labs AND GetHotelStays simultaneously in parallel!{RESET}")
@@ -315,6 +317,28 @@ def run_cockpit_loop():
                 print(f"\n  {C_GREEN}[✓] Dispatched {sent} initial emails!{RESET}")
             except Exception as e:
                 print(f"  {C_RED}[!] Error: {e}{RESET}")
+            input("\n  Press Enter to return to menu...")
+
+        # [W] WhatsApp Outreach
+        elif choice == "w":
+            print(f"\n  {C_GREEN}[► LAUNCHING AUTONOMOUS WHATSAPP OUTREACH ENGINE]{RESET}")
+            import whatsapp_engine
+            try:
+                cnt = input("  Max WhatsApp messages to dispatch (default 5): ").strip()
+                limit = int(cnt) if cnt.isdigit() else 5
+                whatsapp_engine.dispatch_whatsapp_queue(limit=limit, business_id=active_id, headless=False)
+            except Exception as e:
+                print(f"  {C_RED}[!] WhatsApp engine error: {e}{RESET}")
+            input("\n  Press Enter to return to menu...")
+
+        # [Q] WhatsApp QR Code Login Link
+        elif choice == "q":
+            print(f"\n  {C_YELLOW}[► OPENING WHATSAPP WEB QR CODE LINK]{RESET}")
+            import whatsapp_engine
+            try:
+                whatsapp_engine.launch_whatsapp_login_qr()
+            except Exception as e:
+                print(f"  {C_RED}[!] WhatsApp login error: {e}{RESET}")
             input("\n  Press Enter to return to menu...")
 
         # [F] Dispatch Follow-ups

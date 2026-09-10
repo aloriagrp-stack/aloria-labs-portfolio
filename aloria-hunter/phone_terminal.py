@@ -150,6 +150,7 @@ def handle_client(client_sock, client_addr):
   {C_WHITE}[D]{RESET} {C_YELLOW}● Safe Dry-Run{RESET}           {C_DIM}— Scrape & audit leads without sending emails{RESET}
   {C_WHITE}[A]{RESET} {C_BLUE}● Run Website Auditor{RESET}    {C_DIM}— Inspect website speeds, SSL & extract emails{RESET}
   {C_WHITE}[E]{RESET} {C_MAGENTA}● Dispatch Email Queue{RESET}   {C_DIM}— Send tailored Day 0 cold pitches for active business{RESET}
+  {C_WHITE}[W]{RESET} {C_GREEN}● WhatsApp Outreach{RESET}      {C_DIM}— Send tailored WhatsApp pitch to leads with phone numbers{RESET}
   {C_WHITE}[F]{RESET} {C_YELLOW}● Dispatch Follow-ups{RESET}    {C_DIM}— Send scheduled 2-Day & 4-Day follow-up sequence{RESET}
   {C_WHITE}[R]{RESET} {C_GREEN}● Full Autopilot Wave{RESET}    {C_DIM}— 1-Click Hunt ➔ Audit ➔ Pitch ➔ Follow-up cycle (Active){RESET}
   {C_WHITE}[B]{RESET} {C_GREEN}⚡ Dual Parallel Wave{RESET}    {C_DIM}— Run Aloria Labs AND GetHotelStays in parallel!{RESET}
@@ -233,6 +234,17 @@ def handle_client(client_sock, client_addr):
                     send(f"\n{C_GREEN}[✓] Dispatched {sent} emails!{RESET}\n")
                 except Exception as e:
                     send(f"\n{C_RED}[!] Dispatch error: {e}{RESET}\n")
+                send("Press Enter to return to menu...")
+                recv_line()
+
+            elif choice == "w":
+                send(f"\n{C_GREEN}[► DISPATCHING WHATSAPP OUTREACH QUEUE]{RESET}\n")
+                import whatsapp_engine
+                try:
+                    sent = whatsapp_engine.dispatch_whatsapp_queue(limit=5, business_id=active_id, headless=True)
+                    send(f"\n{C_GREEN}[✓] Dispatched {sent} WhatsApp pitches!{RESET}\n")
+                except Exception as e:
+                    send(f"\n{C_RED}[!] WhatsApp error: {e}{RESET}\n")
                 send("Press Enter to return to menu...")
                 recv_line()
 

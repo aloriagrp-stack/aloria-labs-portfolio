@@ -58,6 +58,11 @@ def init_db():
         cursor.execute("ALTER TABLE leads ADD COLUMN business_id TEXT DEFAULT 'aloria_labs'")
         conn.commit()
 
+    if "whatsapp_status" not in lead_cols:
+        cursor.execute("ALTER TABLE leads ADD COLUMN whatsapp_status TEXT DEFAULT NULL")
+    if "whatsapp_sent_at" not in lead_cols:
+        cursor.execute("ALTER TABLE leads ADD COLUMN whatsapp_sent_at TEXT DEFAULT NULL")
+
     cursor.execute("PRAGMA table_info(outreach_logs)")
     log_cols = [r["name"] for r in cursor.fetchall()]
     if "business_id" not in log_cols:
@@ -322,6 +327,42 @@ def get_recent_logs(business_id=None, limit=10):
         """, (limit,))
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
+def get_leads_ready_for_whatsapp(business_id=None, limit=5):
+    conn = get_connection()
+    cursor = conn.cursor()
+    if business_id:
+        cursor.execute("""
+        SELECT * FROM leads
+        WHERE business_id = ?
+          AND phone IS NOT NULL AND TRIM(phone) != ''
+          AND (email IS NULL OR TRIM(email) = '' OR status = 'NO_EMAIL' OR status = 'AUDITED')
+          AND (whatsapp_status IS NULL OR whatsapp_status = 'PENDING')
+        ORDER BY id ASC
+        LIMIT ?
+        """, (business_id, limit))
+    else:
+        cursor.execute("""
+        SELECT * FROM leads
+        WHERE phone IS NOT NULL AND TRIM(phone) != ''
+          AND (email IS NULL OR TRIM(email) = '' OR status = 'NO_EMAIL' OR status = 'AUDITED')
+          AND (whatsapp_status IS NULL OR whatsapp_status = 'PENDING')
+        ORDER BY id ASC
+        LIMIT ?
+        """, (limit,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
     return rows
+
+def mark_whatsapp_sent(lead_id, status="SENT"):
+    conn = get_connection()
+    cursor = conn.cursor()
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+    UPDATE leads
+    SET whatsapp_status = ?, whatsapp_sent_at = ?
+    WHERE id = ?
+    """, (status, now_str, lead_id))
+    conn.commit()
+    conn.close()
 
 init_db()

@@ -52,6 +52,8 @@ class HotelStaysAgent(BaseAgent):
             self.execute_audit(limit=params.get("limit", 10))
         elif action == "dispatch_initial":
             self.execute_dispatch(limit=params.get("limit", 5))
+        elif action == "whatsapp":
+            self.execute_whatsapp_dispatch(limit=params.get("limit", 5))
         elif action == "dispatch_followups":
             self.execute_followups()
         elif action == "full_wave":
@@ -129,11 +131,27 @@ class HotelStaysAgent(BaseAgent):
         self.status = "IDLE"
         self.current_task = "Standby"
 
+    def execute_whatsapp_dispatch(self, limit=5):
+        self.status = "WHATSAPP_DISPATCH"
+        self.current_task = "Dispatching tailored WhatsApp pitches to hotels"
+        self.log_event("Checking hotel leads without email for WhatsApp outreach...", "INFO")
+
+        try:
+            import whatsapp_engine
+            sent = whatsapp_engine.dispatch_whatsapp_queue(limit=limit, business_id=self.business_id, headless=True)
+            self.log_event(f"WhatsApp outreach finished: {sent} delivered.", "SUCCESS")
+        except Exception as e:
+            self.log_event(f"WhatsApp outreach error: {e}", "ERROR")
+
+        self.status = "IDLE"
+        self.current_task = "Standby"
+
     def execute_full_wave(self, city="Algiers", country="Algeria", niche="Hotels", limit=5):
         self.cycle_count += 1
         self.log_event(f"Starting Full Autonomous Wave #{self.cycle_count} for GetHotelStays...", "INFO")
         self.execute_hunt_wave(city=city, country=country, niche=niche, limit=limit, headless=True)
         self.execute_audit(limit=limit)
         self.execute_dispatch(limit=limit)
+        self.execute_whatsapp_dispatch(limit=limit)
         self.execute_followups()
         self.log_event(f"Wave #{self.cycle_count} fully completed for GetHotelStays.", "SUCCESS")
