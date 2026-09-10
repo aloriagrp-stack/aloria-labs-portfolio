@@ -35,12 +35,17 @@ class AloriaAgent(BaseAgent):
     def _handle_command(self, cmd):
         action = cmd.get("action")
         params = cmd.get("params", {})
+        tgt = business_manager.get_target_settings("aloria_labs")
+
+        target_city = params.get("city") or tgt.get("city") or "Mumbai"
+        target_country = params.get("country") or tgt.get("country") or "India"
+        target_niche = params.get("niche") or tgt.get("niche") or "Restaurants"
 
         if action == "hunt":
             self.execute_hunt_wave(
-                city=params.get("city", "Algiers"),
-                country=params.get("country", "Algeria"),
-                niche=params.get("niche", "Restaurants"),
+                city=target_city,
+                country=target_country,
+                niche=target_niche,
                 limit=params.get("limit", 5),
                 headless=params.get("headless", True)
             )
@@ -52,9 +57,9 @@ class AloriaAgent(BaseAgent):
             self.execute_followups()
         elif action == "full_wave":
             self.execute_full_wave(
-                city=params.get("city", "Algiers"),
-                country=params.get("country", "Algeria"),
-                niche=params.get("niche", "Restaurants"),
+                city=target_city,
+                country=target_country,
+                niche=target_niche,
                 limit=params.get("limit", 5)
             )
         elif action == "pause":

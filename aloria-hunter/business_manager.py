@@ -63,3 +63,27 @@ def get_pitch_template(biz_id, pitch_key):
     if biz and "pitches" in biz and pitch_key in biz["pitches"]:
         return biz["pitches"][pitch_key]
     return None
+
+def get_target_settings(biz_id):
+    biz = get_business(biz_id)
+    if not biz:
+        return {"country": "", "city": "", "niche": ""}
+    return {
+        "country": biz.get("target_country", ""),
+        "city": biz.get("target_city", ""),
+        "niche": biz.get("target_niche", "")
+    }
+
+def set_target_settings(biz_id, country=None, city=None, niche=None):
+    cfg = load_businesses_config()
+    if biz_id in cfg.get("businesses", {}):
+        if country is not None:
+            cfg["businesses"][biz_id]["target_country"] = country.strip()
+        if city is not None:
+            cfg["businesses"][biz_id]["target_city"] = city.strip()
+        if niche is not None:
+            cfg["businesses"][biz_id]["target_niche"] = niche.strip()
+        save_businesses_config(cfg)
+        return True
+    return False
+

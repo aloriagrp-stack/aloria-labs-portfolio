@@ -11,12 +11,9 @@
         "Real Estate Agencies",
         "Medical Clinics"
       ],
-      "country": "Algeria",
-      "cities": [
-        "Algiers",
-        "Oran",
-        "Constantine"
-      ],
+      "target_country": "",
+      "target_city": "",
+      "target_niche": "",
       "sender_profile": "gmail",
       "sender_display_name": "Shriyansh Aloria — Aloria Labs",
       "pitches": {
@@ -48,12 +45,9 @@
         "Resorts",
         "Guesthouses"
       ],
-      "country": "Algeria",
-      "cities": [
-        "Algiers",
-        "Oran",
-        "Constantine"
-      ],
+      "target_country": "",
+      "target_city": "",
+      "target_niche": "",
       "sender_profile": "gmail",
       "sender_display_name": "Hotel Partnerships Desk — GetHotelStays",
       "pitches": {
