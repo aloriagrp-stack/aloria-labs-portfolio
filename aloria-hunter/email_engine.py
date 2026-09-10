@@ -338,12 +338,19 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=N
     msg.attach(MIMEText(html_text, "html", "utf-8"))
 
     try:
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=20) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(sender_email, password)
-            server.sendmail(sender_email, [to_email], msg.as_string())
+        if int(smtp_port) == 465:
+            import ssl
+            ssl_ctx = ssl.create_default_context()
+            with smtplib.SMTP_SSL(smtp_server, 465, context=ssl_ctx, timeout=20) as server:
+                server.login(sender_email, password)
+                server.sendmail(sender_email, [to_email], msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_server, int(smtp_port), timeout=20) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, [to_email], msg.as_string())
         return True, sender_email
     except Exception as e:
         print(f"  {ui.C_RED}[!] SMTP error for {to_email}: {e}{ui.RESET}")
