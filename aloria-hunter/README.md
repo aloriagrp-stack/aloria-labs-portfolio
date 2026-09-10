@@ -6,34 +6,38 @@ A production-grade Python autonomous agent that hunts local businesses on **Goog
 
 ## ⚡ Key Features
 
-1. **Autonomous Google Maps Screen Controller**:
-   - Uses Playwright Chromium to search `"Restaurants in Algiers, Algeria"` (or any country/city/niche).
-   - Scrolls the feed, clicks each listing, and extracts name, phone, address, rating, and website status.
-2. **Deterministic Empirical Audit Engine**:
-   - Tests server response speed / latency.
-   - Tests mobile viewport responsiveness (`<meta name="viewport">`).
-   - Checks SSL certificate validity (`https`).
-   - Scrapes homepage and `/contact` pages for email addresses and contact points.
-3. **Branching Value Proposition Pitcher**:
-   - **Case A (No Website — Golden Lead)**: Pitches an autonomous website & online ordering platform to capture digital customers.
-   - **Case B (Has Website)**: Quotes the exact empirical flaws (slow speed, mobile rendering failure, no online booking).
-4. **Automated Follow-up Engine**:
-   - Day 0: Initial personalized pitch.
-   - Day 2: Polite follow-up bump.
-   - Day 4: Final courteous check-in / breakup email.
-5. **SQLite State Machine (`hunter.db`)**:
-   - Guarantees zero duplicate crawls and zero duplicate emails.
-6. **Zero External LLM APIs**:
-   - 100% self-contained deterministic Python engineering. No OpenAI/Claude API costs.
+1. **Dual Independent Parallel Autonomous Agents**:
+   - **Agent 1: Agent Aloria (Aloria Labs)**: Hunts and audits restaurants, cafes, clinics for web and software modernization pitches.
+   - **Agent 2: Agent HotelStays (GetHotelStays)**: Hunts independent hotels, boutique stays, and resorts, pitching partner onboarding for direct guest bookings.
+   - **Parallel Multithreaded Execution**: Both agents can run concurrently on background threads with zero cross-blocking and isolated queues.
+2. **Local Mobile Command & Chat App (Installable PWA)**:
+   - Self-hosted on your machine (FastAPI on port 8000). Zero 3rd party or Telegram dependence.
+   - Installable on mobile phones via "Add to Home Screen" as an app.
+   - Chat with both agents in real-time, trigger quick action chips (`Hunt`, `Audit`, `Send`, `Follow-up`), view live lead ledger, and stream the terminal console live to your phone.
+3. **24/7 Continuous Dual Autopilot**:
+   - Automated perpetual wave scheduler that alternates between Aloria Labs and GetHotelStays with safe IP cooldown intervals.
+4. **Clean, Uncluttered CLI Terminal Cockpit**:
+   - High-contrast, linear console with 1-key business switching (`[1-2]`), real-time pipeline KPIs, and direct wave execution.
+5. **Deterministic Audit & Branching Outreach**:
+   - Speed/SSL/viewport auditor, no-website golden lead detector, and automated 2-Day/4-Day follow-up engine.
 
 ---
 
 ## 🚀 How to Run
 
-Navigate into the folder:
-```bash
-cd aloria-hunter
+### 1. Launch Terminal Command Center (PC/Laptop)
+```cmd
+.\hunt.bat
 ```
+*(Clean terminal menu: Press `1` for Aloria Labs, `2` for GetHotelStays, or `H` to hunt!)*
+
+### 2. Launch Mobile Command App (Control from Phone)
+```cmd
+.\mobile.bat
+```
+*(Opens the local server on `http://192.168.43.83:8000`. Open this URL in your phone's browser, tap "Add to Home Screen" to install it as an app, and command both agents from anywhere on your WiFi!)*
+
+
 
 ### 1. Test Run (Live Visible Screen Control — Watch It Click & Type)
 ```bash

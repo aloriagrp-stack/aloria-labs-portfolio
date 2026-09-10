@@ -126,8 +126,8 @@ def audit_single_website(lead):
         "vulnerabilities": vulnerabilities
     }
 
-def audit_pending_leads(limit=20):
-    pending = db.get_pending_audits(limit=limit)
+def audit_pending_leads(limit=20, business_id=None):
+    pending = db.get_pending_audits(business_id=business_id, limit=limit)
     print(f"  {ui.C_BLUE}[⚡ AUDITOR ENGINE]{ui.RESET} Inspecting {ui.C_WHITE}{len(pending)}{ui.RESET} candidate websites for technical vulnerabilities & email extraction...")
     results = []
     for lead in pending:

@@ -7,6 +7,8 @@ import config
 import db
 import ui
 
+import business_manager
+
 def generate_pitch(lead, email_type="INITIAL"):
     name = lead["business_name"]
     city = lead["city"]
@@ -14,9 +16,44 @@ def generate_pitch(lead, email_type="INITIAL"):
     has_website = lead["has_website"]
     audit = (lead["audit_summary"] or "").lower()
     website_url = lead["website_url"] or ""
+    biz_id = lead.get("business_id") or "aloria_labs"
+
+    # Check if business has custom templates in business_manager
+    biz = business_manager.get_business(biz_id)
+    sender_name = biz.get("sender_display_name", "Shriyansh Aloria — Aloria Labs") if biz else "Shriyansh Aloria — Aloria Labs"
+
+    if biz and "pitches" in biz:
+        pitch_key = None
+        if email_type == "INITIAL":
+            pitch_key = "case_a_no_website" if not has_website else "case_b_audit"
+        elif email_type == "FOLLOW_UP_1":
+            pitch_key = "follow_up_1"
+        elif email_type == "FOLLOW_UP_2":
+            pitch_key = "follow_up_2"
+
+        if pitch_key and pitch_key in biz["pitches"]:
+            tpl = biz["pitches"][pitch_key]
+            rating_val = lead.get("rating") or "4.5"
+            reviews_val = lead.get("reviews_count") or "20+"
+            flaws_text = lead.get("audit_summary") or "• Sub-optimal mobile responsiveness\n• Slower load times impacting Google rankings"
+
+            subj = tpl.get("subject", "").format(
+                business_name=name, city=city, niche=niche,
+                rating=rating_val, reviews_count=reviews_val,
+                website_url=website_url, sender_name=sender_name
+            )
+            body = tpl.get("body", "").format(
+                business_name=name, city=city, niche=niche,
+                rating=rating_val, reviews_count=reviews_val,
+                website_url=website_url, sender_name=sender_name,
+                flaws_bullet_points=flaws_text
+            )
+            html_body = f"""<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111; line-height: 1.6; max-width: 600px; white-space: pre-line;">{body}</div>"""
+            return subj, body, html_body
 
     if email_type == "INITIAL":
         if not has_website:
+
             # PITCH CATEGORY A: ZERO DIGITAL FOOTPRINT / NO WEBSITE
             subject = f"Question regarding {name}'s online reservations in {city}"
             plain_text = f"""Hi {name} Team,
@@ -312,8 +349,8 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=N
         print(f"  {ui.C_RED}[!] SMTP error for {to_email}: {e}{ui.RESET}")
         return False, sender_email
 
-def dispatch_initial_emails(limit=5, profile_name=None):
-    ready_leads = db.get_leads_ready_for_initial_email(limit=limit)
+def dispatch_initial_emails(limit=5, profile_name=None, business_id=None):
+    ready_leads = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit)
     print(f"  {ui.C_MAGENTA}[⚡ EMAIL ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_leads)}{ui.RESET} verified leads ready for initial pitch...")
 
     sent_count = 0
@@ -322,22 +359,24 @@ def dispatch_initial_emails(limit=5, profile_name=None):
         if not to_email:
             continue
 
+        lead_biz = lead.get("business_id") or business_id or "aloria_labs"
         subject, plain, html = generate_pitch(lead, email_type="INITIAL")
         success, sender = send_email_via_smtp(to_email, subject, plain, html, profile_name)
         if success:
             db.mark_initial_email_sent(lead["id"])
-            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "SENT")
+            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "SENT", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, True)
             sent_count += 1
             time.sleep(30)
         else:
-            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "FAILED")
+            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "FAILED", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Handshake Error")
 
     return sent_count
 
-def dispatch_followups(profile_name=None):
+def dispatch_followups(profile_name=None, business_id=None):
     ready_followups = db.get_leads_ready_for_followup(
+        business_id=business_id,
         interval_days=config.FOLLOW_UP_INTERVAL_DAYS,
         max_followups=config.MAX_FOLLOW_UPS
     )
@@ -349,17 +388,18 @@ def dispatch_followups(profile_name=None):
         curr_count = lead["follow_up_count"] or 0
         new_count = curr_count + 1
         email_type = f"FOLLOW_UP_{new_count}"
+        lead_biz = lead.get("business_id") or business_id or "aloria_labs"
 
         subject, plain, html = generate_pitch(lead, email_type=email_type)
         success, sender = send_email_via_smtp(to_email, subject, plain, html, profile_name)
         if success:
             db.mark_followup_sent(lead["id"], new_count)
-            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "SENT")
+            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "SENT", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, f"[Follow-up {new_count}] {subject}", True)
             sent_count += 1
             time.sleep(30)
         else:
-            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "FAILED")
+            db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "FAILED", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Error")
 
     return sent_count

@@ -15,6 +15,7 @@ import ui
 import runner
 import db
 import config
+import terminal_cockpit
 
 def select_sender_account_menu():
     profiles, active_key = config.list_smtp_profiles()
@@ -143,9 +144,11 @@ def interactive_mode():
         input(f"  {ui.C_GREEN}Wave finished! Press Enter to return to Command Center...{ui.RESET}")
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and sys.argv[1] == "--legacy":
+        interactive_mode()
+    elif len(sys.argv) > 1:
         # User passed CLI flags like: python hunt.py --country UAE --headless
         runner.main()
     else:
-        # Zero-arg 1-click execution
-        interactive_mode()
+        # Zero-arg 1-click execution launches WTF/Sampler Terminal Cockpit
+        terminal_cockpit.run_cockpit_loop()

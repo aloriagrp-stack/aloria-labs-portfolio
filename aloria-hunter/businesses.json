@@ -1,0 +1,79 @@
+{
+  "active_business_id": "aloria_labs",
+  "businesses": {
+    "aloria_labs": {
+      "name": "Aloria Labs",
+      "tagline": "Autonomous Web Infrastructure & Custom Systems",
+      "niche": "Software & Web Infrastructure",
+      "default_niches": [
+        "Restaurants",
+        "Cafes",
+        "Real Estate Agencies",
+        "Medical Clinics"
+      ],
+      "country": "Algeria",
+      "cities": [
+        "Algiers",
+        "Oran",
+        "Constantine"
+      ],
+      "sender_profile": "gmail",
+      "sender_display_name": "Shriyansh Aloria — Aloria Labs",
+      "pitches": {
+        "case_a_no_website": {
+          "subject": "Quick question regarding {business_name}'s online presence in {city}",
+          "body": "Hi {business_name} Team,\n\nI was looking up top-rated {niche} in {city} and noticed your Google Maps listing has great reviews ({rating}★ across {reviews_count} customers), but you currently don't have an official website connected to your profile.\n\nOver 68% of local customers in {city} look for a direct menu, pricing, or instant booking before visiting. Without a direct web presence, that revenue leaks to competitors with instant ordering.\n\nAt Aloria Labs, we deploy high-speed, modern digital platforms with zero friction. We built a live interactive concept for {business_name}—would you be open to a 3-minute screen preview this week?\n\nBest regards,\n{sender_name}\nAloria Labs — Engineering High-Performance Digital Infrastructure\nhttps://alorialabs.in | direct: info@alorialabs.in"
+        },
+        "case_b_audit": {
+          "subject": "Empirical audit notes on {business_name}'s website",
+          "body": "Hi {business_name} Team,\n\nOur engineering scanner recently audited top {niche} in {city}. While {business_name} has strong local reputation, we ran a digital performance scan on {website_url} and identified a few critical friction points:\n\n{flaws_bullet_points}\n\nThese issues directly hurt Google ranking and cause mobile visitors to bounce before reaching your contact page.\n\nWe specialize in high-speed, lightning-fast modern rebuilds that double mobile customer conversion. Would it be alright if I sent a 90-second video breakdown of how to fix this for {business_name}?\n\nBest regards,\n{sender_name}\nAloria Labs — Engineering High-Performance Digital Infrastructure\nhttps://alorialabs.in"
+        },
+        "follow_up_1": {
+          "subject": "Re: Quick question regarding {business_name}'s online presence in {city}",
+          "body": "Hi {business_name} Team,\n\nJust wanted to bump this in case it got buried under daily operations at {business_name}.\n\nDid you get a moment to review the digital presence notes I sent over two days ago? Happy to share the preview whenever you have 2 minutes.\n\nBest,\n{sender_name}\nAloria Labs"
+        },
+        "follow_up_2": {
+          "subject": "Final check-in — {business_name} digital presence",
+          "body": "Hi {business_name} Team,\n\nI assume you're fully focused on running operations right now, so I won't crowd your inbox any further.\n\nIf you ever decide to modernize {business_name}'s digital infrastructure in {city}, feel free to reach back out anytime.\n\nWishing you continued success,\n{sender_name}\nAloria Labs"
+        }
+      }
+    },
+    "gethotelstays": {
+      "name": "GetHotelStays",
+      "tagline": "Direct Guest Bookings & Partner Onboarding for Independent Hotels",
+      "niche": "Independent Hotels & Boutique Resorts",
+      "default_niches": [
+        "Hotels",
+        "Boutique Hotels",
+        "Resorts",
+        "Guesthouses"
+      ],
+      "country": "Algeria",
+      "cities": [
+        "Algiers",
+        "Oran",
+        "Constantine"
+      ],
+      "sender_profile": "gmail",
+      "sender_display_name": "Hotel Partnerships Desk — GetHotelStays",
+      "pitches": {
+        "case_a_no_website": {
+          "subject": "Partner invitation: Onboarding {business_name} onto GetHotelStays ({city})",
+          "body": "Hi {business_name} Management Team,\n\nI came across {business_name} on Google Maps while scouting top-rated independent stays in {city} ({rating}★ with {reviews_count} guest reviews).\n\nWe run GetHotelStays—a curated direct-booking platform designed specifically for independent hotels and boutique stays to get verified guest bookings without getting squeezed by 20%+ OTA aggregator commissions.\n\nWe are currently onboarding premier stays in {city} and would love to feature {business_name}. We set up your property profile, showcase your rooms and amenities, and connect travelers directly to your reception.\n\nOnboarding is completely free with zero listing setup fees. Would you be open to a 2-minute overview this week?\n\nWarm regards,\n{sender_name}\nGetHotelStays — Independent Hotel Network\nhttps://gethotelstays.com | partnerships@gethotelstays.com"
+        },
+        "case_b_audit": {
+          "subject": "Featuring {business_name} on GetHotelStays — Direct guest bookings for {city}",
+          "body": "Hi {business_name} Reservations & Management Team,\n\nI was reviewing top independent hospitality properties in {city} and came across {business_name} ({website_url}).\n\nMost independent hotels lose 18% to 25% of their revenue to big OTA platforms like Booking.com and Expedia. At GetHotelStays, we partner with independent hotels and boutique resorts to drive high-intent direct bookings at fair, transparent terms.\n\nWe are expanding our featured stays in {city} and would love to onboard {business_name} to give you extra visibility and direct guest inquiries.\n\nCould I share a 2-minute walkthrough on how we can feature your property this season?\n\nWarm regards,\n{sender_name}\nGetHotelStays — Independent Hotel Network\nhttps://gethotelstays.com | partnerships@gethotelstays.com"
+        },
+        "follow_up_1": {
+          "subject": "Re: Partner invitation: Onboarding {business_name} onto GetHotelStays ({city})",
+          "body": "Hi {business_name} Team,\n\nJust bumping my previous note regarding featuring {business_name} on the GetHotelStays network.\n\nWe are finalizing our featured independent hotel listings in {city} for the upcoming season. Did you get a moment to review?\n\nHappy to answer any questions or share the 1-page partner sheet.\n\nBest regards,\n{sender_name}\nGetHotelStays"
+        },
+        "follow_up_2": {
+          "subject": "Final check-in: Featuring {business_name} on GetHotelStays",
+          "body": "Hi {business_name} Team,\n\nI understand you are likely busy managing guest arrivals and day-to-day hotel operations right now.\n\nI won't follow up further, but if you ever want to open a new direct booking channel for {business_name} with zero upfront listing fees, our partnership desk is always open for you.\n\nWishing your property a fully booked season!\n\nBest regards,\n{sender_name}\nGetHotelStays"
+        }
+      }
+    }
+  }
+}

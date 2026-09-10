@@ -5,7 +5,7 @@ import config
 import db
 import ui
 
-def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None):
+def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None, business_id="aloria_labs"):
     if headless is None:
         headless = config.HEADLESS
 
@@ -166,7 +166,8 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         phone=phone,
                         rating=rating,
                         reviews_count=reviews_count,
-                        website_url=website_url
+                        website_url=website_url,
+                        business_id=business_id
                     )
 
                     ui.log_discovered_place(count + 1, max_places, title, website_url, phone, rating)
