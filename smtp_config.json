@@ -20,13 +20,13 @@
       "reply_to": "info@alorialabs.in"
     },
     "gethotelstays": {
-      "name": "GetHotelStays Official (sales@gethotelstays.com)",
-      "email": "sales@gethotelstays.com",
-      "password": "shriyansh@0402",
+      "name": "GetHotelStays Official (onboard@gethotelstays.com)",
+      "email": "onboard@gethotelstays.com",
+      "password": "shriyansh0402",
       "smtp_server": "mail.gethotelstays.com",
       "smtp_port": 465,
       "sender_name": "Shriyansh Aloria — GetHotelStays",
-      "reply_to": "sales@gethotelstays.com"
+      "reply_to": "onboard@gethotelstays.com"
     }
   }
 }
