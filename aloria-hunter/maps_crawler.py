@@ -70,11 +70,12 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
 
             # Scroll the feed to load results
             ui.log_crawler_step(3, 4, "Streaming listings viewport...")
-            for scroll_idx in range(4):
+            scroll_count = max(4, min(25, (max_places // 2) + 2))
+            for scroll_idx in range(scroll_count):
                 try:
                     feed = page.locator(feed_selector)
                     feed.evaluate("el => el.scrollBy(0, 3000)")
-                    time.sleep(1.5)
+                    time.sleep(1.2)
                 except Exception:
                     page.mouse.wheel(0, 1000)
                     time.sleep(1)

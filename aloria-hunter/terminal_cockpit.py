@@ -176,95 +176,179 @@ def show_clean_lead_ledger(active_id):
 def run_247_hotel_onboarding_loop():
     active_id = "gethotelstays"
     tgt = business_manager.get_target_settings(active_id)
-    country = tgt.get("country") or "India"
-    city = tgt.get("city") or "Goa"
-    niche = tgt.get("niche") or "Hotels"
+    def_country = tgt.get("country") or "India"
+    def_city = tgt.get("city") or "Goa"
+
+    print(f"\n{C_CYAN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+    print(f"  {C_CYAN}║                   🎯 CONFIGURE HOTEL ONBOARDING MISSION & DELIVERY GOAL                       ║{RESET}")
+    print(f"  {C_CYAN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
+
+    # 1. State / Destination Prompt
+    state_input = input(f"  {C_WHITE}1. Target State / City (e.g. Goa, Rajasthan, Manali, Kerala, Jaipur) [{def_city}]: {RESET}").strip()
+    city = state_input or def_city
+    country = def_country
+    niche = "Hotels"
+    business_manager.set_target_settings(active_id, country=country, city=city, niche=niche)
+
+    # 2. Channel Selection
+    import whatsapp_engine
+    is_wa = whatsapp_engine.is_whatsapp_logged_in()
+    wa_label = f"{C_GREEN}[CONNECTED]{RESET}" if is_wa else f"{C_YELLOW}[NOT CONNECTED - QR REQUIRED]{RESET}"
+
+    print(f"\n  {C_WHITE}2. Select Outreach Channel:{RESET}")
+    print(f"     {C_CYAN}[1]{RESET} Email Only         — via {C_GREEN}onboard@gethotelstays.com{RESET}")
+    print(f"     {C_CYAN}[2]{RESET} WhatsApp Only      — via Linked WhatsApp Web {wa_label}")
+    print(f"     {C_CYAN}[3]{RESET} Dual Multi-Channel — Both Email + WhatsApp {C_YELLOW}(Recommended for 100% reach){RESET}")
+    ch_choice = input(f"     Choice [1-3] (Default 3): ").strip()
+
+    if ch_choice == "1":
+        channel_mode = "EMAIL"
+    elif ch_choice == "2":
+        channel_mode = "WHATSAPP"
+    else:
+        channel_mode = "BOTH"
+
+    # 3. Delivered Goal Selection
+    print(f"\n  {C_WHITE}3. Desired DELIVERED Outreach Goal:{RESET}")
+    print(f"     {C_DIM}Enter how many hotels must receive DELIVERED outreach emails / WhatsApp messages.{RESET}")
+    print(f"     {C_YELLOW}[!] Note: Engine will run continuously until exactly this number of messages are DELIVERED.{RESET}")
+    goal_input = input(f"     Target Delivered Hotels (e.g. 50, 100, 500) [100]: ").strip()
+    try:
+        target_goal = int(goal_input) if goal_input else 100
+        if target_goal <= 0:
+            target_goal = 100
+    except ValueError:
+        target_goal = 100
 
     print(f"\n{C_GREEN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
-    print(f"  {C_GREEN}║               🔥 24/7 AUTONOMOUS HOTEL ONBOARDING ENGINE ONLINE                               ║{RESET}")
-    print(f"  {C_GREEN}║          Mission: 100% Autonomous Hotel Discovery, Verification & Direct Onboarding          ║{RESET}")
+    print(f"  {C_GREEN}║             🔥 MISSION CONFIRMED: {target_goal} DELIVERED HOTEL OUTREACHES                            ║{RESET}")
     print(f"  {C_GREEN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
-    print(f"  {C_WHITE}Sender Profile:{RESET}  {C_GREEN}onboard@gethotelstays.com{RESET} (MilesWeb cPanel SSL :465)")
-    print(f"  {C_WHITE}Initial Target:{RESET}  {C_YELLOW}{niche}{RESET} in {C_CYAN}{city}, {country}{RESET}")
-    print(f"  {C_DIM}Mode: 24/7 continuous autonomous execution. Press Ctrl+C anytime to pause/return.{RESET}\n")
+    print(f"  {C_WHITE}Target Region:{RESET}  {C_YELLOW}{city}, {country}{RESET}")
+    print(f"  {C_WHITE}Channel Mode:{RESET}   {C_CYAN}{channel_mode}{RESET}")
+    print(f"  {C_WHITE}Delivery Goal:{RESET}  {C_GREEN}{target_goal} DELIVERED HOTELS{RESET}")
+    print(f"  {C_DIM}The engine will crawl, audit and dispatch continuously until {target_goal} hotels are reached.{RESET}")
+    print(f"  {C_DIM}Press Ctrl+C at any time to pause or return to menu.{RESET}\n")
+    time.sleep(2)
 
-    destinations = [city, "Goa", "Jaipur", "Udaipur", "Manali", "Shimla", "Rishikesh", "Munnar", "Mussoorie", "Ooty"]
-    # De-duplicate while preserving initial preference
+    # Establish baseline delivered count before this mission
+    delivered_start = db.get_delivered_count(business_id=active_id, channel=channel_mode)
+
+    # Destination rotation list based on target region
+    base_destinations = [city]
+    if "goa" in city.lower():
+        base_destinations += ["North Goa", "South Goa", "Calangute", "Candolim", "Anjuna", "Panaji", "Baga", "Morjim", "Palolem"]
+    elif "rajasthan" in city.lower() or "jaipur" in city.lower():
+        base_destinations += ["Jaipur", "Udaipur", "Jodhpur", "Jaisalmer", "Pushkar", "Mount Abu", "Bikaner"]
+    elif "himachal" in city.lower() or "manali" in city.lower():
+        base_destinations += ["Manali", "Shimla", "Dharamshala", "Kasol", "Kullu", "Spiti", "Bir"]
+    elif "kerala" in city.lower():
+        base_destinations += ["Munnar", "Kochi", "Alleppey", "Wayanad", "Varkala", "Kovalam", "Thekkady"]
+    elif "uttarakhand" in city.lower() or "rishikesh" in city.lower():
+        base_destinations += ["Rishikesh", "Mussoorie", "Nainital", "Dehradun", "Haridwar", "Auli"]
+    else:
+        base_destinations += [f"{city} Central", f"{city} North", f"{city} South", "Goa", "Jaipur", "Udaipur", "Manali", "Rishikesh"]
+
+    # De-duplicate while preserving initial priority
     seen = set()
-    clean_destinations = [d for d in destinations if not (d.lower() in seen or seen.add(d.lower()))]
+    clean_destinations = [d for d in base_destinations if not (d.lower() in seen or seen.add(d.lower()))]
 
     cycle = 1
     while True:
+        # Check current progress toward goal
+        current_total = db.get_delivered_count(business_id=active_id, channel=channel_mode)
+        delivered_in_mission = current_total - delivered_start
+        remaining_to_deliver = max(0, target_goal - delivered_in_mission)
+
+        if delivered_in_mission >= target_goal:
+            print(f"\n{C_GREEN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+            print(f"  {C_GREEN}║             🎉 MISSION ACCOMPLISHED: {target_goal} DELIVERED OUTREACHES COMPLETED!                 ║{RESET}")
+            print(f"  {C_GREEN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
+            stats = db.get_delivered_breakdown(business_id=active_id)
+            print(f"  {C_WHITE}Emails Delivered:{RESET}   {C_CYAN}{stats['emails_delivered']}{RESET}")
+            print(f"  {C_WHITE}WhatsApp Delivered:{RESET} {C_GREEN}{stats['whatsapp_delivered']}{RESET}")
+            print(f"  {C_WHITE}Total Deliveries:{RESET}   {C_YELLOW}{stats['total_delivered']}{RESET}\n")
+            input("  Press Enter to return to main menu...")
+            break
+
         current_city = clean_destinations[(cycle - 1) % len(clean_destinations)]
+        pct = min(100.0, (delivered_in_mission / target_goal) * 100) if target_goal > 0 else 0
+
         print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-        print(f"  {C_WHITE}► [WAVE #{cycle}] ONBOARDING WAVE: {C_GREEN}{niche.upper()} IN {current_city.upper()}, {country.upper()}{RESET}")
+        print(f"  {C_WHITE}► [CYCLE #{cycle}] TARGETING: {C_GREEN}{current_city.upper()} ({country.upper()}){RESET}")
+        print(f"  {C_YELLOW}PROGRESS: [ {delivered_in_mission} / {target_goal} DELIVERED ] ({pct:.1f}%) │ Remaining Needed: {remaining_to_deliver}{RESET}")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
 
         try:
-            # 1. Google Maps Discovery
-            print(f"  {C_CYAN}[1/4] Scraping independent hotels & boutique stays on Maps...{RESET}")
+            # Step 1: Scrape candidates on Google Maps (batch of 10 to ensure steady supply of contacts)
+            print(f"  {C_CYAN}[1/4] Scraping independent hotels & boutique stays on Maps in {current_city}...{RESET}")
             discovered = maps_crawler.crawl_google_maps(
                 city=current_city,
                 country=country,
-                niche=niche,
-                max_places=5,
+                niche="Hotels",
+                max_places=10,
                 headless=True,
                 business_id=active_id
             )
-            print(f"        {C_GREEN}✓ Discovered {len(discovered)} potential hotel properties{RESET}")
+            print(f"        {C_GREEN}✓ Discovered {len(discovered)} potential properties on Maps{RESET}")
 
-            # 2. Audit & Contact Extraction
-            print(f"  {C_CYAN}[2/4] Inspecting websites & extracting reservation emails / phones...{RESET}")
-            audited = website_auditor.audit_pending_leads(limit=5, business_id=active_id)
-            print(f"        {C_GREEN}✓ Audited {len(audited)} properties{RESET}")
+            # Step 2: Audit websites & extract contact details (emails & phones)
+            print(f"  {C_CYAN}[2/4] Auditing websites & extracting verified emails / phone numbers...{RESET}")
+            audited = website_auditor.audit_pending_leads(limit=10, business_id=active_id)
+            print(f"        {C_GREEN}✓ Extracted details from {len(audited)} properties{RESET}")
 
-            # 3. Dispatch Onboarding Invitations via onboard@gethotelstays.com
-            print(f"  {C_CYAN}[3/4] Dispatching GetHotelStays ₹0 onboarding invitations (onboard@gethotelstays.com)...{RESET}")
-            sent = email_engine.dispatch_initial_emails(limit=5, profile_name="gethotelstays", business_id=active_id)
-            print(f"        {C_GREEN}✓ Dispatched {sent} official partner onboarding emails{RESET}")
+            # Step 3: Dispatch Emails if selected
+            emails_sent_wave = 0
+            if channel_mode in ["EMAIL", "BOTH"]:
+                print(f"  {C_CYAN}[3/4] Dispatching official partner onboarding emails via onboard@gethotelstays.com...{RESET}")
+                emails_sent_wave = email_engine.dispatch_initial_emails(limit=min(10, remaining_to_deliver), profile_name="gethotelstays", business_id=active_id)
+                print(f"        {C_GREEN}✓ Successfully delivered {emails_sent_wave} onboarding emails{RESET}")
 
-            # Optional: WhatsApp Outreach if session exists
-            try:
-                import whatsapp_engine
+            # Step 4: Dispatch WhatsApp if selected
+            wa_sent_wave = 0
+            if channel_mode in ["WHATSAPP", "BOTH"]:
                 if whatsapp_engine.is_whatsapp_logged_in():
-                    print(f"  {C_CYAN}[*] Dispatching WhatsApp onboarding outreach to mobile contacts...{RESET}")
-                    wa_sent = whatsapp_engine.dispatch_whatsapp_queue(limit=3, business_id=active_id, headless=True)
-                    print(f"        {C_GREEN}✓ Dispatched {wa_sent} WhatsApp onboarding messages{RESET}")
+                    print(f"  {C_CYAN}[3b/4] Dispatching WhatsApp onboarding outreach to mobile contacts...{RESET}")
+                    wa_sent_wave = whatsapp_engine.dispatch_whatsapp_queue(limit=min(5, remaining_to_deliver), business_id=active_id, headless=True)
+                    print(f"        {C_GREEN}✓ Successfully delivered {wa_sent_wave} WhatsApp messages{RESET}")
+
+            # Follow-ups (maintain 2-day sequence)
+            try:
+                email_engine.dispatch_followups(profile_name="gethotelstays", business_id=active_id)
             except Exception:
                 pass
 
-            # 4. Dispatch Follow-ups
-            print(f"  {C_CYAN}[4/4] Checking scheduled 2-Day & 4-Day onboarding follow-ups...{RESET}")
-            fu_sent = email_engine.dispatch_followups(profile_name="gethotelstays", business_id=active_id)
-            print(f"        {C_GREEN}✓ Dispatched {fu_sent} follow-ups{RESET}")
+            # Update delivered count
+            current_total = db.get_delivered_count(business_id=active_id, channel=channel_mode)
+            delivered_in_mission = current_total - delivered_start
+            remaining_to_deliver = max(0, target_goal - delivered_in_mission)
+            pct = min(100.0, (delivered_in_mission / target_goal) * 100) if target_goal > 0 else 0
 
-            # Pipeline Update
-            stats = db.get_funnel_stats(business_id=active_id)
-            total_leads = stats.get('total', 0)
-            pitched = stats.get('pitch_sent', 0)
-            deliveries = stats.get('emails_sent', 0)
-            print(f"\n  {C_WHITE}HOTEL PIPELINE UPDATE:{RESET} {C_GREEN}{total_leads}{RESET} Total Hotels │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{deliveries}{RESET} Delivered Emails")
+            print(f"\n  {C_WHITE}MISSION STATUS:{RESET} {C_GREEN}{delivered_in_mission} / {target_goal} DELIVERED{RESET} ({pct:.1f}%) │ {C_YELLOW}{remaining_to_deliver} remaining{RESET}")
+
+            if delivered_in_mission >= target_goal:
+                continue
 
             cycle += 1
 
-            # Safe 24/7 Cooldown Pacing (300 seconds = 5 minutes between waves)
-            cooldown = 300
-            print(f"\n  {C_DIM}Wave #{cycle-1} complete. Cooldown active for sender health ({cooldown}s).{RESET}")
+            # Safe Cooldown between batches (e.g. 60-90 seconds for continuous delivery while safeguarding deliverability)
+            cooldown = 60
+            print(f"\n  {C_DIM}Wave complete. Safe pacing active ({cooldown}s) to maintain 100% inbox delivery.{RESET}")
             for sec in range(cooldown, 0, -5):
                 m, s = divmod(sec, 60)
-                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next onboarding wave in {m:02d}:{s:02d} — Press Ctrl+C to return to menu...{RESET}   ")
+                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next hunt wave in {m:02d}:{s:02d} — Goal: {delivered_in_mission}/{target_goal} Delivered (Ctrl+C to pause)...{RESET}   ")
                 sys.stdout.flush()
                 time.sleep(5)
             print()
 
         except KeyboardInterrupt:
-            print(f"\n\n  {C_YELLOW}[!] 24/7 Hotel Onboarding Engine paused by operator. Returning to menu...{RESET}\n")
-            time.sleep(1)
+            print(f"\n\n  {C_YELLOW}[!] Mission paused by operator. Delivered so far: {delivered_in_mission} / {target_goal} hotels.{RESET}")
+            print(f"  {C_DIM}You can resume anytime by selecting Option [1] again.{RESET}\n")
+            time.sleep(1.5)
             break
         except Exception as e:
             print(f"\n  {C_RED}[!] Error in wave #{cycle}: {e}{RESET}")
-            print(f"  {C_DIM}Retrying next cycle in 60 seconds...{RESET}")
-            time.sleep(60)
+            print(f"  {C_DIM}Retrying next batch in 30 seconds...{RESET}")
+            time.sleep(30)
 
 def run_247_aloria_loop():
     active_id = "aloria_labs"

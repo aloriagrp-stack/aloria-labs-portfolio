@@ -365,4 +365,33 @@ def mark_whatsapp_sent(lead_id, status="SENT"):
     conn.commit()
     conn.close()
 
+def get_delivered_count(business_id="gethotelstays", channel="BOTH"):
+    conn = get_connection()
+    cursor = conn.cursor()
+    if channel.upper() == "EMAIL":
+        cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND initial_email_sent_at IS NOT NULL", (business_id,))
+    elif channel.upper() == "WHATSAPP":
+        cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND whatsapp_status = 'SENT'", (business_id,))
+    else:
+        cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND (initial_email_sent_at IS NOT NULL OR whatsapp_status = 'SENT')", (business_id,))
+    res = cursor.fetchone()[0]
+    conn.close()
+    return res
+
+def get_delivered_breakdown(business_id="gethotelstays"):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND initial_email_sent_at IS NOT NULL", (business_id,))
+    emails = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND whatsapp_status = 'SENT'", (business_id,))
+    wa = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE business_id = ? AND (initial_email_sent_at IS NOT NULL OR whatsapp_status = 'SENT')", (business_id,))
+    total_unique = cursor.fetchone()[0]
+    conn.close()
+    return {
+        "emails_delivered": emails,
+        "whatsapp_delivered": wa,
+        "total_delivered": total_unique
+    }
+
 init_db()
