@@ -6,19 +6,26 @@ from bs4 import BeautifulSoup
 import db
 import ui
 
-EMAIL_REGEX = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+')
+EMAIL_REGEX = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,10}')
 IGNORED_EMAIL_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.css', '.js')
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
 def clean_email(email_str):
+    if not email_str:
+        return None
     email = email_str.strip().lower()
+    # Reject CDN / framework / version patterns (like bootstrap@5.3.3, jquery@3.6.0)
+    if re.search(r'@[0-9]+\.[0-9]+', email) or any(bad in email for bad in ["bootstrap", "jquery", "react", "webpack", "sentry", "example.com", "domain.com", "wixpress", "cloudflare", "schema.org"]):
+        return None
+    # Reject asset extensions
     if any(email.endswith(ext) for ext in IGNORED_EMAIL_EXTENSIONS):
         return None
-    if "example.com" in email or "sentry.io" in email or "domain.com" in email:
+    # Must have a valid TLD with only letters
+    if not re.search(r'\.[a-z]{2,10}$', email):
         return None
     return email
 
