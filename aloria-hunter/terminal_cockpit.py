@@ -38,7 +38,6 @@ import business_manager
 import maps_crawler
 import website_auditor
 import email_engine
-import runner
 
 def print_banner():
     banner = f"""
@@ -56,111 +55,85 @@ def print_banner():
 def print_clean_dashboard():
     active_id = business_manager.get_active_business_id()
     active_b = business_manager.get_active_business()
-    businesses, _ = business_manager.list_businesses()
     stats = db.get_funnel_stats(business_id=active_id)
 
     total = stats.get("total", 0)
     audited = stats.get("audited", 0)
     pitched = stats.get("pitch_sent", 0)
-    fu1 = stats.get("follow_up_1", 0)
-    fu2 = stats.get("follow_up_2", 0)
-    golden = stats.get("golden_leads", 0)
     sent_total = stats.get("emails_sent", 0)
 
-    b_name = active_b.get("name", active_id)
-    sender = active_b.get("sender_display_name", "Default")
-
     tgt = business_manager.get_target_settings(active_id)
-    tgt_country = tgt.get("country")
-    tgt_city = tgt.get("city")
-    tgt_niche = tgt.get("niche")
-    
+    tgt_country = tgt.get("country") or ("India" if active_id == "gethotelstays" else "India")
+    tgt_city = tgt.get("city") or ("Goa" if active_id == "gethotelstays" else "")
+    tgt_niche = tgt.get("niche") or ("Hotels" if active_id == "gethotelstays" else "")
+
     if tgt_country and tgt_city:
         loc_str = f"{C_GREEN}{tgt_city}, {tgt_country}{RESET}"
     else:
         loc_str = f"{C_YELLOW}[NOT SET - Press T to choose]{RESET}"
-        
-    niche_str = f"{C_YELLOW}{tgt_niche}{RESET}" if tgt_niche else f"{C_YELLOW}[NOT SET - Press T to choose]{RESET}"
 
-    # Clean Header
-    print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-    print(f"  {C_WHITE}ACTIVE BUSINESS:{RESET}   {Back.CYAN}{Fore.BLACK} {b_name.upper()} {RESET}  {C_DIM}(Press 1-{len(businesses)} to switch business profile){RESET}")
-    print(f"  {C_WHITE}TARGET REGION:{RESET}     {loc_str}")
-    print(f"  {C_WHITE}TARGET NICHE:{RESET}      {niche_str}")
-    print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}    {C_CYAN}{sender}{RESET}")
-    print(f"  {C_WHITE}PIPELINE STATS:{RESET}    {C_GREEN}{total}{RESET} Leads │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_MAGENTA}{golden}{RESET} Golden No-Web │ {C_CYAN}{sent_total}{RESET} Sent")
-    print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
+    niche_str = f"{C_CYAN}{tgt_niche}{RESET}" if tgt_niche else f"{C_YELLOW}[NOT SET - Press T to choose]{RESET}"
 
-    # Business Switcher Options
-    print(f"  {C_YELLOW}─── [SWITCH BUSINESS PROFILE] ─────────────────────────────────────────────────────────────{RESET}")
-    keys = list(businesses.keys())
-    for idx, b_id in enumerate(keys, 1):
-        b = businesses[b_id]
-        b_tgt = business_manager.get_target_settings(b_id)
-        t_loc = f"{b_tgt.get('city')}, {b_tgt.get('country')}" if b_tgt.get('country') else "Location Not Set"
-        t_nic = b_tgt.get('niche') or "Niche Not Set"
-        if b_id == active_id:
-            tag = f"{C_GREEN}● [ACTIVE]{RESET}"
-            name_str = f"{C_GREEN}{b.get('name', b_id)}{RESET}"
-        else:
-            tag = f"{C_DIM}○ [STANDBY]{RESET}"
-            name_str = f"{C_WHITE}{b.get('name', b_id)}{RESET}"
-        print(f"  {C_YELLOW}[{idx}]{RESET} {tag} {name_str} {C_DIM}— {t_nic} ({t_loc}){RESET}")
+    if active_id == "gethotelstays":
+        # GET HOTEL STAYS SPECIFIC ULTRA-CLEAN DASHBOARD
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+        print(f"  {C_WHITE}ACTIVE AGENT:{RESET}       {Back.CYAN}{Fore.BLACK} GETHOTELSTAYS — 24/7 HOTEL PARTNER ONBOARDING {RESET}  {C_DIM}(Press B to switch){RESET}")
+        print(f"  {C_WHITE}TARGET DESTINATION:{RESET} {loc_str} │ {niche_str}")
+        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}Shriyansh Aloria — GetHotelStays <onboard@gethotelstays.com>{RESET}")
+        print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Hotels Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent")
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
 
-    # Hunter Operations
-    print(f"\n  {C_CYAN}─── [AUTOMATION OPERATIONS] ───────────────────────────────────────────────────────────────{RESET}")
-    print(f"  {C_WHITE}[T]{RESET} {C_CYAN}⚙ Set Country / City / Niche{RESET} {C_DIM}— Choose target location & industry manually{RESET}")
-    print(f"  {C_WHITE}[H]{RESET} {C_GREEN}● Live Hunter{RESET}            {C_DIM}— Watch visible Chrome window scrape Google Maps live{RESET}")
-    print(f"  {C_WHITE}[S]{RESET} {C_CYAN}● Silent Ghost Hunter{RESET}    {C_DIM}— Run Maps crawler silently in background (headless){RESET}")
-    print(f"  {C_WHITE}[D]{RESET} {C_YELLOW}● Safe Dry-Run{RESET}           {C_DIM}— Scrape & audit leads without sending emails{RESET}")
-    print(f"  {C_WHITE}[A]{RESET} {C_BLUE}● Run Website Auditor{RESET}    {C_DIM}— Inspect website speeds, SSL & extract emails{RESET}")
-    print(f"  {C_WHITE}[E]{RESET} {C_MAGENTA}● Dispatch Email Queue{RESET}   {C_DIM}— Send tailored Day 0 cold pitches for active business{RESET}")
-    print(f"  {C_WHITE}[W]{RESET} {C_GREEN}● WhatsApp Outreach{RESET}      {C_DIM}— Send tailored WhatsApp pitch to leads with phone numbers{RESET}")
-    print(f"  {C_WHITE}[Q]{RESET} {C_YELLOW}● WhatsApp QR Code Link{RESET}  {C_DIM}— Scan QR code once to connect your WhatsApp Web{RESET}")
-    print(f"  {C_WHITE}[F]{RESET} {C_YELLOW}● Dispatch Follow-ups{RESET}    {C_DIM}— Send scheduled 2-Day & 4-Day follow-up sequence{RESET}")
-    print(f"  {C_WHITE}[R]{RESET} {C_GREEN}● Full Autopilot Wave{RESET}    {C_DIM}— 1-Click Hunt ➔ Audit ➔ Pitch ➔ Follow-up cycle (Active profile){RESET}")
-    print(f"  {C_WHITE}[B]{RESET} {C_GREEN}⚡ Dual Parallel Wave{RESET}    {C_DIM}— Run Aloria Labs AND GetHotelStays simultaneously in parallel!{RESET}")
-    print(f"  {C_WHITE}[L]{RESET} {C_CYAN}● Lead Ledger & History{RESET}  {C_DIM}— View all leads, email contacts & outreach status{RESET}")
-    print(f"  {C_WHITE}[M]{RESET} {C_MAGENTA}● Mobile Command App{RESET}     {C_DIM}— Launch phone control server (Open on your mobile){RESET}")
-    print(f"  {C_WHITE}[0]{RESET} {C_RED}● Exit Console{RESET}           {C_DIM}— Close Hunter Command Center{RESET}\n")
+        print(f"  {C_YELLOW}─── [ACTIVE AGENT PROFILE] ────────────────────────────────────────────────────────────────{RESET}")
+        print(f"  {C_GREEN}● [ACTIVE]{RESET}  {C_WHITE}GetHotelStays{RESET} — Autonomous Hotel Partner Onboarding ({loc_str})")
+        print(f"  {C_DIM}○ [STANDBY] Aloria Labs  — Web & Digital Infrastructure Agency (Press [B] to toggle){RESET}")
+
+        print(f"\n  {C_GREEN}─── [AUTONOMOUS 24/7 HOTEL ONBOARDING ENGINE] ─────────────────────────────────────────────{RESET}")
+        print(f"  {C_WHITE}[1]{RESET} {C_GREEN}🔥 START 24/7 HOTEL ONBOARDING{RESET}   {C_DIM}— Runs continuously: Discover ➔ Extract ➔ Pitch ➔ Follow-up{RESET}")
+        print(f"  {C_WHITE}[T]{RESET} {C_CYAN}⚙ Set Target City / State{RESET}        {C_DIM}— Destination (Currently: {tgt_city or 'Goa'}, {tgt_country or 'India'}){RESET}")
+        print(f"  {C_WHITE}[L]{RESET} {C_YELLOW}📋 Hotel Pipeline & Ledger{RESET}        {C_DIM}— View discovered hotels, contacts & onboarding stages{RESET}")
+        print(f"  {C_WHITE}[Q]{RESET} {C_MAGENTA}💬 WhatsApp Web QR Login{RESET}          {C_DIM}— Connect WhatsApp Web for multi-channel outreach{RESET}")
+        print(f"  {C_WHITE}[B]{RESET} {C_BLUE}🔄 Switch to Aloria Labs{RESET}          {C_DIM}— Switch profile to Web & Software Agency{RESET}")
+        print(f"  {C_WHITE}[0]{RESET} {C_RED}✖ Exit Console{RESET}                    {C_DIM}— Close Hunter Command Center{RESET}\n")
+
+    else:
+        # ALORIA LABS SPECIFIC CLEAN DASHBOARD
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+        print(f"  {C_WHITE}ACTIVE AGENT:{RESET}       {Back.CYAN}{Fore.BLACK} ALORIA LABS — CLIENT ACQUISITION {RESET}  {C_DIM}(Press B to switch){RESET}")
+        print(f"  {C_WHITE}TARGET REGION:{RESET}      {loc_str} │ {niche_str}")
+        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_CYAN}Shriyansh Aloria — Aloria Labs <alorialabs@gmail.com>{RESET}")
+        print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Leads Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent")
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
+
+        print(f"  {C_YELLOW}─── [ACTIVE AGENT PROFILE] ────────────────────────────────────────────────────────────────{RESET}")
+        print(f"  {C_GREEN}● [ACTIVE]{RESET}  {C_WHITE}Aloria Labs{RESET}  — Web & Custom Software Agency ({loc_str})")
+        print(f"  {C_DIM}○ [STANDBY] GetHotelStays — Autonomous Hotel Partner Onboarding (Press [B] to toggle){RESET}")
+
+        print(f"\n  {C_CYAN}─── [AUTONOMOUS 24/7 CLIENT ACQUISITION ENGINE] ───────────────────────────────────────────{RESET}")
+        print(f"  {C_WHITE}[1]{RESET} {C_GREEN}🚀 START 24/7 CLIENT ACQUISITION{RESET} {C_DIM}— Non-stop: Maps ➔ Web Audits ➔ Custom Pitches ➔ Follow-up{RESET}")
+        print(f"  {C_WHITE}[T]{RESET} {C_CYAN}⚙ Set Target Location / Niche{RESET}   {C_DIM}— Industry & location targeting{RESET}")
+        print(f"  {C_WHITE}[L]{RESET} {C_YELLOW}📋 Client Pipeline & Ledger{RESET}       {C_DIM}— View all leads & outreach status{RESET}")
+        print(f"  {C_WHITE}[B]{RESET} {C_BLUE}🔄 Switch to GetHotelStays{RESET}       {C_DIM}— Switch to Hotel Onboarding Agent{RESET}")
+        print(f"  {C_WHITE}[0]{RESET} {C_RED}✖ Exit Console{RESET}                    {C_DIM}— Close Hunter Command Center{RESET}\n")
 
 def configure_target(b_id):
     b = business_manager.get_business(b_id)
     b_name = b.get("name", b_id) if b else b_id
     tgt = business_manager.get_target_settings(b_id)
-    old_c = tgt.get("country", "")
-    old_ci = tgt.get("city", "")
-    old_ni = tgt.get("niche", "")
-    
+    old_c = tgt.get("country", "India")
+    old_ci = tgt.get("city", "Goa" if b_id == "gethotelstays" else "Mumbai")
+    old_ni = tgt.get("niche", "Hotels" if b_id == "gethotelstays" else "Restaurants")
+
     print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-    print(f"  {C_WHITE}CONFIGURE TARGET LOCATION & NICHE FOR: {C_YELLOW}{b_name.upper()}{RESET}")
-    print(f"  {C_DIM}Enter the country, city, and industry you want to target. You are in full control.{RESET}")
+    print(f"  {C_WHITE}CONFIGURE TARGET DESTINATION FOR: {C_YELLOW}{b_name.upper()}{RESET}")
     print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-    
-    hint_country = f" [{old_c}]" if old_c else ""
-    c = input(f"  {C_WHITE}Target Country (e.g. India, USA, UAE, UK){hint_country}: {RESET}").strip()
-    if not c and old_c: c = old_c
-    
-    hint_city = f" [{old_ci}]" if old_ci else ""
-    ci = input(f"  {C_WHITE}Target City (e.g. Mumbai, Dubai, London, Bangalore){hint_city}: {RESET}").strip()
-    if not ci and old_ci: ci = old_ci
-    
-    def_niche = old_ni or ("Hotels" if b_id == "gethotelstays" else "Restaurants")
-    ni = input(f"  {C_WHITE}Target Niche / Industry [{def_niche}]: {RESET}").strip()
-    if not ni: ni = def_niche
-    
+
+    c = input(f"  {C_WHITE}Target Country [{old_c}]: {RESET}").strip() or old_c
+    ci = input(f"  {C_WHITE}Target City / State (e.g. Goa, Jaipur, Manali, Udaipur) [{old_ci}]: {RESET}").strip() or old_ci
+    ni = input(f"  {C_WHITE}Target Category [{old_ni}]: {RESET}").strip() or old_ni
+
     business_manager.set_target_settings(b_id, country=c, city=ci, niche=ni)
     print(f"\n  {C_GREEN}[✓] Target saved: {ni} in {ci}, {c}!{RESET}\n")
     time.sleep(1)
-    return c, ci, ni
-
-def get_or_prompt_target(b_id):
-    tgt = business_manager.get_target_settings(b_id)
-    c = tgt.get("country", "")
-    ci = tgt.get("city", "")
-    ni = tgt.get("niche", "")
-    if not c or not ci:
-        return configure_target(b_id)
     return c, ci, ni
 
 def show_clean_lead_ledger(active_id):
@@ -173,7 +146,7 @@ def show_clean_lead_ledger(active_id):
     print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
 
     if not leads:
-        print(f"\n  {C_DIM}No leads discovered yet for this profile. Run Option [H] to hunt.{RESET}\n")
+        print(f"\n  {C_DIM}No leads recorded yet. Start 24/7 Engine [Option 1] to begin.{RESET}\n")
     else:
         print(f"  {C_DIM}{'NAME':<26} {'PRESENCE':<16} {'EMAIL':<28} {'STAGE'}{RESET}")
         print(f"  {C_DIM}{'─' * 26} {'─' * 16} {'─' * 28} {'─' * 14}{RESET}")
@@ -195,6 +168,164 @@ def show_clean_lead_ledger(active_id):
     print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
     input("  Press Enter to return to main menu...")
 
+def run_247_hotel_onboarding_loop():
+    active_id = "gethotelstays"
+    tgt = business_manager.get_target_settings(active_id)
+    country = tgt.get("country") or "India"
+    city = tgt.get("city") or "Goa"
+    niche = tgt.get("niche") or "Hotels"
+
+    print(f"\n{C_GREEN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+    print(f"  {C_GREEN}║               🔥 24/7 AUTONOMOUS HOTEL ONBOARDING ENGINE ONLINE                               ║{RESET}")
+    print(f"  {C_GREEN}║          Mission: 100% Autonomous Hotel Discovery, Verification & Direct Onboarding          ║{RESET}")
+    print(f"  {C_GREEN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
+    print(f"  {C_WHITE}Sender Profile:{RESET}  {C_GREEN}onboard@gethotelstays.com{RESET} (MilesWeb cPanel SSL :465)")
+    print(f"  {C_WHITE}Initial Target:{RESET}  {C_YELLOW}{niche}{RESET} in {C_CYAN}{city}, {country}{RESET}")
+    print(f"  {C_DIM}Mode: 24/7 continuous autonomous execution. Press Ctrl+C anytime to pause/return.{RESET}\n")
+
+    destinations = [city, "Goa", "Jaipur", "Udaipur", "Manali", "Shimla", "Rishikesh", "Munnar", "Mussoorie", "Ooty"]
+    # De-duplicate while preserving initial preference
+    seen = set()
+    clean_destinations = [d for d in destinations if not (d.lower() in seen or seen.add(d.lower()))]
+
+    cycle = 1
+    while True:
+        current_city = clean_destinations[(cycle - 1) % len(clean_destinations)]
+        print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+        print(f"  {C_WHITE}► [WAVE #{cycle}] ONBOARDING WAVE: {C_GREEN}{niche.upper()} IN {current_city.upper()}, {country.upper()}{RESET}")
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+
+        try:
+            # 1. Google Maps Discovery
+            print(f"  {C_CYAN}[1/4] Scraping independent hotels & boutique stays on Maps...{RESET}")
+            discovered = maps_crawler.crawl_google_maps(
+                city=current_city,
+                country=country,
+                niche=niche,
+                max_places=5,
+                headless=True,
+                business_id=active_id
+            )
+            print(f"        {C_GREEN}✓ Discovered {len(discovered)} potential hotel properties{RESET}")
+
+            # 2. Audit & Contact Extraction
+            print(f"  {C_CYAN}[2/4] Inspecting websites & extracting reservation emails / phones...{RESET}")
+            audited = website_auditor.audit_pending_leads(limit=5, business_id=active_id)
+            print(f"        {C_GREEN}✓ Audited {len(audited)} properties{RESET}")
+
+            # 3. Dispatch Onboarding Invitations via onboard@gethotelstays.com
+            print(f"  {C_CYAN}[3/4] Dispatching GetHotelStays ₹0 onboarding invitations (onboard@gethotelstays.com)...{RESET}")
+            sent = email_engine.dispatch_initial_emails(limit=5, profile_name="gethotelstays", business_id=active_id)
+            print(f"        {C_GREEN}✓ Dispatched {sent} official partner onboarding emails{RESET}")
+
+            # Optional: WhatsApp Outreach if session exists
+            try:
+                import whatsapp_engine
+                if whatsapp_engine.is_whatsapp_logged_in():
+                    print(f"  {C_CYAN}[*] Dispatching WhatsApp onboarding outreach to mobile contacts...{RESET}")
+                    wa_sent = whatsapp_engine.dispatch_whatsapp_queue(limit=3, business_id=active_id, headless=True)
+                    print(f"        {C_GREEN}✓ Dispatched {wa_sent} WhatsApp onboarding messages{RESET}")
+            except Exception:
+                pass
+
+            # 4. Dispatch Follow-ups
+            print(f"  {C_CYAN}[4/4] Checking scheduled 2-Day & 4-Day onboarding follow-ups...{RESET}")
+            fu_sent = email_engine.dispatch_followups(profile_name="gethotelstays", business_id=active_id)
+            print(f"        {C_GREEN}✓ Dispatched {fu_sent} follow-ups{RESET}")
+
+            # Pipeline Update
+            stats = db.get_funnel_stats(business_id=active_id)
+            total_leads = stats.get('total', 0)
+            pitched = stats.get('pitch_sent', 0)
+            deliveries = stats.get('emails_sent', 0)
+            print(f"\n  {C_WHITE}HOTEL PIPELINE UPDATE:{RESET} {C_GREEN}{total_leads}{RESET} Total Hotels │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{deliveries}{RESET} Delivered Emails")
+
+            cycle += 1
+
+            # Safe 24/7 Cooldown Pacing (300 seconds = 5 minutes between waves)
+            cooldown = 300
+            print(f"\n  {C_DIM}Wave #{cycle-1} complete. Cooldown active for sender health ({cooldown}s).{RESET}")
+            for sec in range(cooldown, 0, -5):
+                m, s = divmod(sec, 60)
+                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next onboarding wave in {m:02d}:{s:02d} — Press Ctrl+C to return to menu...{RESET}   ")
+                sys.stdout.flush()
+                time.sleep(5)
+            print()
+
+        except KeyboardInterrupt:
+            print(f"\n\n  {C_YELLOW}[!] 24/7 Hotel Onboarding Engine paused by operator. Returning to menu...{RESET}\n")
+            time.sleep(1)
+            break
+        except Exception as e:
+            print(f"\n  {C_RED}[!] Error in wave #{cycle}: {e}{RESET}")
+            print(f"  {C_DIM}Retrying next cycle in 60 seconds...{RESET}")
+            time.sleep(60)
+
+def run_247_aloria_loop():
+    active_id = "aloria_labs"
+    tgt = business_manager.get_target_settings(active_id)
+    country = tgt.get("country") or "India"
+    city = tgt.get("city") or "Mumbai"
+    niche = tgt.get("niche") or "Restaurants"
+
+    print(f"\n{C_CYAN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+    print(f"  {C_CYAN}║               🚀 24/7 AUTONOMOUS CLIENT ACQUISITION ENGINE ONLINE                             ║{RESET}")
+    print(f"  {C_CYAN}║             Mission: High-Converting Web Modernization Discovery & Outreach                  ║{RESET}")
+    print(f"  {C_CYAN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
+    print(f"  {C_WHITE}Target:{RESET}  {C_YELLOW}{niche}{RESET} in {C_CYAN}{city}, {country}{RESET}")
+    print(f"  {C_DIM}Mode: 24/7 continuous autonomous execution. Press Ctrl+C anytime to pause/return.{RESET}\n")
+
+    cycle = 1
+    while True:
+        print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+        print(f"  {C_WHITE}► [WAVE #{cycle}] CLIENT DISCOVERY WAVE: {C_GREEN}{niche.upper()} IN {city.upper()}, {country.upper()}{RESET}")
+        print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+
+        try:
+            # 1. Google Maps Hunt
+            print(f"  {C_CYAN}[1/4] Scraping local business listings on Maps...{RESET}")
+            maps_crawler.crawl_google_maps(
+                city=city,
+                country=country,
+                niche=niche,
+                max_places=5,
+                headless=True,
+                business_id=active_id
+            )
+
+            # 2. Audit & Contact Extraction
+            print(f"  {C_CYAN}[2/4] Auditing websites for speed, mobile responsiveness & SSL...{RESET}")
+            website_auditor.audit_pending_leads(limit=5, business_id=active_id)
+
+            # 3. Dispatch Initial Pitches
+            print(f"  {C_CYAN}[3/4] Dispatching tailored digital infrastructure pitches...{RESET}")
+            sent = email_engine.dispatch_initial_emails(limit=5, profile_name="gmail", business_id=active_id)
+            print(f"        {C_GREEN}✓ Dispatched {sent} tailored pitches{RESET}")
+
+            # 4. Dispatch Follow-ups
+            print(f"  {C_CYAN}[4/4] Dispatching scheduled follow-ups...{RESET}")
+            fu_sent = email_engine.dispatch_followups(profile_name="gmail", business_id=active_id)
+            print(f"        {C_GREEN}✓ Dispatched {fu_sent} follow-ups{RESET}")
+
+            cycle += 1
+
+            cooldown = 300
+            print(f"\n  {C_DIM}Wave complete. Cooldown active ({cooldown}s). Next wave starts automatically...{RESET}")
+            for sec in range(cooldown, 0, -5):
+                m, s = divmod(sec, 60)
+                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next cycle in {m:02d}:{s:02d} — Press Ctrl+C to return to menu...{RESET}   ")
+                sys.stdout.flush()
+                time.sleep(5)
+            print()
+
+        except KeyboardInterrupt:
+            print(f"\n\n  {C_YELLOW}[!] Client acquisition engine paused by operator.{RESET}\n")
+            time.sleep(1)
+            break
+        except Exception as e:
+            print(f"\n  {C_RED}[!] Error in wave #{cycle}: {e}{RESET}")
+            time.sleep(60)
+
 def run_cockpit_loop():
     while True:
         os.system("cls" if os.name == "nt" else "clear")
@@ -207,222 +338,54 @@ def run_cockpit_loop():
             print(f"\n  {C_CYAN}Closing Hunter Command Center. Farewell.{RESET}\n")
             break
 
-        if choice in ["0", "q", "exit"]:
+        if choice in ["0", "exit"]:
             print(f"\n  {C_CYAN}Closing Hunter Command Center. Farewell.{RESET}\n")
             break
 
-        # Switch Business Profile
-        businesses, _ = business_manager.list_businesses()
-        if choice.isdigit() and 1 <= int(choice) <= len(businesses):
-            keys = list(businesses.keys())
-            idx = int(choice) - 1
-            chosen_id = keys[idx]
-            business_manager.set_active_business(chosen_id)
-            print(f"\n  {C_GREEN}[✓] Switched active business to: {businesses[chosen_id].get('name')}{RESET}")
+        active_id = business_manager.get_active_business_id()
+
+        # Switch Business Profile Toggle via 'b'
+        if choice == "b":
+            new_id = "aloria_labs" if active_id == "gethotelstays" else "gethotelstays"
+            business_manager.set_active_business(new_id)
+            print(f"\n  {C_GREEN}[✓] Switched active profile to: {new_id.upper()}{RESET}")
+            time.sleep(1)
+            continue
+
+        # If user typed '2' to switch directly to gethotelstays
+        if choice == "2" and active_id != "gethotelstays":
+            business_manager.set_active_business("gethotelstays")
+            print(f"\n  {C_GREEN}[✓] Switched active profile to: GETHOTELSTAYS{RESET}")
             time.sleep(1)
             continue
 
         # [L] Ledger
         if choice == "l":
-            active_id = business_manager.get_active_business_id()
             show_clean_lead_ledger(active_id)
             continue
 
         # [T] Configure Target
         if choice == "t":
-            active_id = business_manager.get_active_business_id()
             configure_target(active_id)
             continue
 
-        # Active business parameters
-        active_id = business_manager.get_active_business_id()
-        active_b = business_manager.get_active_business()
-        sender_prof = active_b.get("sender_profile", "gmail")
-
-        # [H] Live Hunter
-        if choice == "h":
-            country, city, niche = get_or_prompt_target(active_id)
-            print(f"\n  {C_CYAN}[► LAUNCHING LIVE MAPS HUNTER]{RESET}")
-            print(f"  Target: {C_WHITE}{niche}{RESET} in {C_GREEN}{city}, {country}{RESET} for {C_YELLOW}{active_b.get('name')}{RESET}")
-            cnt = input("  Max places to scrape (default 5): ").strip()
-            limit = int(cnt) if cnt.isdigit() else 5
-            try:
-                maps_crawler.crawl_google_maps(
-                    city=city,
-                    country=country,
-                    niche=niche,
-                    max_places=limit,
-                    headless=False,
-                    business_id=active_id
-                )
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [S] Silent Hunter (Headless)
-        elif choice == "s":
-            country, city, niche = get_or_prompt_target(active_id)
-            print(f"\n  {C_CYAN}[► LAUNCHING SILENT BACKGROUND HUNTER]{RESET}")
-            print(f"  Target: {C_WHITE}{niche}{RESET} in {C_GREEN}{city}, {country}{RESET} for {C_YELLOW}{active_b.get('name')}{RESET}")
-            cnt = input("  Max places to scrape (default 5): ").strip()
-            limit = int(cnt) if cnt.isdigit() else 5
-            try:
-                maps_crawler.crawl_google_maps(
-                    city=city,
-                    country=country,
-                    niche=niche,
-                    max_places=limit,
-                    headless=True,
-                    business_id=active_id
-                )
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [D] Safe Dry-Run
-        elif choice == "d":
-            country, city, niche = get_or_prompt_target(active_id)
-            print(f"\n  {C_YELLOW}[► RUNNING SAFE DRY-RUN (NO EMAILS)]{RESET}")
-            print(f"  Target: {C_WHITE}{niche}{RESET} in {C_GREEN}{city}, {country}{RESET}")
-            cnt = input("  Max places to scrape (default 3): ").strip()
-            limit = int(cnt) if cnt.isdigit() else 3
-            try:
-                maps_crawler.crawl_google_maps(
-                    city=city,
-                    country=country,
-                    niche=niche,
-                    max_places=limit,
-                    headless=False,
-                    business_id=active_id
-                )
-                website_auditor.audit_pending_leads(limit=limit, business_id=active_id)
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [A] Website Auditor
-        elif choice == "a":
-            print(f"\n  {C_BLUE}[► RUNNING WEBSITE AUDITOR]{RESET}")
-            try:
-                website_auditor.audit_pending_leads(limit=10, business_id=active_id)
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [E] Dispatch Email Queue
-        elif choice == "e":
-            print(f"\n  {C_MAGENTA}[► DISPATCHING COLD OUTREACH QUEUE]{RESET}")
-            try:
-                sent = email_engine.dispatch_initial_emails(limit=5, profile_name=sender_prof, business_id=active_id)
-                print(f"\n  {C_GREEN}[✓] Dispatched {sent} initial emails!{RESET}")
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [W] WhatsApp Outreach
-        elif choice == "w":
-            print(f"\n  {C_GREEN}[► LAUNCHING AUTONOMOUS WHATSAPP OUTREACH ENGINE]{RESET}")
-            import whatsapp_engine
-            try:
-                cnt = input("  Max WhatsApp messages to dispatch (default 5): ").strip()
-                limit = int(cnt) if cnt.isdigit() else 5
-                whatsapp_engine.dispatch_whatsapp_queue(limit=limit, business_id=active_id, headless=False)
-            except Exception as e:
-                print(f"  {C_RED}[!] WhatsApp engine error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [Q] WhatsApp QR Code Login Link
-        elif choice == "q":
-            print(f"\n  {C_YELLOW}[► OPENING WHATSAPP WEB QR CODE LINK]{RESET}")
+        # [Q] WhatsApp Login QR
+        if choice == "q":
             import whatsapp_engine
             try:
                 whatsapp_engine.launch_whatsapp_login_qr()
             except Exception as e:
                 print(f"  {C_RED}[!] WhatsApp login error: {e}{RESET}")
             input("\n  Press Enter to return to menu...")
+            continue
 
-        # [F] Dispatch Follow-ups
-        elif choice == "f":
-            print(f"\n  {C_YELLOW}[► DISPATCHING SCHEDULED 2-DAY / 4-DAY FOLLOW-UPS]{RESET}")
-            try:
-                sent = email_engine.dispatch_followups(profile_name=sender_prof, business_id=active_id)
-                print(f"\n  {C_GREEN}[✓] Dispatched {sent} follow-up emails!{RESET}")
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [R] Full Autopilot Wave
-        elif choice == "r":
-            country, city, niche = get_or_prompt_target(active_id)
-            print(f"\n  {C_MAGENTA}[► RUNNING FULL AUTOPILOT WAVE FOR {active_b.get('name').upper()}]{RESET}")
-            print(f"  Target: {C_WHITE}{niche}{RESET} in {C_GREEN}{city}, {country}{RESET}")
-            try:
-                # 1. Hunt
-                maps_crawler.crawl_google_maps(city=city, country=country, niche=niche, max_places=5, headless=False, business_id=active_id)
-                # 2. Audit
-                website_auditor.audit_pending_leads(limit=5, business_id=active_id)
-                # 3. Pitch
-                email_engine.dispatch_initial_emails(limit=5, profile_name=sender_prof, business_id=active_id)
-                # 4. Follow-up
-                email_engine.dispatch_followups(profile_name=sender_prof, business_id=active_id)
-                print(f"\n  {C_GREEN}[✓] Autopilot wave complete!{RESET}")
-            except Exception as e:
-                print(f"  {C_RED}[!] Error: {e}{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [B] Dual Parallel Wave
-        elif choice == "b":
-            print(f"\n  {C_MAGENTA}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
-            print(f"  {C_MAGENTA}║               ⚡ LAUNCHING DUAL PARALLEL AUTONOMOUS AGENTS (MULTI-THREADED)                  ║{RESET}")
-            print(f"  {C_MAGENTA}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
-            
-            c1, ci1, ni1 = get_or_prompt_target("aloria_labs")
-            c2, ci2, ni2 = get_or_prompt_target("gethotelstays")
-            
-            print(f"  {C_GREEN}[THREAD 1]{RESET} {C_WHITE}Agent Aloria Labs:{RESET} Hunting {ni1} in {ci1}, {c1}...")
-            print(f"  {C_GREEN}[THREAD 2]{RESET} {C_WHITE}Agent GetHotelStays:{RESET} Hunting {ni2} in {ci2}, {c2}...")
-            print(f"  {C_DIM}Running both agents concurrently in parallel background threads...{RESET}\n")
-
-            import threading
-
-            def run_aloria():
-                try:
-                    b = business_manager.get_business("aloria_labs")
-                    sp = b.get("sender_profile", "gmail") if b else "gmail"
-                    maps_crawler.crawl_google_maps(city=ci1, country=c1, niche=ni1, max_places=5, headless=True, business_id="aloria_labs")
-                    website_auditor.audit_pending_leads(limit=5, business_id="aloria_labs")
-                    email_engine.dispatch_initial_emails(limit=5, profile_name=sp, business_id="aloria_labs")
-                    email_engine.dispatch_followups(profile_name=sp, business_id="aloria_labs")
-                    print(f"\n  {C_GREEN}[✓ AGENT ALORIA]{RESET} Parallel wave completed successfully!")
-                except Exception as e:
-                    print(f"\n  {C_RED}[!] Agent Aloria error: {e}{RESET}")
-
-            def run_hotels():
-                try:
-                    b = business_manager.get_business("gethotelstays")
-                    sp = b.get("sender_profile", "gmail") if b else "gmail"
-                    maps_crawler.crawl_google_maps(city=ci2, country=c2, niche=ni2, max_places=5, headless=True, business_id="gethotelstays")
-                    website_auditor.audit_pending_leads(limit=5, business_id="gethotelstays")
-                    email_engine.dispatch_initial_emails(limit=5, profile_name=sp, business_id="gethotelstays")
-                    email_engine.dispatch_followups(profile_name=sp, business_id="gethotelstays")
-                    print(f"\n  {C_GREEN}[✓ AGENT HOTELSTAYS]{RESET} Parallel wave completed successfully!")
-                except Exception as e:
-                    print(f"\n  {C_RED}[!] Agent HotelStays error: {e}{RESET}")
-
-            t1 = threading.Thread(target=run_aloria)
-            t2 = threading.Thread(target=run_hotels)
-            t1.start()
-            t2.start()
-            t1.join()
-            t2.join()
-            print(f"\n  {C_CYAN}[✓ DUAL PARALLEL WAVE COMPLETED FOR BOTH BUSINESSES!]{RESET}")
-            input("\n  Press Enter to return to menu...")
-
-        # [M] Mobile Server
-        elif choice == "m":
-            import mobile_server
-            mobile_server.run_server()
-            input("\n  Press Enter to return to menu...")
+        # [1] or [Enter] - RUN 24/7 AUTONOMOUS ENGINE
+        if choice in ["1", ""]:
+            if active_id == "gethotelstays":
+                run_247_hotel_onboarding_loop()
+            else:
+                run_247_aloria_loop()
+            continue
 
 if __name__ == "__main__":
     run_cockpit_loop()

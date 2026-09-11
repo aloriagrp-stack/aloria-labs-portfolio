@@ -367,8 +367,13 @@ def dispatch_initial_emails(limit=5, profile_name=None, business_id=None):
             continue
 
         lead_biz = lead.get("business_id") or business_id or "aloria_labs"
+        active_prof = profile_name
+        if not active_prof:
+            biz_data = business_manager.get_business(lead_biz)
+            active_prof = biz_data.get("sender_profile") if biz_data else ("gethotelstays" if lead_biz == "gethotelstays" else "gmail")
+
         subject, plain, html = generate_pitch(lead, email_type="INITIAL")
-        success, sender = send_email_via_smtp(to_email, subject, plain, html, profile_name)
+        success, sender = send_email_via_smtp(to_email, subject, plain, html, active_prof)
         if success:
             db.mark_initial_email_sent(lead["id"])
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "SENT", business_id=lead_biz)
@@ -396,9 +401,13 @@ def dispatch_followups(profile_name=None, business_id=None):
         new_count = curr_count + 1
         email_type = f"FOLLOW_UP_{new_count}"
         lead_biz = lead.get("business_id") or business_id or "aloria_labs"
+        active_prof = profile_name
+        if not active_prof:
+            biz_data = business_manager.get_business(lead_biz)
+            active_prof = biz_data.get("sender_profile") if biz_data else ("gethotelstays" if lead_biz == "gethotelstays" else "gmail")
 
         subject, plain, html = generate_pitch(lead, email_type=email_type)
-        success, sender = send_email_via_smtp(to_email, subject, plain, html, profile_name)
+        success, sender = send_email_via_smtp(to_email, subject, plain, html, active_prof)
         if success:
             db.mark_followup_sent(lead["id"], new_count)
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "SENT", business_id=lead_biz)
