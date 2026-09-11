@@ -78,6 +78,7 @@ def print_clean_dashboard():
     is_wa = whatsapp_engine.is_whatsapp_logged_in()
     wa_badge = f"{C_GREEN}● Connected{RESET}" if is_wa else f"{C_YELLOW}○ Not Linked (Press Q){RESET}"
 
+    if active_id == "gethotelstays":
         ghs_prof = config.get_smtp_config("gethotelstays")
         ghs_email = ghs_prof.get("email", "gethotelstays02@gmail.com")
 
