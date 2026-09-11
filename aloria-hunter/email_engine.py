@@ -318,7 +318,7 @@ https://alorialabs.in
 def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=None):
     smtp_conf = config.get_smtp_config(profile_name)
     sender_email = smtp_conf.get("email")
-    password = smtp_conf.get("password")
+    password = (smtp_conf.get("password") or "").replace(" ", "").strip()
     smtp_server = smtp_conf.get("smtp_server", "smtp.gmail.com")
     smtp_port = smtp_conf.get("smtp_port", 587)
     sender_name = smtp_conf.get("sender_name", "Shriyansh Aloria — Aloria Labs")

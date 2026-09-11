@@ -78,12 +78,13 @@ def print_clean_dashboard():
     is_wa = whatsapp_engine.is_whatsapp_logged_in()
     wa_badge = f"{C_GREEN}● Connected{RESET}" if is_wa else f"{C_YELLOW}○ Not Linked (Press Q){RESET}"
 
-    if active_id == "gethotelstays":
-        # GET HOTEL STAYS SPECIFIC ULTRA-CLEAN DASHBOARD
+        ghs_prof = config.get_smtp_config("gethotelstays")
+        ghs_email = ghs_prof.get("email", "gethotelstays02@gmail.com")
+
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
         print(f"  {C_WHITE}ACTIVE AGENT:{RESET}       {Back.CYAN}{Fore.BLACK} GETHOTELSTAYS — 24/7 HOTEL PARTNER ONBOARDING {RESET}  {C_DIM}(Press B to switch){RESET}")
         print(f"  {C_WHITE}TARGET DESTINATION:{RESET} {loc_str} │ {niche_str}")
-        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}Shriyansh Aloria — GetHotelStays <onboard@gethotelstays.com>{RESET}")
+        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}Shriyansh Aloria — GetHotelStays <{ghs_email}>{RESET}")
         print(f"  {C_WHITE}WHATSAPP ENGINE:{RESET}    {wa_badge}")
         print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Hotels Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
@@ -195,8 +196,11 @@ def run_247_hotel_onboarding_loop():
     is_wa = whatsapp_engine.is_whatsapp_logged_in()
     wa_label = f"{C_GREEN}[CONNECTED]{RESET}" if is_wa else f"{C_YELLOW}[NOT CONNECTED - QR REQUIRED]{RESET}"
 
+    ghs_prof = config.get_smtp_config("gethotelstays")
+    ghs_email = ghs_prof.get("email", "gethotelstays02@gmail.com")
+
     print(f"\n  {C_WHITE}2. Select Outreach Channel:{RESET}")
-    print(f"     {C_CYAN}[1]{RESET} Email Only         — via {C_GREEN}onboard@gethotelstays.com{RESET}")
+    print(f"     {C_CYAN}[1]{RESET} Email Only         — via {C_GREEN}{ghs_email}{RESET}")
     print(f"     {C_CYAN}[2]{RESET} WhatsApp Only      — via Linked WhatsApp Web {wa_label}")
     print(f"     {C_CYAN}[3]{RESET} Dual Multi-Channel — Both Email + WhatsApp {C_YELLOW}(Recommended for 100% reach){RESET}")
     ch_choice = input(f"     Choice [1-3] (Default 3): ").strip()
