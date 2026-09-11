@@ -74,12 +74,17 @@ def print_clean_dashboard():
 
     niche_str = f"{C_CYAN}{tgt_niche}{RESET}" if tgt_niche else f"{C_YELLOW}[NOT SET - Press T to choose]{RESET}"
 
+    import whatsapp_engine
+    is_wa = whatsapp_engine.is_whatsapp_logged_in()
+    wa_badge = f"{C_GREEN}● Connected{RESET}" if is_wa else f"{C_YELLOW}○ Not Linked (Press Q){RESET}"
+
     if active_id == "gethotelstays":
         # GET HOTEL STAYS SPECIFIC ULTRA-CLEAN DASHBOARD
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
         print(f"  {C_WHITE}ACTIVE AGENT:{RESET}       {Back.CYAN}{Fore.BLACK} GETHOTELSTAYS — 24/7 HOTEL PARTNER ONBOARDING {RESET}  {C_DIM}(Press B to switch){RESET}")
         print(f"  {C_WHITE}TARGET DESTINATION:{RESET} {loc_str} │ {niche_str}")
         print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}Shriyansh Aloria — GetHotelStays <onboard@gethotelstays.com>{RESET}")
+        print(f"  {C_WHITE}WHATSAPP ENGINE:{RESET}    {wa_badge}")
         print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Hotels Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
 
@@ -91,7 +96,7 @@ def print_clean_dashboard():
         print(f"  {C_WHITE}[1]{RESET} {C_GREEN}🔥 START 24/7 HOTEL ONBOARDING{RESET}   {C_DIM}— Runs continuously: Discover ➔ Extract ➔ Pitch ➔ Follow-up{RESET}")
         print(f"  {C_WHITE}[T]{RESET} {C_CYAN}⚙ Set Target City / State{RESET}        {C_DIM}— Destination (Currently: {tgt_city or 'Goa'}, {tgt_country or 'India'}){RESET}")
         print(f"  {C_WHITE}[L]{RESET} {C_YELLOW}📋 Hotel Pipeline & Ledger{RESET}        {C_DIM}— View discovered hotels, contacts & onboarding stages{RESET}")
-        print(f"  {C_WHITE}[Q]{RESET} {C_MAGENTA}💬 WhatsApp Web QR Login{RESET}          {C_DIM}— Connect WhatsApp Web for multi-channel outreach{RESET}")
+        print(f"  {C_WHITE}[Q]{RESET} {C_MAGENTA}💬 WhatsApp Web QR Login{RESET}          {wa_badge} {C_DIM}— Re-scan or manage WhatsApp Web session{RESET}")
         print(f"  {C_WHITE}[B]{RESET} {C_BLUE}🔄 Switch to Aloria Labs{RESET}          {C_DIM}— Switch profile to Web & Software Agency{RESET}")
         print(f"  {C_WHITE}[0]{RESET} {C_RED}✖ Exit Console{RESET}                    {C_DIM}— Close Hunter Command Center{RESET}\n")
 

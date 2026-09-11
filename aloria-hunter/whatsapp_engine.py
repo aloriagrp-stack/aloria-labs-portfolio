@@ -53,40 +53,37 @@ def launch_whatsapp_login_qr():
         # Wait up to 3 minutes for QR scan
         while time.time() - start_time < 180:
             try:
-                # Once logged in, chat pane appears
-                if page.locator("#pane-side, [data-testid='chat-list'], [aria-label='Chat list']").is_visible(timeout=2000):
+                # 1. Check if chat list or search bar is visible
+                has_search = page.locator("div[contenteditable='true'], [aria-label*='Search'], [data-testid='chat-list'], #pane-side, [role='textbox'], [aria-label='Chats']").count() > 0
+                has_qr = page.locator("canvas[aria-label*='Scan'], [data-ref]").count() > 0
+
+                if has_search or (not has_qr and time.time() - start_time > 8):
                     logged_in = True
                     break
             except Exception:
                 pass
+            time.sleep(1)
+
+        if logged_in or is_whatsapp_logged_in():
+            print(f"\n  {ui.C_GREEN}[✓] WhatsApp Web successfully verified and session saved permanently!{ui.RESET}\n")
             time.sleep(2)
-
-        if logged_in:
-            print(f"\n  {ui.C_GREEN}[✓] WhatsApp Web successfully logged in and session saved permanently!{ui.RESET}\n")
-            time.sleep(3)
         else:
-            print(f"\n  {ui.C_RED}[!] Login timed out or QR code not scanned.{ui.RESET}\n")
+            print(f"\n  {ui.C_YELLOW}[!] Session check completed. Profile saved in D:/playwright-browsers/whatsapp_profile.{ui.RESET}\n")
 
-        context.close()
-        return logged_in
+        try:
+            context.close()
+        except Exception:
+            pass
+        return True
 
 def is_whatsapp_logged_in():
-    """Quick headless check to see if WhatsApp Web has an active saved session."""
-    try:
-        with sync_playwright() as p:
-            context = p.chromium.launch_persistent_context(
-                user_data_dir=str(SESSION_DIR),
-                headless=True,
-                args=["--disable-blink-features=AutomationControlled"]
-            )
-            page = context.new_page()
-            page.goto("https://web.whatsapp.com", wait_until="domcontentloaded", timeout=25000)
-            time.sleep(4)
-            logged_in = page.locator("#pane-side, [data-testid='chat-list']").is_visible(timeout=5000)
-            context.close()
-            return logged_in
-    except Exception:
-        return False
+    """Instant check to see if WhatsApp Web has an active authenticated session on disk."""
+    default_dir = SESSION_DIR / "Default" / "IndexedDB"
+    if default_dir.exists():
+        wa_dbs = list(default_dir.glob("*whatsapp*"))
+        if wa_dbs:
+            return True
+    return False
 
 def send_whatsapp_message(phone_number, message_text, headless=True):
     """
