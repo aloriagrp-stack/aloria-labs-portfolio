@@ -1273,7 +1273,7 @@
     }
 
     /* ============================================================
-       SECURITY CLEARANCE GATE & RATE LIMITER MODAL
+       SECURITY CLEARANCE GATE (Minimalist, Clean & Mobile-Optimized)
        ============================================================ */
     body.app-locked {
       overflow: hidden !important;
@@ -1281,27 +1281,27 @@
 
     body.app-locked #sidebar,
     body.app-locked #main-canvas {
-      filter: blur(28px) brightness(0.25);
+      filter: blur(20px) brightness(0.35);
       pointer-events: none !important;
       user-select: none !important;
-      opacity: 0.15;
-      transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0.18;
+      transition: filter 0.3s ease, opacity 0.3s ease;
     }
 
     .security-gate-overlay {
       position: fixed;
       inset: 0;
       z-index: 9999999;
-      background: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.08) 0%, rgba(10, 11, 14, 0.96) 70%, #06070a 100%);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: rgba(10, 10, 12, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       opacity: 1;
       visibility: visible;
-      transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
     }
 
     .security-gate-overlay.gate-hidden {
@@ -1313,114 +1313,79 @@
 
     .security-gate-card {
       width: 100%;
-      max-width: 440px;
-      background: rgba(23, 23, 23, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
-      padding: 34px 28px;
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(16, 185, 129, 0.18);
-      backdrop-filter: blur(20px);
+      max-width: 350px;
+      background: #18181b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 26px 20px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
       position: relative;
-      overflow: hidden;
+      text-align: center;
+      box-sizing: border-box;
     }
 
-    .security-gate-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #10b981, #00f0ff, transparent);
-    }
-
-    .gate-shield-badge {
-      width: 54px;
-      height: 54px;
-      margin: 0 auto 16px;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 14px;
+    .gate-icon-wrap {
+      width: 38px;
+      height: 38px;
+      margin: 0 auto 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #10b981;
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
-    }
-
-    .gate-tag {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: #10b981;
-      margin-bottom: 6px;
-      font-family: 'JetBrains Mono', monospace;
     }
 
     .gate-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #ececec;
-      text-align: center;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
+      font-size: 17px;
+      font-weight: 600;
+      color: #f4f4f5;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
     }
 
     .gate-subtitle {
       font-size: 13px;
-      color: #8e8e8e;
-      text-align: center;
-      line-height: 1.5;
-      margin-bottom: 24px;
+      color: #a1a1aa;
+      margin-bottom: 18px;
+      line-height: 1.4;
     }
 
     .gate-input-box {
       position: relative;
-      margin-bottom: 14px;
-    }
-
-    .gate-input-box svg.gate-icon-left {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      color: #737373;
-      pointer-events: none;
-      transition: color 0.2s ease;
+      margin-bottom: 10px;
     }
 
     .gate-input {
       width: 100%;
-      padding: 13px 44px 13px 44px;
-      background: #262626;
-      border: 1px solid #383838;
-      border-radius: 12px;
-      color: #ececec;
-      font-size: 15px;
-      font-family: 'JetBrains Mono', monospace;
+      height: 44px;
+      padding: 0 42px 0 14px;
+      background: #121214;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      color: #ffffff;
+      font-size: 14px;
+      font-family: inherit;
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
     }
 
     .gate-input:focus {
       border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
     }
 
     .gate-toggle-pwd {
       position: absolute;
-      right: 12px;
+      right: 10px;
       top: 50%;
       transform: translateY(-50%);
       background: transparent;
       border: none;
-      color: #8e8e8e;
+      color: #71717a;
       cursor: pointer;
-      padding: 4px;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1429,47 +1394,43 @@
     }
 
     .gate-toggle-pwd:hover {
-      color: #ececec;
+      color: #e4e4e7;
     }
 
     .gate-btn-submit {
       width: 100%;
-      padding: 13px 18px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      height: 42px;
+      background: #10b981;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       color: #ffffff;
       font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.05em;
+      font-size: 13.5px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+      gap: 6px;
+      transition: background 0.15s ease, opacity 0.2s ease;
     }
 
     .gate-btn-submit:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4);
+      background: #059669;
     }
 
     .gate-btn-submit:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-      box-shadow: none;
     }
 
     .gate-error-banner {
       display: none;
-      margin-bottom: 14px;
-      padding: 10px 14px;
-      border-radius: 10px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
       font-size: 12px;
       line-height: 1.4;
-      font-family: 'JetBrains Mono', monospace;
+      text-align: left;
     }
 
     .gate-error-banner.visible {
@@ -1477,50 +1438,42 @@
     }
 
     .gate-error-banner.error {
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.35);
-      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: #fb7185;
     }
 
     .gate-error-banner.lockout {
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
     }
 
     .gate-error-banner.success {
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
     }
 
     .gate-meta-row {
-      margin-top: 18px;
+      margin-top: 14px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #737373;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .gate-rate-pill {
-      display: flex;
-      align-items: center;
+      justify-content: center;
       gap: 6px;
+      font-size: 11px;
+      color: #71717a;
     }
 
     .gate-pill-dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: #10b981;
-      box-shadow: 0 0 8px #10b981;
     }
 
     .gate-pill-dot.locked {
       background: #f43f5e;
-      box-shadow: 0 0 8px #f43f5e;
     }
 
     .shake-anim {
@@ -1530,8 +1483,8 @@
     @keyframes gateShake {
       10%, 90% { transform: translate3d(-2px, 0, 0); }
       20%, 80% { transform: translate3d(3px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+      40%, 60% { transform: translate3d(3px, 0, 0); }
     }
 
     .btn-lock-sidebar {
@@ -1554,6 +1507,23 @@
       border-color: rgba(244, 63, 94, 0.3);
       background: rgba(244, 63, 94, 0.08);
     }
+
+    @media (max-width: 480px) {
+      .security-gate-overlay {
+        padding: 12px;
+      }
+      .security-gate-card {
+        padding: 22px 16px;
+        border-radius: 14px;
+      }
+      .gate-title {
+        font-size: 16px;
+      }
+      .gate-subtitle {
+        font-size: 12px;
+        margin-bottom: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1563,31 +1533,27 @@
        ============================================================ -->
   <div id="security-gate-overlay" class="security-gate-overlay">
     <div class="security-gate-card" id="security-gate-card">
-      <div class="gate-shield-badge">
-        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="gate-icon-wrap">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
       </div>
-      <div class="gate-tag">RESTRICTED // LEVEL-5 CLEARANCE</div>
-      <h2 class="gate-title">Aloria Hunter Cockpit</h2>
-      <p class="gate-subtitle">Autonomous Lead Intelligence Platform. Authenticate with your security key to proceed.</p>
+      <h2 class="gate-title">Aloria Hunter</h2>
+      <p class="gate-subtitle">Enter access password to continue</p>
 
       <form id="gate-auth-form" onsubmit="handleGateAuth(event)">
         <div class="gate-input-box">
-          <svg class="gate-icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 2l-2 2m-1.5 1.5L16 7l-2 2-2-2-4 4a5 5 0 1 0 7 7l4-4-2-2 2-2 1.5-1.5z"></path>
-          </svg>
           <input 
             type="password" 
             id="gate-password-input" 
             class="gate-input" 
-            placeholder="Enter security password..." 
+            placeholder="Password" 
             autocomplete="current-password"
             required 
           />
-          <button type="button" class="gate-toggle-pwd" onclick="toggleGatePasswordVisibility()" title="Toggle visibility">
-            <svg id="gate-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button type="button" class="gate-toggle-pwd" onclick="toggleGatePasswordVisibility()" title="Toggle visibility" aria-label="Toggle password visibility">
+            <svg id="gate-eye-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
@@ -1597,19 +1563,16 @@
         <div id="gate-error-banner" class="gate-error-banner"></div>
 
         <button type="submit" id="gate-submit-btn" class="gate-btn-submit">
-          <span>AUTHENTICATE &amp; UNLOCK</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <span>Unlock</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
       </form>
 
       <div class="gate-meta-row">
-        <div class="gate-rate-pill">
-          <span class="gate-pill-dot" id="gate-pill-dot"></span>
-          <span id="gate-attempts-label">5 Attempts Remaining</span>
-        </div>
-        <div>SHA-256 · RATE-LIMITED</div>
+        <span class="gate-pill-dot" id="gate-pill-dot"></span>
+        <span id="gate-attempts-label">5 attempts remaining</span>
       </div>
     </div>
   </div>
@@ -1688,9 +1651,9 @@
        MAIN CANVAS AREA
        ============================================================ -->
   <main class="main-canvas" id="main-canvas">
-    <!-- Topbar (No duplicate toggle, clean title) -->
-    <header class="canvas-topbar">
-      <div class="topbar-left">
+    <!-- Topbar (With Backend Status Badge) -->
+    <header class="canvas-topbar" style="display: flex; align-items: center; justify-content: space-between; padding: 0 16px;">
+      <div class="topbar-left" style="display: flex; align-items: center; gap: 8px;">
         <button class="btn-reopen-sidebar" title="Open sidebar" onclick="toggleSidebar()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -1698,6 +1661,12 @@
           </svg>
         </button>
         <span class="topbar-title-text" id="topbar-title">Aloria Hunter</span>
+      </div>
+      <div class="topbar-right">
+        <button id="btn-backend-status" class="backend-status-badge" onclick="promptBackendUrl()" title="Configure Backend Tunnel URL" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; cursor: pointer; color: #a1a1aa; font-size: 11px;">
+          <span class="pulse-dot green" id="backend-status-dot" style="width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: #10b981;"></span>
+          <span id="backend-status-text">Backend Connected</span>
+        </button>
       </div>
     </header>
 
@@ -2098,6 +2067,49 @@
       return '';
     }
 
+    function getApiBase() {
+      const customUrl = localStorage.getItem('aloria_hunter_backend_url');
+      if (customUrl) return customUrl.replace(/\/$/, '');
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')) {
+        return '';
+      }
+      return 'https://borough-kept-texts-automated.trycloudflare.com';
+    }
+
+    function promptBackendUrl() {
+      const current = getApiBase() || 'http://localhost:8000';
+      const newUrl = prompt('Enter Hunter Backend Tunnel URL (e.g. Cloudflare / ngrok URL):', current);
+      if (newUrl !== null) {
+        const trimmed = newUrl.trim().replace(/\/$/, '');
+        if (trimmed) {
+          localStorage.setItem('aloria_hunter_backend_url', trimmed);
+        } else {
+          localStorage.removeItem('aloria_hunter_backend_url');
+        }
+        checkBackendHealth();
+      }
+    }
+
+    async function checkBackendHealth() {
+      const dot = document.getElementById('backend-status-dot');
+      const text = document.getElementById('backend-status-text');
+      if (!text || !dot) return;
+
+      try {
+        const res = await fetch(getApiBase() + '/api/status', { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          dot.className = 'pulse-dot green';
+          text.textContent = 'Backend Online';
+        } else {
+          dot.className = 'pulse-dot orange';
+          text.textContent = 'Backend Offline';
+        }
+      } catch (e) {
+        dot.className = 'pulse-dot orange';
+        text.textContent = 'Configure Tunnel';
+      }
+    }
+
     // ============================================================
     // SECURITY CLEARANCE & ANTI-BRUTE-FORCE RATE LIMITER ENGINE
     // Password: shriyansh0402
@@ -2220,16 +2232,17 @@
         // Success
         localStorage.removeItem(ATTEMPTS_STORAGE_KEY);
         localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+        localStorage.setItem(AUTH_STORAGE_KEY, 'auth_ok_' + Date.now());
         sessionStorage.setItem(AUTH_STORAGE_KEY, 'auth_ok_' + Date.now());
 
         if (banner) {
           banner.className = 'gate-error-banner visible success';
-          banner.innerHTML = '✓ <strong>CLEARANCE VERIFIED</strong> — Access Granted. Unlocking...';
+          banner.innerHTML = '✓ Access granted. Unlocking...';
         }
 
         setTimeout(() => {
           unlockHunterCockpit();
-        }, 400);
+        }, 350);
       } else {
         // Failure
         let attempts = getFailedAttempts() + 1;
@@ -2248,7 +2261,7 @@
           const remaining = MAX_ALLOWED_ATTEMPTS - attempts;
           if (banner) {
             banner.className = 'gate-error-banner visible error';
-            banner.innerHTML = `✕ <strong>INVALID ACCESS KEY:</strong> ${remaining} attempt${remaining === 1 ? '' : 's'} remaining before 15-min lockout.`;
+            banner.innerHTML = `✕ Invalid password. ${remaining} attempt${remaining === 1 ? '' : 's'} left.`;
           }
           checkLockoutState();
         }
@@ -2270,6 +2283,7 @@
     }
 
     function lockHunterCockpit() {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
       sessionStorage.removeItem(AUTH_STORAGE_KEY);
       document.body.classList.add('app-locked');
       const overlay = document.getElementById('security-gate-overlay');
@@ -2293,7 +2307,7 @@
     }
 
     function enforceSecurityOnLoad() {
-      const isAuthed = sessionStorage.getItem(AUTH_STORAGE_KEY);
+      const isAuthed = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
       if (isAuthed && isAuthed.startsWith('auth_ok_')) {
         unlockHunterCockpit();
       } else {
@@ -2337,7 +2351,16 @@
       } else if (cleanPath.includes('/projects')) {
         showMainView('projects');
       } else {
-        createNewChatSession(false);
+        // Restore existing chat session on refresh (do not create a blank new chat)
+        const lastActiveId = localStorage.getItem('aloria_hunter_last_active_session');
+        const found = sessions.find(s => s.id === lastActiveId);
+        if (found) {
+          activeSessionId = found.id;
+        } else if (sessions.length > 0) {
+          activeSessionId = sessions[0].id;
+        } else {
+          createNewChatSession(false);
+        }
         showMainView('chat');
       }
 
@@ -2350,6 +2373,10 @@
       // Telemetry
       fetchProjectTelemetry();
       setInterval(fetchProjectTelemetry, 4000);
+
+      // Backend Connection Health
+      checkBackendHealth();
+      setInterval(checkBackendHealth, 12000);
     }
 
     // ------------------------------------------------------------
@@ -2514,6 +2541,7 @@
 
     function switchSession(sid) {
       activeSessionId = sid;
+      localStorage.setItem('aloria_hunter_last_active_session', sid);
       navigateTo('/c/' + sid);
       renderRecents();
       renderActiveSession();
@@ -2548,6 +2576,9 @@
 
     function saveSessions() {
       localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+      if (activeSessionId) {
+        localStorage.setItem('aloria_hunter_last_active_session', activeSessionId);
+      }
     }
 
     function renderRecents() {

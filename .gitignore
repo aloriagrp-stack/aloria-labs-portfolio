@@ -28,3 +28,5 @@ aloria-hunter/*.log
 __pycache__/
 *.pyc
 scratch/
+*.exe
+aloria-hunter/cloudflared.exe
