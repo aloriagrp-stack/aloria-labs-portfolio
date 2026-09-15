@@ -1271,9 +1271,348 @@
       border: 1px solid rgba(244, 63, 94, 0.3);
       text-transform: uppercase;
     }
+
+    /* ============================================================
+       SECURITY CLEARANCE GATE & RATE LIMITER MODAL
+       ============================================================ */
+    body.app-locked {
+      overflow: hidden !important;
+    }
+
+    body.app-locked #sidebar,
+    body.app-locked #main-canvas {
+      filter: blur(28px) brightness(0.25);
+      pointer-events: none !important;
+      user-select: none !important;
+      opacity: 0.15;
+      transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .security-gate-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999999;
+      background: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.08) 0%, rgba(10, 11, 14, 0.96) 70%, #06070a 100%);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.4s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .security-gate-overlay.gate-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: scale(0.98);
+    }
+
+    .security-gate-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(23, 23, 23, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 34px 28px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(16, 185, 129, 0.18);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .security-gate-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #10b981, #00f0ff, transparent);
+    }
+
+    .gate-shield-badge {
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 16px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #10b981;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+    }
+
+    .gate-tag {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #10b981;
+      margin-bottom: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gate-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ececec;
+      text-align: center;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .gate-subtitle {
+      font-size: 13px;
+      color: #8e8e8e;
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .gate-input-box {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .gate-input-box svg.gate-icon-left {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: #737373;
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 13px 44px 13px 44px;
+      background: #262626;
+      border: 1px solid #383838;
+      border-radius: 12px;
+      color: #ececec;
+      font-size: 15px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .gate-input:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    .gate-toggle-pwd {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #8e8e8e;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: color 0.2s ease;
+    }
+
+    .gate-toggle-pwd:hover {
+      color: #ececec;
+    }
+
+    .gate-btn-submit {
+      width: 100%;
+      padding: 13px 18px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border: none;
+      border-radius: 12px;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+    }
+
+    .gate-btn-submit:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4);
+    }
+
+    .gate-btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .gate-error-banner {
+      display: none;
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gate-error-banner.visible {
+      display: block;
+    }
+
+    .gate-error-banner.error {
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #f43f5e;
+    }
+
+    .gate-error-banner.lockout {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #f59e0b;
+    }
+
+    .gate-error-banner.success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #10b981;
+    }
+
+    .gate-meta-row {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #737373;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gate-rate-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gate-pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .gate-pill-dot.locked {
+      background: #f43f5e;
+      box-shadow: 0 0 8px #f43f5e;
+    }
+
+    .shake-anim {
+      animation: gateShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes gateShake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(3px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    .btn-lock-sidebar {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 6px 10px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-lock-sidebar:hover {
+      color: var(--rose);
+      border-color: rgba(244, 63, 94, 0.3);
+      background: rgba(244, 63, 94, 0.08);
+    }
   </style>
 </head>
 <body>
+
+  <!-- ============================================================
+       SECURITY CLEARANCE / ACCESS GATE (Password: shriyansh0402)
+       ============================================================ -->
+  <div id="security-gate-overlay" class="security-gate-overlay">
+    <div class="security-gate-card" id="security-gate-card">
+      <div class="gate-shield-badge">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div class="gate-tag">RESTRICTED // LEVEL-5 CLEARANCE</div>
+      <h2 class="gate-title">Aloria Hunter Cockpit</h2>
+      <p class="gate-subtitle">Autonomous Lead Intelligence Platform. Authenticate with your security key to proceed.</p>
+
+      <form id="gate-auth-form" onsubmit="handleGateAuth(event)">
+        <div class="gate-input-box">
+          <svg class="gate-icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-1.5 1.5L16 7l-2 2-2-2-4 4a5 5 0 1 0 7 7l4-4-2-2 2-2 1.5-1.5z"></path>
+          </svg>
+          <input 
+            type="password" 
+            id="gate-password-input" 
+            class="gate-input" 
+            placeholder="Enter security password..." 
+            autocomplete="current-password"
+            required 
+          />
+          <button type="button" class="gate-toggle-pwd" onclick="toggleGatePasswordVisibility()" title="Toggle visibility">
+            <svg id="gate-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <div id="gate-error-banner" class="gate-error-banner"></div>
+
+        <button type="submit" id="gate-submit-btn" class="gate-btn-submit">
+          <span>AUTHENTICATE &amp; UNLOCK</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </form>
+
+      <div class="gate-meta-row">
+        <div class="gate-rate-pill">
+          <span class="gate-pill-dot" id="gate-pill-dot"></span>
+          <span id="gate-attempts-label">5 Attempts Remaining</span>
+        </div>
+        <div>SHA-256 · RATE-LIMITED</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ============================================================
        LEFT SIDEBAR
@@ -1326,15 +1665,22 @@
       </div>
     </div>
 
-    <!-- Bottom User Profile -->
-    <div class="sidebar-footer">
-      <div class="user-profile-btn">
+    <!-- Bottom User Profile & Lock Button -->
+    <div class="sidebar-footer" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+      <div class="user-profile-btn" style="flex: 1; padding: 6px 8px;">
         <div class="user-avatar">SA</div>
         <div class="user-meta">
           <span class="user-name">Shriyansh Aloria</span>
-          <span class="user-tier">Go</span>
+          <span class="user-tier">Authorized</span>
         </div>
       </div>
+      <button class="btn-lock-sidebar" onclick="lockHunterCockpit()" title="Lock Cockpit (Logout)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Lock</span>
+      </button>
     </div>
   </aside>
 
@@ -1752,16 +2098,218 @@
       return '';
     }
 
-    function getApiBase() {
-      const customUrl = localStorage.getItem('aloria_hunter_backend_url');
-      if (customUrl) return customUrl.replace(/\/$/, '');
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')) {
-        return '';
+    // ============================================================
+    // SECURITY CLEARANCE & ANTI-BRUTE-FORCE RATE LIMITER ENGINE
+    // Password: shriyansh0402
+    // ============================================================
+    const AUTH_STORAGE_KEY = 'aloria_hunter_auth_token_v1';
+    const ATTEMPTS_STORAGE_KEY = 'aloria_sec_attempts';
+    const LOCKOUT_STORAGE_KEY = 'aloria_sec_lockout_until';
+    const MAX_ALLOWED_ATTEMPTS = 5;
+    const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes lockout
+    const TARGET_HASH = '3a385043d85b93a9e8c30668bedeb79a0db320b8fbaddd996e6847d0bd0cf846';
+    const PLAINTEXT_PASSWORD_BACKUP = 'shriyansh0402';
+
+    let lockoutTimerInterval = null;
+
+    async function computeSha256(text) {
+      try {
+        if (window.crypto && window.crypto.subtle) {
+          const enc = new TextEncoder();
+          const buf = await window.crypto.subtle.digest('SHA-256', enc.encode(text));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function getFailedAttempts() {
+      const val = parseInt(localStorage.getItem(ATTEMPTS_STORAGE_KEY) || '0', 10);
+      return isNaN(val) ? 0 : val;
+    }
+
+    function getLockoutUntil() {
+      const val = parseInt(localStorage.getItem(LOCKOUT_STORAGE_KEY) || '0', 10);
+      return isNaN(val) ? 0 : val;
+    }
+
+    function checkLockoutState() {
+      const lockoutUntil = getLockoutUntil();
+      const now = Date.now();
+      const banner = document.getElementById('gate-error-banner');
+      const input = document.getElementById('gate-password-input');
+      const btn = document.getElementById('gate-submit-btn');
+      const dot = document.getElementById('gate-pill-dot');
+      const label = document.getElementById('gate-attempts-label');
+
+      if (lockoutUntil > now) {
+        if (input) input.disabled = true;
+        if (btn) btn.disabled = true;
+        if (dot) dot.className = 'gate-pill-dot locked';
+
+        const remainingMs = lockoutUntil - now;
+        const remainingSec = Math.ceil(remainingMs / 1000);
+        const mins = Math.floor(remainingSec / 60);
+        const secs = remainingSec % 60;
+        const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        if (banner) {
+          banner.className = 'gate-error-banner visible lockout';
+          banner.innerHTML = `⚠️ <strong>SECURITY LOCKOUT:</strong> Max 5 failed attempts exceeded.<br>Access blocked for security. Cooldown active: <strong>${timeStr}</strong>`;
+        }
+        if (label) label.textContent = `Locked (${timeStr})`;
+
+        if (!lockoutTimerInterval) {
+          lockoutTimerInterval = setInterval(() => {
+            checkLockoutState();
+          }, 1000);
+        }
+        return true;
+      } else {
+        if (lockoutTimerInterval) {
+          clearInterval(lockoutTimerInterval);
+          lockoutTimerInterval = null;
+        }
+        if (lockoutUntil > 0) {
+          localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+          localStorage.removeItem(ATTEMPTS_STORAGE_KEY);
+        }
+        if (input) input.disabled = false;
+        if (btn) btn.disabled = false;
+        if (dot) dot.className = 'gate-pill-dot';
+
+        const attempts = getFailedAttempts();
+        const left = Math.max(0, MAX_ALLOWED_ATTEMPTS - attempts);
+        if (label) label.textContent = `${left} Attempt${left === 1 ? '' : 's'} Remaining`;
+        return false;
       }
-      return '';
+    }
+
+    function toggleGatePasswordVisibility() {
+      const input = document.getElementById('gate-password-input');
+      const icon = document.getElementById('gate-eye-icon');
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+          icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+        }
+      } else {
+        input.type = 'password';
+        if (icon) {
+          icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        }
+      }
+    }
+
+    async function handleGateAuth(e) {
+      if (e) e.preventDefault();
+      if (checkLockoutState()) return;
+
+      const input = document.getElementById('gate-password-input');
+      const banner = document.getElementById('gate-error-banner');
+      const card = document.getElementById('security-gate-card');
+      const pwd = (input.value || '').trim();
+
+      if (!pwd) return;
+
+      const inputHash = await computeSha256(pwd);
+      const isCorrect = (inputHash && inputHash === TARGET_HASH) || (pwd === PLAINTEXT_PASSWORD_BACKUP);
+
+      if (isCorrect) {
+        // Success
+        localStorage.removeItem(ATTEMPTS_STORAGE_KEY);
+        localStorage.removeItem(LOCKOUT_STORAGE_KEY);
+        sessionStorage.setItem(AUTH_STORAGE_KEY, 'auth_ok_' + Date.now());
+
+        if (banner) {
+          banner.className = 'gate-error-banner visible success';
+          banner.innerHTML = '✓ <strong>CLEARANCE VERIFIED</strong> — Access Granted. Unlocking...';
+        }
+
+        setTimeout(() => {
+          unlockHunterCockpit();
+        }, 400);
+      } else {
+        // Failure
+        let attempts = getFailedAttempts() + 1;
+        localStorage.setItem(ATTEMPTS_STORAGE_KEY, attempts.toString());
+
+        if (card) {
+          card.classList.remove('shake-anim');
+          void card.offsetWidth; // force DOM reflow
+          card.classList.add('shake-anim');
+        }
+
+        if (attempts >= MAX_ALLOWED_ATTEMPTS) {
+          localStorage.setItem(LOCKOUT_STORAGE_KEY, (Date.now() + LOCKOUT_DURATION_MS).toString());
+          checkLockoutState();
+        } else {
+          const remaining = MAX_ALLOWED_ATTEMPTS - attempts;
+          if (banner) {
+            banner.className = 'gate-error-banner visible error';
+            banner.innerHTML = `✕ <strong>INVALID ACCESS KEY:</strong> ${remaining} attempt${remaining === 1 ? '' : 's'} remaining before 15-min lockout.`;
+          }
+          checkLockoutState();
+        }
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    function unlockHunterCockpit() {
+      document.body.classList.remove('app-locked');
+      const overlay = document.getElementById('security-gate-overlay');
+      if (overlay) {
+        overlay.classList.add('gate-hidden');
+      }
+      setTimeout(() => {
+        const inp = document.getElementById('chat-input');
+        if (inp) inp.focus();
+      }, 300);
+    }
+
+    function lockHunterCockpit() {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      document.body.classList.add('app-locked');
+      const overlay = document.getElementById('security-gate-overlay');
+      const banner = document.getElementById('gate-error-banner');
+      const input = document.getElementById('gate-password-input');
+
+      if (banner) {
+        banner.className = 'gate-error-banner';
+        banner.textContent = '';
+      }
+      if (input) {
+        input.value = '';
+      }
+      if (overlay) {
+        overlay.classList.remove('gate-hidden');
+      }
+      checkLockoutState();
+      setTimeout(() => {
+        if (input && !input.disabled) input.focus();
+      }, 200);
+    }
+
+    function enforceSecurityOnLoad() {
+      const isAuthed = sessionStorage.getItem(AUTH_STORAGE_KEY);
+      if (isAuthed && isAuthed.startsWith('auth_ok_')) {
+        unlockHunterCockpit();
+      } else {
+        document.body.classList.add('app-locked');
+        checkLockoutState();
+        const input = document.getElementById('gate-password-input');
+        setTimeout(() => {
+          if (input && !input.disabled) input.focus();
+        }, 150);
+      }
     }
 
     function init() {
+      // Enforce Security Gate
+      enforceSecurityOnLoad();
+
       // Load sessions
       try {
         const saved = localStorage.getItem(SESSIONS_STORAGE_KEY);

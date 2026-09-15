@@ -1,22 +1,32 @@
-# Aloria Labs Apache Configuration for cPanel
+# Aloria Labs Apache Hardened Security Configuration
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Ensure /hunter redirects or rewrites cleanly to hunter/
+  # Block direct access to sensitive file extensions & hidden files
+  RewriteRule "(^|/)\.(?!well-known)" - [F]
+  RewriteRule \.(env|git|json|yml|yaml|py|sql|sh|bat|log|md|bak|config)$ - [F,NC]
+
+  # Ensure /hunter redirects cleanly to hunter/
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^hunter$ hunter/ [L,R=301]
 
-  # Allow clean URLs if needed
+  # Clean URLs for portfolio pages
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^(.*)$ $1.html [L]
 </IfModule>
 
-# Caching & Security Headers
+# Disable Directory Browsing / Indexing
+Options -Indexes
+
+# Security & Anti-Hacking Headers
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
 </IfModule>
+

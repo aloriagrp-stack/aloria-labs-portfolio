@@ -36,6 +36,125 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ============================================================
+# SECURITY & ANTI-BRUTE-FORCE RATE LIMITER
+# Password: shriyansh0402
+# ============================================================
+HUNTER_ACCESS_PASSWORD = os.getenv("HUNTER_ACCESS_PASSWORD", "shriyansh0402")
+HUNTER_VALID_TOKENS = set()
+
+class SecurityRateLimiter:
+    def __init__(self):
+        self.ip_requests = {}      # ip -> list of timestamps
+        self.ip_failed_auth = {}   # ip -> {"count": int, "locked_until": float}
+        self.lock = threading.Lock()
+
+    def check_rate_limit(self, client_ip: str, max_requests: int = 120, window_sec: int = 60) -> bool:
+        now = time.time()
+        with self.lock:
+            history = self.ip_requests.get(client_ip, [])
+            history = [t for t in history if now - t < window_sec]
+            if len(history) >= max_requests:
+                self.ip_requests[client_ip] = history
+                return False
+            history.append(now)
+            self.ip_requests[client_ip] = history
+            return True
+
+    def check_auth_lockout(self, client_ip: str) -> tuple[bool, int]:
+        now = time.time()
+        with self.lock:
+            info = self.ip_failed_auth.get(client_ip, {"count": 0, "locked_until": 0.0})
+            if now < info["locked_until"]:
+                remaining = int(info["locked_until"] - now)
+                return False, remaining
+            return True, 0
+
+    def record_auth_failure(self, client_ip: str) -> tuple[int, int]:
+        now = time.time()
+        with self.lock:
+            info = self.ip_failed_auth.get(client_ip, {"count": 0, "locked_until": 0.0})
+            info["count"] += 1
+            if info["count"] >= 5:
+                info["locked_until"] = now + (15 * 60) # 15 minutes lockout
+                self.ip_failed_auth[client_ip] = info
+                return info["count"], 15 * 60
+            self.ip_failed_auth[client_ip] = info
+            return info["count"], 0
+
+    def record_auth_success(self, client_ip: str):
+        with self.lock:
+            if client_ip in self.ip_failed_auth:
+                del self.ip_failed_auth[client_ip]
+
+security_limiter = SecurityRateLimiter()
+
+@app.middleware("http")
+async def security_rate_limit_middleware(request: Request, call_next):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    
+    # Static UI and asset paths exempt from aggressive rate limiting
+    path = request.url.path
+    if path.startswith("/api/"):
+        if not security_limiter.check_rate_limit(client_ip, max_requests=120, window_sec=60):
+            return JSONResponse(
+                status_code=429,
+                content={"error": "Rate limit exceeded. Maximum 120 requests per minute allowed."}
+            )
+            
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
+@app.post("/api/auth/login")
+async def api_auth_login(request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    is_allowed, remaining_sec = security_limiter.check_auth_lockout(client_ip)
+    if not is_allowed:
+        mins = remaining_sec // 60
+        secs = remaining_sec % 60
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": f"Security lockout: Too many failed attempts. Try again in {mins:02d}:{secs:02d}",
+                "locked": True,
+                "remaining_seconds": remaining_sec
+            }
+        )
+
+    try:
+        body = await request.json()
+        password = str(body.get("password", "")).strip()
+    except Exception:
+        password = ""
+
+    if password == HUNTER_ACCESS_PASSWORD:
+        security_limiter.record_auth_success(client_ip)
+        import secrets
+        token = "aloria_sec_" + secrets.token_hex(24)
+        HUNTER_VALID_TOKENS.add(token)
+        return {"status": "ok", "token": token, "message": "Clearance verified"}
+    else:
+        attempts, lockout_sec = security_limiter.record_auth_failure(client_ip)
+        if lockout_sec > 0:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Security threshold exceeded. IP locked out for 15 minutes.",
+                    "locked": True,
+                    "remaining_seconds": lockout_sec
+                }
+            )
+        remaining_attempts = max(0, 5 - attempts)
+        return JSONResponse(
+            status_code=401,
+            content={
+                "error": f"Invalid password. {remaining_attempts} attempt(s) remaining.",
+                "attempts_remaining": remaining_attempts
+            }
+        )
+
 UI_DIR = BASE_DIR / "mobile_ui"
 
 @app.on_event("startup")
