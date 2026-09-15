@@ -27,11 +27,13 @@ DEFAULT_CITIES = [
 # Browser Display: False = Visible window on screen (you can watch it type/click), True = Silent background
 HEADLESS = False
 
-# Rate Limiting & Safety
-MAX_LEADS_PER_RUN = 30
-EMAIL_DELAY_MINUTES = 8  # Wait 8 minutes between emails to maintain 100% deliverability
-MAX_EMAILS_PER_DAY = 40
-FOLLOW_UP_INTERVAL_DAYS = 2  # Follow up after 2 days of no response
+# Rate Limiting & High-Speed Adaptive Pacing
+MAX_LEADS_PER_RUN = 50
+EMAIL_DELAY_MINUTES = 0  # Replaced by high-speed adaptive jitter pacing in seconds
+DISPATCH_DELAY_SECONDS = 10  # 8-12s humanized random jitter between dispatches
+PACING_MODE = "TURBO"  # "TURBO" (6-10s) | "BALANCED" (12-18s) | "SAFE" (25-35s)
+MAX_EMAILS_PER_DAY = 500  # Full Gmail SMTP capacity
+FOLLOW_UP_INTERVAL_DAYS = 3  # Follow up after 3 days of no response
 MAX_FOLLOW_UPS = 2  # Total follow-ups (Initial + Follow-up 1 + Follow-up 2)
 
 # Load SMTP Credentials from parent directory smtp_config.json

@@ -1,5 +1,5 @@
 {
-  "active_profile": "gmail",
+  "active_profile": "gethotelstays_india",
   "profiles": {
     "gmail": {
       "name": "Aloria Gmail (alorialabs@gmail.com)",
@@ -27,6 +27,15 @@
       "smtp_port": 587,
       "sender_name": "Shriyansh Aloria — GetHotelStays",
       "reply_to": "gethotelstays02@gmail.com"
+    },
+    "gethotelstays_india": {
+      "name": "GetHotelStays India (gethotelstays.india@gmail.com)",
+      "email": "gethotelstays.india@gmail.com",
+      "password": "azwj amab gafj exnn",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.india@gmail.com"
     }
   }
 }

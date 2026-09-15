@@ -5,8 +5,10 @@ from pathlib import Path
 DB_PATH = Path(__file__).resolve().parent / "hunter.db"
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=30000;")
     return conn
 
 def init_db():
@@ -48,6 +50,15 @@ def init_db():
         sent_at TEXT DEFAULT CURRENT_TIMESTAMP,
         business_id TEXT DEFAULT 'aloria_labs'
     );
+
+    CREATE TABLE IF NOT EXISTS email_blacklist (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        reason TEXT DEFAULT 'BOUNCED',
+        source TEXT DEFAULT 'IMAP_BOUNCE',
+        blacklisted_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_blacklist_email ON email_blacklist(email);
     """)
     conn.commit()
 
@@ -129,70 +140,233 @@ def update_audit(lead_id, email, audit_summary):
     conn.commit()
     conn.close()
 
+def add_to_blacklist(email, reason="BOUNCED", source="IMAP_BOUNCE"):
+    if not email or not isinstance(email, str):
+        return False
+    clean = email.strip().lower()
+    if not clean or "@" not in clean:
+        return False
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+        INSERT OR IGNORE INTO email_blacklist (email, reason, source)
+        VALUES (?, ?, ?)
+        """, (clean, reason, source))
+        conn.commit()
+        # Also mark existing leads with this email as BOUNCED
+        cursor.execute("""
+        UPDATE leads
+        SET status = 'BOUNCED', audit_summary = coalesce(audit_summary, '') || ' [BOUNCED: ' || ? || ']'
+        WHERE LOWER(TRIM(email)) = ? AND status != 'BOUNCED'
+        """, (reason, clean))
+        # Update outreach_logs status
+        cursor.execute("""
+        UPDATE outreach_logs
+        SET status = 'BOUNCED'
+        WHERE LOWER(TRIM(recipient_email)) = ?
+        """, (clean,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception:
+        conn.close()
+        return False
+
+def is_email_blacklisted(email):
+    if not email:
+        return False
+    clean = email.strip().lower()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM email_blacklist WHERE LOWER(TRIM(email)) = ? LIMIT 1", (clean,))
+    res = cursor.fetchone() is not None
+    conn.close()
+    return res
+
+def get_blacklisted_emails(limit=200):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, email, reason, source, blacklisted_at FROM email_blacklist ORDER BY id DESC LIMIT ?", (limit,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
+
+def is_email_already_contacted(email, business_id=None):
+    if not email:
+        return False
+    clean = email.strip().lower()
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Check outreach_logs: ANY initial outreach sent to this email
+    cursor.execute("""
+    SELECT 1 FROM outreach_logs 
+    WHERE LOWER(TRIM(recipient_email)) = ? AND status = 'SENT'
+    LIMIT 1
+    """, (clean,))
+    if cursor.fetchone():
+        conn.close()
+        return True
+
+    # Check leads table for sent initial
+    cursor.execute("""
+    SELECT 1 FROM leads 
+    WHERE LOWER(TRIM(email)) = ? AND initial_email_sent_at IS NOT NULL
+    LIMIT 1
+    """, (clean,))
+    res = cursor.fetchone() is not None
+    conn.close()
+    return res
+
+def mark_lead_bounced(email, reason="Address not found / Mailbox unavailable"):
+    return add_to_blacklist(email, reason=reason, source="IMAP_BOUNCE")
+
 def get_leads_ready_for_initial_email(business_id=None, limit=10):
     conn = get_connection()
     cursor = conn.cursor()
+    # Strict deduplication & protection query:
+    # 1. Email must be present and not empty
+    # 2. Status must not be BOUNCED or BLACKLISTED
+    # 3. Email must not be in email_blacklist
+    # 4. Email must not have already received a cold email in outreach_logs
+    # 5. Email must not have already been sent in another lead record
+    # 6. GROUP BY email ensures zero duplicate emails in the same batch
+    sql = """
+    SELECT * FROM leads
+    WHERE (status = 'AUDITED' OR (status = 'DISCOVERED' AND has_website = 0))
+      AND email IS NOT NULL AND TRIM(email) != ''
+      AND initial_email_sent_at IS NULL
+      AND status NOT IN ('BOUNCED', 'BLACKLISTED')
+      AND LOWER(TRIM(email)) NOT IN (SELECT LOWER(TRIM(email)) FROM email_blacklist)
+      AND LOWER(TRIM(email)) NOT IN (
+          SELECT LOWER(TRIM(recipient_email)) FROM outreach_logs WHERE status = 'SENT'
+      )
+      AND LOWER(TRIM(email)) NOT IN (
+          SELECT LOWER(TRIM(l2.email)) FROM leads l2 
+          WHERE l2.initial_email_sent_at IS NOT NULL AND l2.id != leads.id AND l2.email IS NOT NULL
+      )
+    """
+    params = []
     if business_id:
-        cursor.execute("""
-        SELECT * FROM leads
-        WHERE (status = 'AUDITED' OR (status = 'DISCOVERED' AND has_website = 0))
-          AND email IS NOT NULL AND email != ''
-          AND initial_email_sent_at IS NULL
-          AND business_id = ?
-        LIMIT ?
-        """, (business_id, limit))
-    else:
-        cursor.execute("""
-        SELECT * FROM leads
-        WHERE (status = 'AUDITED' OR (status = 'DISCOVERED' AND has_website = 0))
-          AND email IS NOT NULL AND email != ''
-          AND initial_email_sent_at IS NULL
-        LIMIT ?
-        """, (limit,))
+        sql += " AND business_id = ?"
+        params.append(business_id)
+
+    sql += " GROUP BY LOWER(TRIM(email)) ORDER BY id ASC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(sql, tuple(params))
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
 
-def get_leads_ready_for_followup(business_id=None, interval_days=2, max_followups=2):
+def get_leads_ready_for_followup(business_id=None, interval_days=3, max_followups=2):
     conn = get_connection()
     cursor = conn.cursor()
     cutoff_time = (datetime.utcnow() - timedelta(days=interval_days)).isoformat()
+    
+    # Exclude bounced, blacklisted, and leads whose email is in email_blacklist
+    sql = """
+    SELECT * FROM leads
+    WHERE status IN ('SENT_INITIAL', 'FOLLOW_UP_1')
+      AND follow_up_count < ?
+      AND status NOT IN ('BOUNCED', 'BLACKLISTED', 'REPLIED', 'OPT_OUT')
+      AND (
+          (status = 'SENT_INITIAL' AND initial_email_sent_at <= ?)
+          OR
+          (status = 'FOLLOW_UP_1' AND last_follow_up_at <= ?)
+      )
+      AND LOWER(TRIM(email)) NOT IN (SELECT LOWER(TRIM(email)) FROM email_blacklist)
+    """
+    params = [max_followups, cutoff_time, cutoff_time]
     if business_id:
-        cursor.execute("""
-        SELECT * FROM leads
-        WHERE status IN ('SENT_INITIAL', 'FOLLOW_UP_1')
-          AND follow_up_count < ?
-          AND business_id = ?
-          AND (
-              (status = 'SENT_INITIAL' AND initial_email_sent_at <= ?)
-              OR
-              (status = 'FOLLOW_UP_1' AND last_follow_up_at <= ?)
-          )
-        """, (max_followups, business_id, cutoff_time, cutoff_time))
-    else:
-        cursor.execute("""
-        SELECT * FROM leads
-        WHERE status IN ('SENT_INITIAL', 'FOLLOW_UP_1')
-          AND follow_up_count < ?
-          AND (
-              (status = 'SENT_INITIAL' AND initial_email_sent_at <= ?)
-              OR
-              (status = 'FOLLOW_UP_1' AND last_follow_up_at <= ?)
-          )
-        """, (max_followups, cutoff_time, cutoff_time))
+        sql += " AND business_id = ?"
+        params.append(business_id)
+
+    sql += " ORDER BY COALESCE(last_follow_up_at, initial_email_sent_at) ASC"
+
+    cursor.execute(sql, tuple(params))
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
 
-def mark_initial_email_sent(lead_id):
+def get_overdue_followups(business_id=None, interval_days=3, max_followups=2):
+    """
+    Offline/Downtime Aware Calculator:
+    Inspects all leads that have been sent an outreach email, calculates exact elapsed time,
+    and returns leads that are overdue for follow-up (e.g. because the laptop was shut down).
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    now = datetime.utcnow()
+
+    sql = """
+    SELECT id, business_name, email, city, country, niche, status,
+           initial_email_sent_at, last_follow_up_at, follow_up_count, business_id
+    FROM leads
+    WHERE status IN ('SENT_INITIAL', 'FOLLOW_UP_1')
+      AND follow_up_count < ?
+      AND email IS NOT NULL AND TRIM(email) != ''
+      AND status NOT IN ('BOUNCED', 'BLACKLISTED', 'REPLIED', 'OPT_OUT')
+      AND LOWER(TRIM(email)) NOT IN (SELECT LOWER(TRIM(email)) FROM email_blacklist)
+    """
+    params = [max_followups]
+    if business_id:
+        sql += " AND business_id = ?"
+        params.append(business_id)
+
+    cursor.execute(sql, tuple(params))
+    candidates = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    overdue_leads = []
+    for lead in candidates:
+        status = lead["status"]
+        ref_time_str = lead["last_follow_up_at"] if status == "FOLLOW_UP_1" else lead["initial_email_sent_at"]
+        if not ref_time_str:
+            continue
+
+        try:
+            # Handle ISO string or space-separated timestamp
+            clean_ts = ref_time_str.replace("Z", "").split("+")[0]
+            if "T" in clean_ts:
+                sent_dt = datetime.fromisoformat(clean_ts)
+            else:
+                sent_dt = datetime.strptime(clean_ts, "%Y-%m-%d %H:%M:%S")
+
+            elapsed_seconds = (now - sent_dt).total_seconds()
+            days_elapsed = elapsed_seconds / 86400.0
+
+            if days_elapsed >= interval_days:
+                lead["days_elapsed"] = round(days_elapsed, 1)
+                lead["days_overdue"] = round(days_elapsed - interval_days, 1)
+                lead["target_follow_up"] = (lead["follow_up_count"] or 0) + 1
+                lead["reference_sent_at"] = ref_time_str
+                overdue_leads.append(lead)
+        except Exception:
+            continue
+
+    # Sort descending by days overdue (most urgent first)
+    overdue_leads.sort(key=lambda x: x["days_elapsed"], reverse=True)
+    return overdue_leads
+
+def mark_initial_email_sent(lead_id, email=None):
     conn = get_connection()
     cursor = conn.cursor()
     now_str = datetime.utcnow().isoformat()
-    cursor.execute("""
-    UPDATE leads
-    SET status = 'SENT_INITIAL', initial_email_sent_at = ?, last_follow_up_at = ?
-    WHERE id = ?
-    """, (now_str, now_str, lead_id))
+    if email:
+        clean = email.strip().lower()
+        # Mark all duplicate leads sharing this exact email address so none can receive a duplicate
+        cursor.execute("""
+        UPDATE leads
+        SET status = 'SENT_INITIAL', initial_email_sent_at = ?, last_follow_up_at = ?
+        WHERE LOWER(TRIM(email)) = ? OR id = ?
+        """, (now_str, now_str, clean, lead_id))
+    else:
+        cursor.execute("""
+        UPDATE leads
+        SET status = 'SENT_INITIAL', initial_email_sent_at = ?, last_follow_up_at = ?
+        WHERE id = ?
+        """, (now_str, now_str, lead_id))
     conn.commit()
     conn.close()
 
@@ -242,25 +416,28 @@ def get_stats(business_id=None):
     params = (business_id,) if business_id else ()
 
     cursor.execute(f"SELECT count(*) as total, sum(has_website) as with_website, count(CASE WHEN has_website = 0 THEN 1 END) as without_website FROM leads {base_cond}", params)
-    row = dict(cursor.fetchone() or {"total": 0, "with_website": 0, "without_website": 0})
-    if row.get("with_website") is None:
-        row["with_website"] = 0
-    if row.get("without_website") is None:
-        row["without_website"] = 0
+    raw_row = cursor.fetchone()
+    res: dict = dict(raw_row) if raw_row else {"total": 0, "with_website": 0, "without_website": 0}
+    if res.get("with_website") is None:
+        res["with_website"] = 0
+    if res.get("without_website") is None:
+        res["without_website"] = 0
 
     cursor.execute(f"SELECT status, count(*) as count FROM leads {base_cond} GROUP BY status", params)
-    statuses = {r['status']: r['count'] for r in cursor.fetchall()}
+    statuses: dict = {str(r['status']): int(r['count']) for r in cursor.fetchall()}
 
     log_cond = "WHERE business_id = ? AND status='SENT'" if business_id else "WHERE status='SENT'"
     cursor.execute(f"SELECT count(*) as count FROM outreach_logs {log_cond}", params)
-    row['total_emails_sent'] = cursor.fetchone()['count']
+    log_row = cursor.fetchone()
+    res['total_emails_sent'] = int(log_row['count']) if log_row else 0
     conn.close()
-    row['statuses'] = statuses
-    return row
+    res['statuses'] = statuses
+    return res
 
 def get_funnel_stats(business_id=None):
     stats = get_stats(business_id)
-    statuses = stats.get("statuses", {})
+    raw_statuses = stats.get("statuses")
+    statuses: dict = raw_statuses if isinstance(raw_statuses, dict) else {}
     total = stats.get("total", 0)
     discovered = statuses.get("DISCOVERED", 0)
     audited = statuses.get("AUDITED", 0)

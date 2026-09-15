@@ -149,9 +149,10 @@ class HotelStaysAgent(BaseAgent):
     def execute_full_wave(self, city="Algiers", country="Algeria", niche="Hotels", limit=5):
         self.cycle_count += 1
         self.log_event(f"Starting Full Autonomous Wave #{self.cycle_count} for GetHotelStays...", "INFO")
+        # Priority protocol: check and dispatch overdue follow-ups first before new scraping
+        self.execute_followups()
         self.execute_hunt_wave(city=city, country=country, niche=niche, limit=limit, headless=True)
         self.execute_audit(limit=limit)
         self.execute_dispatch(limit=limit)
         self.execute_whatsapp_dispatch(limit=limit)
-        self.execute_followups()
         self.log_event(f"Wave #{self.cycle_count} fully completed for GetHotelStays.", "SUCCESS")

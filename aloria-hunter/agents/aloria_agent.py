@@ -4,6 +4,7 @@ import maps_crawler
 import website_auditor
 import email_engine
 import business_manager
+import aloria_brain
 import db
 
 class AloriaAgent(BaseAgent):
@@ -17,7 +18,10 @@ class AloriaAgent(BaseAgent):
 
     def run(self):
         self.is_running = True
-        self.log_event("Agent Aloria initialized and online.", "INFO")
+        aloria_brain.load_intelligence_library()
+        p_count = len(aloria_brain._ALL_PROBLEMS)
+        n_count = len(aloria_brain._NICHE_INDEX)
+        self.log_event(f"Agent Aloria initialized. Aloria Brain online: {n_count} Niches | {p_count} Problem Playbooks armed.", "SUCCESS")
 
         while self.is_running:
             # 1. Process immediate manual commands from queue (if any)
@@ -133,8 +137,9 @@ class AloriaAgent(BaseAgent):
     def execute_full_wave(self, city="Algiers", country="Algeria", niche="Restaurants", limit=5):
         self.cycle_count += 1
         self.log_event(f"Starting Full Autonomous Wave #{self.cycle_count} for Aloria Labs...", "INFO")
+        # Priority protocol: check and dispatch overdue follow-ups first before new scraping
+        self.execute_followups()
         self.execute_hunt_wave(city=city, country=country, niche=niche, limit=limit, headless=True)
         self.execute_audit(limit=limit)
         self.execute_dispatch(limit=limit)
-        self.execute_followups()
         self.log_event(f"Wave #{self.cycle_count} fully completed.", "SUCCESS")

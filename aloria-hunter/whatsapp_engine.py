@@ -69,13 +69,13 @@ def clean_phone_number(raw_phone, default_country_code="91"):
 
 def launch_whatsapp_login_qr():
     """
-    Opens WhatsApp Web in a visible Chrome window with full User-Agent so the operator can scan the QR code.
-    The session is saved permanently in D:/playwright-browsers/whatsapp_profile.
+    Opens WhatsApp Web in a visible Chrome window so the operator can scan the QR code.
+    Only marks logged in when the actual chats panel is confirmed loaded.
     """
     print(f"\n{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}")
     print(f"  {ui.C_WHITE}WHATSAPP WEB QR CODE LOGIN{ui.RESET}")
     print(f"  {ui.C_DIM}Opening Chrome window... Scan the QR code using your phone's WhatsApp.{ui.RESET}")
-    print(f"  {ui.C_DIM}(WhatsApp ➔ Linked Devices ➔ Link a Device){ui.RESET}")
+    print(f"  {ui.C_YELLOW}Phone Steps: Open WhatsApp ➔ Settings / Three Dots ➔ Linked Devices ➔ Link a Device{ui.RESET}")
     print(f"{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}\n")
 
     with sync_playwright() as p:
@@ -83,33 +83,38 @@ def launch_whatsapp_login_qr():
             user_data_dir=str(SESSION_DIR),
             headless=False,
             user_agent=USER_AGENT,
-            viewport={"width": 1280, "height": 800},
+            viewport={"width": 1280, "height": 850},
             args=["--disable-blink-features=AutomationControlled"]
         )
-        page = context.new_page()
+        page = context.pages[0] if context.pages else context.new_page()
         page.goto("https://web.whatsapp.com", wait_until="domcontentloaded", timeout=60000)
 
-        print(f"  {ui.C_YELLOW}[!] Waiting for you to scan QR code on screen...{ui.RESET}")
+        print(f"  {ui.C_YELLOW}► Chrome window is open. Waiting for you to scan the QR code...{ui.RESET}")
+        print(f"  {ui.C_DIM}(The window will automatically detect your login once scanned){ui.RESET}\n")
 
         logged_in = False
         start_time = time.time()
-        while time.time() - start_time < 180:
-            try:
-                has_search = page.locator("div[contenteditable='true'], [aria-label*='Search'], [data-testid='chat-list'], #pane-side").count() > 0
-                has_qr = page.locator("canvas[aria-label*='Scan'], [data-ref]").count() > 0
 
-                if has_search or (not has_qr and time.time() - start_time > 10):
+        # Wait up to 5 minutes for genuine user QR scan
+        while time.time() - start_time < 300:
+            try:
+                # Real indicators that login succeeded and chats are active:
+                has_chats = page.locator("#pane-side, [data-testid='chat-list'], [aria-label='Chat list'], [aria-label='Chats']").count() > 0
+                has_search = page.locator("div[role='textbox'][data-tab='3'], div[contenteditable='true'][data-tab='3']").count() > 0
+
+                if has_chats or has_search:
                     logged_in = True
                     break
             except Exception:
                 pass
-            time.sleep(1)
+            time.sleep(1.5)
 
         if logged_in:
-            print(f"\n  {ui.C_GREEN}[✓] WhatsApp Web successfully verified and session saved permanently!{ui.RESET}\n")
-            time.sleep(2)
+            print(f"  {ui.C_GREEN}[✓] WhatsApp Web successfully authenticated! Syncing session to disk...{ui.RESET}")
+            time.sleep(5)  # Allow IndexedDB and session cookies to settle
+            print(f"  {ui.C_GREEN}[✓] Session saved permanently in {SESSION_DIR}!{ui.RESET}\n")
         else:
-            print(f"\n  {ui.C_YELLOW}[!] Please finish scanning in the open Chrome window.{ui.RESET}\n")
+            print(f"\n  {ui.C_RED}[!] QR login timed out after 5 minutes or was cancelled.{ui.RESET}\n")
 
         try:
             context.close()
@@ -118,12 +123,15 @@ def launch_whatsapp_login_qr():
         return logged_in
 
 def is_whatsapp_logged_in():
-    """Checks if WhatsApp Web has an active authenticated session on disk."""
+    """Checks if WhatsApp Web has saved authentication files on disk."""
     default_dir = SESSION_DIR / "Default" / "IndexedDB"
     if default_dir.exists():
-        wa_dbs = list(default_dir.glob("*whatsapp*"))
-        if wa_dbs:
-            return True
+        leveldb = default_dir / "https_web.whatsapp.com_0.indexeddb.leveldb"
+        if leveldb.exists() and any(leveldb.iterdir()):
+            # Must have actual log/ldb files bigger than initial empty stub
+            ldb_files = list(leveldb.glob("*.ldb")) + list(leveldb.glob("*.log"))
+            if any(f.stat().st_size > 1024 for f in ldb_files):
+                return True
     return False
 
 def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False):
@@ -173,6 +181,7 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
 
     # Launch browser ONCE for the entire batch with full Chrome User-Agent
     with sync_playwright() as p:
+        context = None
         try:
             context = p.chromium.launch_persistent_context(
                 user_data_dir=str(SESSION_DIR),
@@ -181,12 +190,30 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
                 viewport={"width": 1280, "height": 800},
                 args=["--disable-blink-features=AutomationControlled"]
             )
-            page = context.new_page()
+            page = context.pages[0] if context.pages else context.new_page()
+
+            # Pre-flight check: Verify if WhatsApp is actually logged in before starting dispatches
+            page.goto("https://web.whatsapp.com", wait_until="domcontentloaded", timeout=45000)
+            time.sleep(3)
+            has_qr = page.locator("canvas, [data-ref], div:has-text('Scan to log in')").count() > 0
+            if has_qr:
+                print(f"  {ui.C_RED}[!] WhatsApp Web is NOT authenticated (QR code detected).{ui.RESET}")
+                print(f"  {ui.C_YELLOW}[!] Please scan your QR code using Option [Q] or run login_whatsapp.bat.{ui.RESET}")
+                return 0
 
             for idx, (lead, clean_phone) in enumerate(valid_mobile_leads, 1):
                 lead_id = lead["id"]
                 hotel_name = lead["business_name"]
-                msg = whatsapp_pitch.format(business_name=hotel_name)
+
+                if business_id == "aloria_labs":
+                    try:
+                        import aloria_brain
+                        msg = aloria_brain.generate_dynamic_whatsapp(lead) or whatsapp_pitch.format(business_name=hotel_name)
+                    except Exception:
+                        msg = whatsapp_pitch.format(business_name=hotel_name)
+                else:
+                    msg = whatsapp_pitch.format(business_name=hotel_name)
+
                 encoded_msg = urllib.parse.quote(msg)
                 url = f"https://web.whatsapp.com/send?phone={clean_phone}&text={encoded_msg}"
 
@@ -195,8 +222,8 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
                 try:
                     page.goto(url, wait_until="domcontentloaded", timeout=45000)
 
-                    # Wait for either chat input or invalid phone number modal
                     delivered = False
+                    invalid_number_found = False
                     start_wait = time.time()
 
                     while time.time() - start_wait < 25:
@@ -205,6 +232,7 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
                         if dialog.count() > 0 and any(kw in dialog.first.inner_text().lower() for kw in ["invalid", "not allowed", "ok"]):
                             print(f"  {ui.C_YELLOW}[!] Number {clean_phone} is not registered on WhatsApp.{ui.RESET}")
                             db.mark_whatsapp_sent(lead_id, status="NOT_ON_WHATSAPP")
+                            invalid_number_found = True
                             try:
                                 # Dismiss popup
                                 page.locator("button:has-text('OK'), div[role='button']:has-text('OK')").first.click(timeout=1000)
@@ -233,7 +261,7 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
 
                         time.sleep(1)
 
-                    if not delivered and dialog.count() == 0:
+                    if not delivered and not invalid_number_found:
                         print(f"  {ui.C_RED}[✗] WhatsApp chat timed out for {hotel_name}{ui.RESET}")
                         db.mark_whatsapp_sent(lead_id, status="FAILED_TIMEOUT")
 
@@ -246,10 +274,17 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
                     print(f"  {ui.C_DIM}Waiting 15s (anti-ban pacing)...{ui.RESET}")
                     time.sleep(15)
 
-            context.close()
-
         except Exception as e:
             print(f"  {ui.C_RED}[!] WhatsApp browser error: {e}{ui.RESET}")
+        finally:
+            if context:
+                try:
+                    context.close()
+                except Exception:
+                    pass
 
     print(f"\n  {ui.C_GREEN}[✓ WHATSAPP OUTREACH COMPLETE]{ui.RESET} Successfully delivered: {sent_count}/{len(valid_mobile_leads)}\n")
     return sent_count
+
+if __name__ == "__main__":
+    launch_whatsapp_login_qr()

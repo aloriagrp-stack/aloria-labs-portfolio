@@ -1,13 +1,30 @@
 import smtplib
 import time
+import random
+import uuid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid
 from datetime import datetime
 import config
 import db
 import ui
-
+import email_verifier
 import business_manager
+
+def get_adaptive_dispatch_delay():
+    """Humanized random jitter pacing for high-speed inbox delivery without bot clustering."""
+    mode = getattr(config, "PACING_MODE", "TURBO").upper()
+    if mode == "TURBO":
+        base = 8.0
+        jitter = random.uniform(-2.0, 2.5)
+    elif mode == "SAFE":
+        base = 25.0
+        jitter = random.uniform(-3.0, 3.0)
+    else:  # BALANCED
+        base = 14.0
+        jitter = random.uniform(-3.0, 3.0)
+    return max(4.0, base + jitter)
 
 def generate_pitch(lead, email_type="INITIAL"):
     name = lead["business_name"]
@@ -18,9 +35,22 @@ def generate_pitch(lead, email_type="INITIAL"):
     website_url = lead["website_url"] or ""
     biz_id = lead.get("business_id") or "aloria_labs"
 
-    # Check if business has custom templates in business_manager
+    # For Aloria Labs: Use 500-problem intelligence library from Aloria Brain
+    if biz_id == "aloria_labs":
+        try:
+            import aloria_brain
+            subj, body, html_body, meta = aloria_brain.generate_dynamic_email(lead, email_type)
+            if subj and body:
+                return subj, body, html_body
+        except Exception as e:
+            print(f"  [!] Aloria Brain error: {e}, falling back to default.")
+
+    # Check if business has custom templates in business_manager (e.g. GetHotelStays)
     biz = business_manager.get_business(biz_id)
     sender_name = biz.get("sender_display_name", "Shriyansh Aloria — Aloria Labs") if biz else "Shriyansh Aloria — Aloria Labs"
+    sender_prof = biz.get("sender_profile", "gmail") if biz else "gmail"
+    smtp_cfg = config.get_smtp_config(sender_prof)
+    sender_email = smtp_cfg.get("email", "info@alorialabs.in")
 
     if biz and "pitches" in biz:
         pitch_key = None
@@ -37,17 +67,28 @@ def generate_pitch(lead, email_type="INITIAL"):
             reviews_val = lead.get("reviews_count") or "20+"
             flaws_text = lead.get("audit_summary") or "• Sub-optimal mobile responsiveness\n• Slower load times impacting Google rankings"
 
-            subj = tpl.get("subject", "").format(
-                business_name=name, city=city, niche=niche,
-                rating=rating_val, reviews_count=reviews_val,
-                website_url=website_url, sender_name=sender_name
-            )
-            body = tpl.get("body", "").format(
-                business_name=name, city=city, niche=niche,
-                rating=rating_val, reviews_count=reviews_val,
-                website_url=website_url, sender_name=sender_name,
-                flaws_bullet_points=flaws_text
-            )
+            fmt_kwargs = {
+                "business_name": name or "",
+                "city": city or "",
+                "niche": niche or "",
+                "rating": rating_val,
+                "reviews_count": reviews_val,
+                "website_url": website_url or "",
+                "sender_name": sender_name or "",
+                "sender_email": sender_email or "",
+                "flaws_bullet_points": flaws_text or ""
+            }
+            raw_subj = tpl.get("subject", "")
+            raw_body = tpl.get("body", "")
+            try:
+                subj = raw_subj.format(**fmt_kwargs)
+            except Exception:
+                subj = raw_subj
+            try:
+                body = raw_body.format(**fmt_kwargs)
+            except Exception:
+                body = raw_body
+
             html_body = f"""<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111; line-height: 1.6; max-width: 600px; white-space: pre-line;">{body}</div>"""
             return subj, body, html_body
 
@@ -317,22 +358,26 @@ https://alorialabs.in
 
 def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=None):
     smtp_conf = config.get_smtp_config(profile_name)
-    sender_email = smtp_conf.get("email")
+    sender_email = str(smtp_conf.get("email") or "alorialabs@gmail.com")
     password = (smtp_conf.get("password") or "").replace(" ", "").strip()
-    smtp_server = smtp_conf.get("smtp_server", "smtp.gmail.com")
-    smtp_port = smtp_conf.get("smtp_port", 587)
-    sender_name = smtp_conf.get("sender_name", "Shriyansh Aloria — Aloria Labs")
-    reply_to = smtp_conf.get("reply_to", "info@alorialabs.in")
+    smtp_server = str(smtp_conf.get("smtp_server") or "smtp.gmail.com")
+    smtp_port = int(smtp_conf.get("smtp_port") or 587)
+    sender_name = str(smtp_conf.get("sender_name") or "Shriyansh Aloria — Aloria Labs")
+    reply_to = str(smtp_conf.get("reply_to") or "info@alorialabs.in")
 
     if not password:
         print(f"  {ui.C_RED}[!] Error: No password configured for sender profile ({sender_email}){ui.RESET}")
         return False, sender_email
 
     msg = MIMEMultipart("alternative")
+    sender_domain = sender_email.split("@")[-1] if "@" in sender_email else "alorialabs.in"
     msg["From"] = f"{sender_name} <{sender_email}>"
     msg["To"] = to_email
     msg["Subject"] = subject
     msg["Reply-To"] = reply_to
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain=sender_domain)
+    msg["X-Mailer"] = "Aloria-Autonomous-Outreach/3.0"
 
     msg.attach(MIMEText(plain_text, "plain", "utf-8"))
     msg.attach(MIMEText(html_text, "html", "utf-8"))
@@ -356,30 +401,56 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=N
         print(f"  {ui.C_RED}[!] SMTP error for {to_email}: {e}{ui.RESET}")
         return False, sender_email
 
-def dispatch_initial_emails(limit=5, profile_name=None, business_id=None):
+def dispatch_initial_emails(limit=10, profile_name=None, business_id=None):
     ready_leads = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit)
     print(f"  {ui.C_MAGENTA}[⚡ EMAIL ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_leads)}{ui.RESET} verified leads ready for initial pitch...")
 
     sent_count = 0
+    seen_in_batch = set()
     for lead in ready_leads:
-        to_email = lead["email"]
+        to_email = (lead["email"] or "").strip().lower()
         if not to_email:
             continue
 
+        # In-memory instant deduplication check
+        if to_email in seen_in_batch:
+            print(f"  {ui.C_YELLOW}[🛡 SKIPPED DEDUPLICATION]{ui.RESET} {to_email} already processed in current batch. Skipping.")
+            continue
+        seen_in_batch.add(to_email)
+
         lead_biz = lead.get("business_id") or business_id or "aloria_labs"
+
+        # STRICT PROTECTION CHECK 1: Never email a blacklisted or already contacted address
+        if db.is_email_blacklisted(to_email):
+            print(f"  {ui.C_RED}[🛡 SKIPPED BLACKLIST]{ui.RESET} {to_email} is on permanent blacklist. Skipping.")
+            continue
+        if db.is_email_already_contacted(to_email, lead_biz):
+            print(f"  {ui.C_YELLOW}[🛡 SKIPPED DEDUPLICATION]{ui.RESET} {to_email} already received outreach. Skipping.")
+            continue
+
+        # ZERO-BOUNCE PRE-SEND VERIFICATION GATE:
+        # Check live MX records and deliverability before ever contacting SMTP
+        is_deliverable, valid_em, fail_reason = email_verifier.verify_email_deliverability(to_email, check_mx=True)
+        if not is_deliverable:
+            print(f"  {ui.C_RED}[🛡 BOUNCE HAZARD BLOCKED]{ui.RESET} {to_email} rejected: {fail_reason}. Auto-blacklisted.")
+            db.add_to_blacklist(to_email, reason=f"Pre-send filter: {fail_reason}", source="PRE_SEND_GATE")
+            continue
+
         active_prof = profile_name
         if not active_prof:
             biz_data = business_manager.get_business(lead_biz)
             active_prof = biz_data.get("sender_profile") if biz_data else ("gethotelstays" if lead_biz == "gethotelstays" else "gmail")
 
         subject, plain, html = generate_pitch(lead, email_type="INITIAL")
-        success, sender = send_email_via_smtp(to_email, subject, plain, html, active_prof)
+        success, sender = send_email_via_smtp(valid_em or to_email, subject, plain, html, active_prof)
         if success:
-            db.mark_initial_email_sent(lead["id"])
+            db.mark_initial_email_sent(lead["id"], email=to_email)
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "SENT", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, True)
             sent_count += 1
-            time.sleep(30)
+            # Adaptive high-speed humanized jitter delay
+            delay = get_adaptive_dispatch_delay()
+            time.sleep(delay)
         else:
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, "INITIAL", subject, "FAILED", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Handshake Error")
@@ -387,16 +458,34 @@ def dispatch_initial_emails(limit=5, profile_name=None, business_id=None):
     return sent_count
 
 def dispatch_followups(profile_name=None, business_id=None):
+    interval_days = getattr(config, "FOLLOW_UP_INTERVAL_DAYS", 3)
     ready_followups = db.get_leads_ready_for_followup(
         business_id=business_id,
-        interval_days=config.FOLLOW_UP_INTERVAL_DAYS,
+        interval_days=interval_days,
         max_followups=config.MAX_FOLLOW_UPS
     )
-    print(f"  {ui.C_MAGENTA}[⚡ FOLLOW-UP ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_followups)}{ui.RESET} leads ready for 2-day scheduled follow-up...")
+    print(f"  {ui.C_MAGENTA}[⚡ FOLLOW-UP ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_followups)}{ui.RESET} leads ready for {interval_days}-day scheduled follow-up...")
 
     sent_count = 0
+    now = datetime.utcnow()
+
     for lead in ready_followups:
         to_email = lead["email"]
+        if not to_email:
+            continue
+
+        # Blacklist check: never follow up on bounced/blacklisted inboxes
+        if db.is_email_blacklisted(to_email) or lead.get("status") == "BOUNCED":
+            print(f"  {ui.C_RED}[🛡 SKIPPED BOUNCED]{ui.RESET} {to_email} was flagged as bounced. Follow-up cancelled.")
+            continue
+
+        # ZERO-BOUNCE PRE-SEND VERIFICATION GATE:
+        is_deliverable, valid_em, fail_reason = email_verifier.verify_email_deliverability(to_email, check_mx=True)
+        if not is_deliverable:
+            print(f"  {ui.C_RED}[🛡 BOUNCE HAZARD BLOCKED]{ui.RESET} {to_email} rejected: {fail_reason}. Auto-blacklisted.")
+            db.add_to_blacklist(to_email, reason=f"Pre-send filter: {fail_reason}", source="PRE_SEND_GATE")
+            continue
+
         curr_count = lead["follow_up_count"] or 0
         new_count = curr_count + 1
         email_type = f"FOLLOW_UP_{new_count}"
@@ -406,14 +495,31 @@ def dispatch_followups(profile_name=None, business_id=None):
             biz_data = business_manager.get_business(lead_biz)
             active_prof = biz_data.get("sender_profile") if biz_data else ("gethotelstays" if lead_biz == "gethotelstays" else "gmail")
 
+        # Time calculation logging (offline downtime awareness)
+        ref_ts = lead.get("last_follow_up_at") or lead.get("initial_email_sent_at")
+        elapsed_str = ""
+        if ref_ts:
+            try:
+                clean_ts = ref_ts.replace("Z", "").split("+")[0]
+                sent_dt = datetime.fromisoformat(clean_ts) if "T" in clean_ts else datetime.strptime(clean_ts, "%Y-%m-%d %H:%M:%S")
+                days_elapsed = (now - sent_dt).total_seconds() / 86400.0
+                days_overdue = max(0.0, days_elapsed - interval_days)
+                if days_overdue > 0.3:
+                    elapsed_str = f" [Sent {days_elapsed:.1f}d ago | {days_overdue:.1f}d overdue (Laptop was offline)]"
+                else:
+                    elapsed_str = f" [Sent {days_elapsed:.1f}d ago | Exactly on schedule]"
+            except Exception:
+                pass
+
         subject, plain, html = generate_pitch(lead, email_type=email_type)
-        success, sender = send_email_via_smtp(to_email, subject, plain, html, active_prof)
+        success, sender = send_email_via_smtp(valid_em or to_email, subject, plain, html, active_prof)
         if success:
             db.mark_followup_sent(lead["id"], new_count)
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "SENT", business_id=lead_biz)
-            ui.log_email_dispatch(lead["business_name"], to_email, f"[Follow-up {new_count}] {subject}", True)
+            ui.log_email_dispatch(lead["business_name"], to_email, f"[Follow-up {new_count}{elapsed_str}] {subject}", True)
             sent_count += 1
-            time.sleep(30)
+            delay = get_adaptive_dispatch_delay()
+            time.sleep(delay)
         else:
             db.log_outreach_event(lead["id"], lead["business_name"], to_email, sender, email_type, subject, "FAILED", business_id=lead_biz)
             ui.log_email_dispatch(lead["business_name"], to_email, subject, False, "SMTP Error")

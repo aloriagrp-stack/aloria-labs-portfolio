@@ -1,35 +1,48 @@
+import os
 import time
 import re
+from urllib.parse import quote_plus, unquote
+
+# Set Playwright browser path on D drive before importing playwright
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
+
 from playwright.sync_api import sync_playwright
 import config
 import db
 import ui
 
-def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None, business_id="aloria_labs"):
+def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None, business_id="aloria_labs", on_step=None, should_stop=None):
     if headless is None:
         headless = config.HEADLESS
 
     query = f"{niche} in {city}, {country}"
     print(f"  {ui.C_CYAN}[⚡ GOOGLE MAPS CRAWLER]{ui.RESET} Query: '{ui.C_WHITE}{query}{ui.RESET}' │ Quota: {ui.C_YELLOW}{max_places}{ui.RESET}")
+    if on_step:
+        on_step(f"Starting Google Maps sweep for {max_places} {niche} in {city}, {country}...")
 
     discovered = []
 
     with sync_playwright() as p:
-        # Launch Chromium from D:\playwright-browsers
-        browser = p.chromium.launch(
-            headless=headless,
-            args=["--disable-blink-features=AutomationControlled", "--start-maximized"]
-        )
-        context = browser.new_context(
-            viewport={"width": 1366, "height": 768},
-            locale="en-US"
-        )
-        page = context.new_page()
-
+        browser = None
+        context = None
         try:
+            if should_stop and should_stop():
+                return discovered
+
+            browser = p.chromium.launch(
+                headless=headless,
+                args=["--disable-blink-features=AutomationControlled", "--start-maximized"]
+            )
+            context = browser.new_context(
+                viewport={"width": 1366, "height": 768},
+                locale="en-US"
+            )
+            page = context.new_page()
             import urllib.parse
             search_url = f"https://www.google.com/maps/search/{urllib.parse.quote_plus(query)}?hl=en"
             ui.log_crawler_step(1, 4, f"Navigating to {ui.C_WHITE}{search_url}{ui.RESET}")
+            if on_step:
+                on_step(f"Navigating to Google Maps search viewport...")
             page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
             time.sleep(2)
 
@@ -83,12 +96,19 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
             # Find all place card links in the feed
             place_links = page.locator('div[role="feed"] a[href*="/maps/place/"]').all()
             ui.log_crawler_step(4, 4, f"Discovered {ui.C_GREEN}{len(place_links)}{ui.RESET} candidates. Extracting metadata...")
+            if on_step:
+                on_step(f"Discovered {len(place_links)} candidate locations in viewport. Beginning inspection...")
 
             seen_titles = set()
             count = 0
 
             for idx, link_loc in enumerate(place_links):
                 if count >= max_places:
+                    break
+
+                if should_stop and should_stop():
+                    if on_step:
+                        on_step("Halt directive received from operator. Safely stopping sweep.")
                     break
 
                 try:
@@ -102,12 +122,21 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         title_loc = page.locator('h1.DUwDvf, div.lMbq3e h1, h1[tabindex="-1"]').first
                         if title_loc.is_visible(timeout=3000):
                             title = title_loc.inner_text().strip()
+                            if title:
+                                title = title.split("\n")[0].strip()
                     except Exception:
                         pass
 
                     if not title or title in seen_titles:
                         continue
+
+                    # Filter out sponsored ads / aggregators
+                    if "sponsored" in title.lower() or "\nby " in title.lower() or "\ue5d4" in title:
+                        continue
                     seen_titles.add(title)
+
+                    if on_step:
+                        on_step(f"Inspecting candidate [{count + 1}/{max_places}]: '{title}'...")
 
                     # Extract Website Link
                     website_url = None
@@ -122,6 +151,17 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                                 if match:
                                     import urllib.parse
                                     website_url = urllib.parse.unquote(match.group(1))
+
+                            # Filter out OTA aggregators / social links to prevent bouncing on 3rd party domains
+                            if website_url:
+                                lower_url = website_url.lower()
+                                ota_domains = [
+                                    "booking.com", "agoda.com", "tripadvisor", "makemytrip.com",
+                                    "goibibo.com", "expedia.com", "hotels.com", "trivago.com",
+                                    "facebook.com", "instagram.com", "justdial.com", "indiamart.com"
+                                ]
+                                if any(dom in lower_url for dom in ota_domains):
+                                    website_url = None
                     except Exception:
                         pass
 
@@ -132,6 +172,8 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         if phone_loc.is_visible(timeout=1000):
                             phone_text = phone_loc.inner_text().strip()
                             phone = re.sub(r'[^\d+\-\s\(\)]', '', phone_text).strip()
+                            if phone:
+                                phone = re.sub(r'\s+', ' ', phone).strip()
                     except Exception:
                         pass
 
@@ -172,6 +214,8 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                     )
 
                     ui.log_discovered_place(count + 1, max_places, title, website_url, phone, rating)
+                    if on_step:
+                        on_step(f"Verified & saved to ledger [{count + 1}/{max_places}]: {title} {'(Domain: ' + website_url + ')' if website_url else '(No Website - Golden Lead)'}")
 
                     discovered.append({
                         "id": lead_id,
@@ -191,7 +235,16 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
         except Exception as e:
             print(f"  {ui.C_RED}[!] Crawler exception: {e}{ui.RESET}")
         finally:
-            browser.close()
+            if context:
+                try:
+                    context.close()
+                except Exception:
+                    pass
+            if browser:
+                try:
+                    browser.close()
+                except Exception:
+                    pass
 
     print(f"  {ui.C_CYAN}[✓ CRAWL COMPLETE]{ui.RESET} Captured {ui.C_GREEN}{len(discovered)}{ui.RESET} leads in this wave.")
     return discovered

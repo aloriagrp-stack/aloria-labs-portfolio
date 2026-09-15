@@ -16,6 +16,7 @@ export default defineConfig({
         models: resolve(__dirname, 'models.html'),
         faq: resolve(__dirname, 'faq.html'),
         contact: resolve(__dirname, 'contact.html'),
+        hunter: resolve(__dirname, 'hunter.html'),
       },
     },
   },

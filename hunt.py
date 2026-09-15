@@ -11,11 +11,11 @@ HUNTER_DIR = ROOT_DIR / "aloria-hunter"
 if str(HUNTER_DIR) not in sys.path:
     sys.path.insert(0, str(HUNTER_DIR))
 
-import ui
-import runner
-import db
-import config
-import terminal_cockpit
+import ui  # type: ignore
+import runner  # type: ignore
+import db  # type: ignore
+import config  # type: ignore
+import terminal_cockpit  # type: ignore
 
 def select_sender_account_menu():
     profiles, active_key = config.list_smtp_profiles()

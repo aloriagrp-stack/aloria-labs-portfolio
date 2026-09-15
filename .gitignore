@@ -25,3 +25,6 @@ dist-ssr
 *.db
 aloria-hunter/*.db
 aloria-hunter/*.log
+__pycache__/
+*.pyc
+scratch/
