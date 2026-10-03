@@ -27,27 +27,22 @@ jobs:
       - name: 🔨 Build Production Bundle
         run: npm run build
 
-      - name: 🚀 Sync to cPanel via FTP
-        id: ftp_deploy_1
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        continue-on-error: true
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_DIR || './' }}
-          dangerous-clean-slate: false
-          timeout: 300000
-
-      - name: 🔁 Retry Sync to cPanel (if transient connection reset)
-        if: steps.ftp_deploy_1.outcome == 'failure'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_DIR || './' }}
-          dangerous-clean-slate: false
-          timeout: 300000
+      - name: 🚀 Sync to cPanel via lftp
+        env:
+          FTP_HOST: ${{ secrets.FTP_SERVER }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+          FTP_DIR: ${{ secrets.FTP_DIR || './' }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -u "$FTP_USER","$FTP_PASS" "$FTP_HOST" -e "
+            set ftp:ssl-allow yes;
+            set ssl:verify-certificate no;
+            set ftp:passive-mode yes;
+            set ftp:fix-pasv-address yes;
+            set ftp:ignore-pasv-address yes;
+            set net:timeout 30;
+            set net:max-retries 3;
+            mirror -R ./dist/ \"$FTP_DIR\" --verbose --parallel=3;
+            quit
+          "
