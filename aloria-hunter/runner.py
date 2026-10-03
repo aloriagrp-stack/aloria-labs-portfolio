@@ -23,8 +23,8 @@ def start_parallel_followup_daemon(interval_seconds=60):
             try:
                 overdue = db.get_leads_ready_for_followup(interval_days=getattr(config, "FOLLOW_UP_INTERVAL_DAYS", 3))
                 if overdue:
-                    print(f"\n  {ui.C_MAGENTA}[⚡ PARALLEL FOLLOW-UP DAEMON]{ui.RESET} Found {len(overdue)} leads ready. Dispatching concurrently...")
-                    email_engine.dispatch_followups()
+                    print(f"\n  {ui.C_MAGENTA}[⚡ PARALLEL FOLLOW-UP DAEMON]{ui.RESET} Found {len(overdue)} leads ready. Dispatching concurrently (cap: 5)...")
+                    email_engine.dispatch_followups(limit=5)
             except Exception as e:
                 pass
             time.sleep(interval_seconds)
@@ -47,13 +47,13 @@ def run_hunter_cycle(country=None, cities=None, niches=None, max_per_niche=15, h
         for niche in niches:
             ui.log_batch_header(city, niche)
             
-            # Step 0: Priority Overdue Follow-ups (Offline Catch-up)
+            # Step 0: Priority Overdue Follow-ups (Offline Catch-up - capped so crawl starts immediately)
             if not dry_run:
                 overdue = db.get_overdue_followups(interval_days=config.FOLLOW_UP_INTERVAL_DAYS)
                 if overdue:
-                    print(f"  {ui.C_YELLOW}[⚡ PRIORITY PROTOCOL]{ui.RESET} Found {len(overdue)} leads overdue for follow-up. Dispatching now...")
+                    print(f"  {ui.C_YELLOW}[⚡ PRIORITY PROTOCOL]{ui.RESET} Found {len(overdue)} leads overdue for follow-up. Dispatching capped batch (max 5)...")
                     try:
-                        email_engine.dispatch_followups()
+                        email_engine.dispatch_followups(limit=5)
                     except Exception as e:
                         print(f"  {ui.C_RED}[!] Error in priority follow-ups: {e}{ui.RESET}")
 

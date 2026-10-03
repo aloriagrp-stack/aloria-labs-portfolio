@@ -24,15 +24,30 @@ DEFAULT_CITIES = [
     "Annaba"
 ]
 
-# Browser Display: False = Visible window on screen (you can watch it type/click), True = Silent background
-HEADLESS = False
+# Browser Display: False = Visible window on screen (you can watch it type/click), True = Silent background (100% headless)
+HEADLESS = True
 
 # Rate Limiting & High-Speed Adaptive Pacing
 MAX_LEADS_PER_RUN = 50
 EMAIL_DELAY_MINUTES = 0  # Replaced by high-speed adaptive jitter pacing in seconds
 DISPATCH_DELAY_SECONDS = 10  # 8-12s humanized random jitter between dispatches
 PACING_MODE = "TURBO"  # "TURBO" (6-10s) | "BALANCED" (12-18s) | "SAFE" (25-35s)
-MAX_EMAILS_PER_DAY = 500  # Full Gmail SMTP capacity
+MAX_EMAILS_PER_DAY = 1000  # Full Swarm capacity
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS = 50       # Exactly 50 successfully delivered emails per account for GetHotelStays
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA = 100   # Exactly 100 successfully delivered emails per account for Aloria Labs
+
+# 10-12 Parallel Agent Lead Hunter Swarm Settings
+SWARM_WORKERS = 12
+SWARM_MAX_CONCURRENCY = 4  # Concurrently active Playwright processes to manage RAM safely
+SWARM_BUFFER_GOAL = 200    # Default lead buffer target
+AUDITOR_WORKERS = 100      # 100 concurrent lightweight Python workers (~1MB RAM each) for blazing-fast website auditing
+
+def get_max_delivered_quota(business_id="gethotelstays"):
+    if str(business_id).lower() in ["aloria_labs", "aloria"]:
+        return MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA
+    return MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS
+
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY = MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS
 FOLLOW_UP_INTERVAL_DAYS = 3  # Follow up after 3 days of no response
 MAX_FOLLOW_UPS = 2  # Total follow-ups (Initial + Follow-up 1 + Follow-up 2)
 
@@ -97,3 +112,15 @@ def set_active_smtp_profile(profile_key):
         except Exception:
             return False
     return False
+
+def find_profile_key_by_email(email_addr):
+    """Looks up the profile key in smtp_config.json matching the given sender email address."""
+    if not email_addr:
+        return None
+    clean = str(email_addr).strip().lower()
+    profiles, _ = list_smtp_profiles()
+    for key, p_data in profiles.items():
+        p_email = str(p_data.get("email") or "").strip().lower()
+        if p_email == clean:
+            return key
+    return None

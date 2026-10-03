@@ -17,6 +17,8 @@ export default defineConfig({
         faq: resolve(__dirname, 'faq.html'),
         contact: resolve(__dirname, 'contact.html'),
         hunter: resolve(__dirname, 'hunter.html'),
+        gethotelstays: resolve(__dirname, 'gethotelstays.html'),
+        alorialabs: resolve(__dirname, 'alorialabs.html'),
       },
     },
   },

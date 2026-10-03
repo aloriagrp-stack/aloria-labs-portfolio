@@ -1,8 +1,10 @@
 import threading
 import time
+from typing import Any
 from datetime import datetime
 from agents.aloria_agent import AloriaAgent
 from agents.hotel_agent import HotelStaysAgent
+from agents.sentinel_agent import HotelSentinelAgent
 
 
 class AgentOrchestrator:
@@ -17,9 +19,11 @@ class AgentOrchestrator:
     def __init__(self):
         self.aloria_agent = AloriaAgent()
         self.hotel_agent = HotelStaysAgent()
+        self.sentinel_agent = HotelSentinelAgent(check_interval_seconds=300)
         self.agents = {
             "aloria": self.aloria_agent,
-            "hotel": self.hotel_agent
+            "hotel": self.hotel_agent,
+            "sentinel": self.sentinel_agent
         }
         self.is_running = False
         self.autopilot_thread = None
@@ -49,6 +53,7 @@ class AgentOrchestrator:
         if not self.is_running:
             self.aloria_agent.start()
             self.hotel_agent.start()
+            self.sentinel_agent.start()
             self.start_parallel_followup_worker(interval_seconds=60)
             self.is_running = True
 
@@ -67,9 +72,9 @@ class AgentOrchestrator:
                     # Check for ready followups
                     overdue = db.get_leads_ready_for_followup(interval_days=getattr(config, "FOLLOW_UP_INTERVAL_DAYS", 3)) if hasattr(db, "get_leads_ready_for_followup") else []
                     if overdue:
-                        self.log_followup_event(f"Detected {len(overdue)} overdue leads. Dispatching parallel outreach wave...", "INFO")
-                        sent_al = email_engine.dispatch_followups(business_id="aloria_labs")
-                        sent_gh = email_engine.dispatch_followups(business_id="gethotelstays")
+                        self.log_followup_event(f"Detected {len(overdue)} overdue leads. Dispatching parallel outreach wave (cap: 5/biz)...", "INFO")
+                        sent_al = email_engine.dispatch_followups(business_id="aloria_labs", limit=5)
+                        sent_gh = email_engine.dispatch_followups(business_id="gethotelstays", limit=5)
                         total_sent = sent_al + sent_gh
                         self.last_followup_sent = total_sent
                         self.log_followup_event(f"Parallel wave complete: Delivered {total_sent} follow-up emails.", "SUCCESS")
@@ -91,8 +96,8 @@ class AgentOrchestrator:
             import email_engine
             try:
                 self.log_followup_event("Manual instant follow-up wave triggered by operator.", "INFO")
-                sent_al = email_engine.dispatch_followups(business_id="aloria_labs")
-                sent_gh = email_engine.dispatch_followups(business_id="gethotelstays")
+                sent_al = email_engine.dispatch_followups(business_id="aloria_labs", limit=10)
+                sent_gh = email_engine.dispatch_followups(business_id="gethotelstays", limit=10)
                 self.last_followup_sent = sent_al + sent_gh
                 self.log_followup_event(f"Instant wave complete: {sent_al + sent_gh} emails sent.", "SUCCESS")
             except Exception as e:
@@ -102,10 +107,11 @@ class AgentOrchestrator:
         t.start()
         return {"status": "dispatched_parallel"}
 
-    def get_status(self):
+    def get_status(self) -> dict[str, Any]:
         return {
             "aloria": self.aloria_agent.get_state(),
             "hotel": self.hotel_agent.get_state(),
+            "sentinel": self.sentinel_agent.get_state(),
             "autopilot_active": self.autopilot_active,
             "parallel_followup_running": self.followup_running,
             "last_followup_check": self.last_followup_check,
@@ -118,16 +124,20 @@ class AgentOrchestrator:
         params = params or {}
         cmd = {"action": action, "params": params}
 
-        if agent_target in ["aloria", "agent_aloria"]:
+        if agent_target in ["aloria", "agent_aloria", "aloria_labs"]:
             self.aloria_agent.send_command(cmd)
             return {"target": "aloria", "action": action, "status": "queued"}
-        elif agent_target in ["hotel", "agent_hotelstays", "hotelstays"]:
+        elif agent_target in ["hotel", "agent_hotelstays", "hotelstays", "gethotelstays"]:
             self.hotel_agent.send_command(cmd)
             return {"target": "hotel", "action": action, "status": "queued"}
+        elif agent_target in ["sentinel", "agent_sentinel", "inbox", "watcher"]:
+            self.sentinel_agent.send_command(cmd)
+            return {"target": "sentinel", "action": action, "status": "queued"}
         elif agent_target in ["both", "all"]:
             self.aloria_agent.send_command(cmd)
             self.hotel_agent.send_command(cmd)
-            return {"target": "both", "action": action, "status": "queued"}
+            self.sentinel_agent.send_command(cmd)
+            return {"target": "all", "action": action, "status": "queued"}
         else:
             return {"error": f"Unknown agent target: {agent_target}"}
 

@@ -30,3 +30,11 @@ __pycache__/
 scratch/
 *.exe
 aloria-hunter/cloudflared.exe
+*.csv
+*.xlsx
+gethotelstays_*.txt
+sent_emails_*.txt
+gethotelstays_*.json
+sent_emails_*.json
+aloria-hunter/debug_*.py
+aloria-hunter/test_leads_status.py

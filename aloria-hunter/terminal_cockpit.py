@@ -3,11 +3,13 @@ import sys
 import time
 from pathlib import Path
 
-# Ensure UTF-8 console on Windows
+# Ensure UTF-8 console on Windows with replacement fallback
 if sys.platform == "win32":
     try:
         if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore
     except Exception:
         pass
 
@@ -39,6 +41,7 @@ import business_manager
 import maps_crawler
 import website_auditor
 import email_engine
+import omni_hunter
 
 def print_banner():
     banner = f"""
@@ -90,17 +93,31 @@ def print_clean_dashboard():
     overdue_badge = f"{C_RED}● {len(overdue)} OVERDUE{RESET}" if overdue else f"{C_GREEN}● All Clear{RESET}"
 
     if active_id == "gethotelstays":
-        ghs_prof_key = active_b.get("sender_profile") or "gethotelstays_india"
-        ghs_prof = config.get_smtp_config(ghs_prof_key)
-        ghs_email = ghs_prof.get("email", "gethotelstays.india@gmail.com")
-        ghs_name = ghs_prof.get("sender_name", "Shriyansh Aloria — GetHotelStays")
+        profiles, _ = config.list_smtp_profiles()
+        ghs_keys = [k for k in profiles.keys() if "gethotelstays" in k.lower() and profiles[k].get("password")]
+        ghs_emails = [profiles[k].get("email", "") for k in ghs_keys if profiles[k].get("email")]
+        if len(ghs_emails) > 1:
+            ghs_sender_str = f"⚡ Multi-Sender Swarm ({len(ghs_emails)} Accounts: {' + '.join(ghs_emails)})"
+        else:
+            ghs_prof_key = active_b.get("sender_profile") or "gethotelstays"
+            ghs_prof = config.get_smtp_config(ghs_prof_key)
+            ghs_email = ghs_prof.get("email", "gethotelstays02@gmail.com")
+            ghs_name = ghs_prof.get("sender_name", "Shriyansh Aloria — GetHotelStays")
+            ghs_sender_str = f"{ghs_name} <{ghs_email}>"
 
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
         print(f"  {C_WHITE}ACTIVE AGENT:{RESET}       {Back.CYAN}{Fore.BLACK} GETHOTELSTAYS — 24/7 HOTEL PARTNER ONBOARDING {RESET}  {C_DIM}(Press B to switch){RESET}")
         print(f"  {C_WHITE}TARGET DESTINATION:{RESET} {loc_str} │ {niche_str}")
-        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}{ghs_name} <{ghs_email}>{RESET}  {C_YELLOW}[Press S to change]{RESET}")
+        print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_GREEN}{ghs_sender_str}{RESET}  {C_YELLOW}[Press S to change]{RESET}")
         print(f"  {C_WHITE}WHATSAPP ENGINE:{RESET}    {wa_badge}")
         print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Hotels Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent │ {C_RED}{bl_count}{RESET} Bounces Blacklisted")
+        swarm_info = db.get_swarm_daily_stats(active_id)
+        quota_per_acc = config.get_max_delivered_quota(active_id)
+        if swarm_info["accounts"]:
+            tot_del = swarm_info["total_delivered_today"]
+            max_cap = swarm_info["max_capacity_today"]
+            q_badge = f"{C_GREEN}✓ COMPLETE ({tot_del}/{max_cap}){RESET}" if swarm_info["all_quotas_completed"] else f"{C_YELLOW}{tot_del}/{max_cap} Delivered Today{RESET}"
+            print(f"  {C_WHITE}SWARM QUOTA:{RESET}        {q_badge} {C_DIM}(Max {quota_per_acc} delivered emails per account across {len(swarm_info['accounts'])} accounts){RESET}")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
 
         if overdue:
@@ -116,7 +133,8 @@ def print_clean_dashboard():
 
         print(f"\n  {C_GREEN}─── [AUTONOMOUS 24/7 HOTEL ONBOARDING ENGINE] ─────────────────────────────────────────────{RESET}")
         print(f"  {C_WHITE}[1]{RESET} {C_GREEN}🔥 START 24/7 HOTEL ONBOARDING{RESET}   {C_DIM}— Runs continuously: Discover ➔ Extract ➔ Pitch ➔ Follow-up{RESET}")
-        print(f"  {C_WHITE}[S]{RESET} {C_CYAN}✉ Choose Sender Account{RESET}        {C_DIM}— Switch sender email (Active: {ghs_email}){RESET}")
+        print(f"  {C_WHITE}[H]{RESET} {C_MAGENTA}🏹 Hunt Fresh Leads (10-Tabs Swarm){RESET} {C_DIM}— Harvest & audit new leads without sending follow-ups{RESET}")
+        print(f"  {C_WHITE}[S]{RESET} {C_CYAN}✉ Choose Sender Account{RESET}        {C_DIM}— Multi-Sender Swarm ({len(ghs_emails)} accounts in active rotation){RESET}")
         print(f"  {C_WHITE}[F]{RESET} {C_YELLOW}⚡ Priority Overdue Follow-ups{RESET}  {overdue_badge} {C_DIM}— Offline catch-up before new leads{RESET}")
         print(f"  {C_WHITE}[C]{RESET} {C_MAGENTA}🛡 Scan Inbox Bounces (IMAP){RESET}    {C_CYAN}{bl_count} Blacklisted{RESET} {C_DIM}— Auto-blacklist dead emails{RESET}")
         print(f"  {C_WHITE}[T]{RESET} {C_CYAN}⚙ Set Target City / State{RESET}        {C_DIM}— Destination (Currently: {tgt_city or 'Goa'}, {tgt_country or 'India'}){RESET}")
@@ -137,6 +155,13 @@ def print_clean_dashboard():
         print(f"  {C_WHITE}TARGET REGION:{RESET}      {loc_str} │ {niche_str}")
         print(f"  {C_WHITE}SENDER ACCOUNT:{RESET}     {C_CYAN}{aloria_name} <{aloria_email}>{RESET}  {C_YELLOW}[Press S to change]{RESET}")
         print(f"  {C_WHITE}PIPELINE STATS:{RESET}     {C_GREEN}{total}{RESET} Leads Discovered │ {C_BLUE}{audited}{RESET} Audited │ {C_YELLOW}{pitched}{RESET} Pitched │ {C_CYAN}{sent_total}{RESET} Sent │ {C_RED}{bl_count}{RESET} Bounces Blacklisted")
+        aloria_swarm = db.get_swarm_daily_stats("aloria_labs")
+        aloria_quota = config.get_max_delivered_quota("aloria_labs")
+        if aloria_swarm["accounts"]:
+            tot_del = aloria_swarm["total_delivered_today"]
+            max_cap = aloria_swarm["max_capacity_today"]
+            q_badge = f"{C_GREEN}✓ COMPLETE ({tot_del}/{max_cap}){RESET}" if aloria_swarm["all_quotas_completed"] else f"{C_YELLOW}{tot_del}/{max_cap} Delivered Today{RESET}"
+            print(f"  {C_WHITE}DAILY QUOTA:{RESET}        {q_badge} {C_DIM}(Max {aloria_quota} delivered emails per account across {len(aloria_swarm['accounts'])} accounts){RESET}")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}\n")
 
         if overdue:
@@ -152,6 +177,7 @@ def print_clean_dashboard():
 
         print(f"\n  {C_CYAN}─── [AUTONOMOUS 24/7 CLIENT ACQUISITION ENGINE] ───────────────────────────────────────────{RESET}")
         print(f"  {C_WHITE}[1]{RESET} {C_GREEN}🚀 START 24/7 CLIENT ACQUISITION{RESET} {C_DIM}— Non-stop: Maps ➔ Web Audits ➔ Custom Pitches ➔ Follow-up{RESET}")
+        print(f"  {C_WHITE}[H]{RESET} {C_MAGENTA}🏹 Hunt Fresh Leads (10-Tabs Swarm){RESET} {C_DIM}— Harvest & audit new leads without sending follow-ups{RESET}")
         print(f"  {C_WHITE}[S]{RESET} {C_CYAN}✉ Choose Sender Account{RESET}        {C_DIM}— Switch sender email (Active: {aloria_email}){RESET}")
         print(f"  {C_WHITE}[F]{RESET} {C_YELLOW}⚡ Priority Overdue Follow-ups{RESET}  {overdue_badge} {C_DIM}— Offline catch-up before new leads{RESET}")
         print(f"  {C_WHITE}[C]{RESET} {C_MAGENTA}🛡 Scan Inbox Bounces (IMAP){RESET}    {C_CYAN}{bl_count} Blacklisted{RESET} {C_DIM}— Auto-blacklist dead emails{RESET}")
@@ -162,7 +188,7 @@ def print_clean_dashboard():
 
 def configure_target(b_id):
     b = business_manager.get_business(b_id)
-    b_name = b.get("name", b_id) if b else b_id
+    b_name = str((b.get("name") if b else None) or b_id or "")
     tgt = business_manager.get_target_settings(b_id)
     old_c = tgt.get("country", "India")
     old_ci = tgt.get("city", "Goa" if b_id == "gethotelstays" else "Mumbai")
@@ -184,7 +210,7 @@ def configure_target(b_id):
 def show_clean_lead_ledger(active_id):
     leads = db.get_lead_ledger(business_id=active_id, limit=50)
     active_b = business_manager.get_business(active_id)
-    b_name = active_b.get("name", active_id) if active_b else active_id
+    b_name = str((active_b.get("name") if active_b else None) or active_id or "")
 
     print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
     print(f"  {C_WHITE}LEAD LEDGER FOR {C_YELLOW}{b_name.upper()}{RESET} ({len(leads)} leads recorded)")
@@ -249,16 +275,55 @@ def handle_priority_followups(active_id):
         print(f"\n  {C_YELLOW}[!] Follow-ups deferred by operator.{RESET}\n")
     input("  Press Enter to return to main menu...")
 
+
+def handle_direct_hunt(active_id):
+    active_b = business_manager.get_business(active_id)
+    b_name = str((active_b.get("name") if active_b else None) or active_id or "")
+    tgt = business_manager.get_target_settings(active_id)
+    default_c = tgt.get("country", "India")
+    default_ci = tgt.get("city", "Goa" if active_id == "gethotelstays" else "Mumbai")
+    default_ni = tgt.get("niche", "Hotels" if active_id == "gethotelstays" else "Restaurants")
+
+    print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+    print(f"  {C_WHITE}HUNT FRESH LEADS (1-BROWSER 10-TABS SWARM) — {C_YELLOW}{b_name.upper()}{RESET}")
+    print(f"  {C_DIM}This mode strictly discovers & audits new properties. Zero cold emails or follow-ups dispatched.{RESET}")
+    print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+
+    city_in = input(f"  {C_WHITE}Target City / State [{default_ci}]: {RESET}").strip() or default_ci
+    country_in = input(f"  {C_WHITE}Target Country [{default_c}]: {RESET}").strip() or default_c
+    niche_in = input(f"  {C_WHITE}Category / Niche [{default_ni}]: {RESET}").strip() or default_ni
+    goal_str = input(f"  {C_WHITE}How many leads to harvest? [50]: {RESET}").strip() or "50"
+    try:
+        goal = int(goal_str)
+    except ValueError:
+        goal = 50
+
+    print(f"\n  {C_GREEN}[*] Launching 1-Browser 10-Tabs Swarm for {niche_in} in {city_in}, {country_in}...{RESET}\n")
+    import swarm_hunter
+    discovered = swarm_hunter.hunt_with_swarm(
+        city=city_in,
+        country=country_in,
+        niche=niche_in,
+        goal=goal,
+        business_id=active_id,
+        workers_count=10,
+        auto_audit=True
+    )
+    print(f"\n  {C_GREEN}[✓] Hunt Finished! Discovered & audited {len(discovered)} fresh leads for {active_id}.{RESET}")
+    input("  Press Enter to return to main menu...")
+
 def handle_bounce_scan(active_id):
     print(f"\n{C_MAGENTA}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-    print(f"  {C_WHITE}IMAP INBOX BOUNCE AUDIT & AUTO-BLACKLIST ENGINE{RESET}")
+    print(f"  {C_WHITE}HOTELSTAYS SENTINEL: INBOX REPLIES & BOUNCE AUDIT ENGINE{RESET}")
     print(f"{C_MAGENTA}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
-    import bounce_detector
-    print(f"  {C_DIM}Scanning connected Gmail accounts for Mailer-Daemon & Delivery failure reports...{RESET}\n")
-    res = bounce_detector.scan_all_profiles()
+    from agents.sentinel_agent import HotelSentinelAgent
+    print(f"  {C_DIM}Scanning connected Gmail accounts for incoming partner replies & bounce reports...{RESET}\n")
+    sentinel = HotelSentinelAgent()
+    sentinel.execute_inbox_scan()
     total_bl = len(db.get_blacklisted_emails(1000))
-    print(f"\n  {C_GREEN}[✓] IMAP Bounce Audit Complete!{RESET}")
-    print(f"  {C_WHITE}Newly blacklisted:{RESET} {C_YELLOW}{res['total_newly_blacklisted']}{RESET} invalid email addresses.")
+    print(f"\n  {C_GREEN}[✓] Sentinel Audit Complete!{RESET}")
+    print(f"  {C_WHITE}Replies Detected:{RESET} {C_GREEN}{sentinel.total_replies_found}{RESET} hotel partners marked REPLIED (Follow-ups halted)")
+    print(f"  {C_WHITE}Bounces Blacklisted:{RESET} {C_YELLOW}{sentinel.total_bounces_found}{RESET} dead inboxes protected")
     print(f"  {C_WHITE}Total database blacklist:{RESET} {C_CYAN}{total_bl}{RESET} protected addresses (Never contacted again).\n")
     input("  Press Enter to return to main menu...")
 
@@ -317,28 +382,30 @@ def run_247_hotel_onboarding_loop():
     is_wa = whatsapp_engine.is_whatsapp_logged_in()
     wa_label = f"{C_GREEN}[CONNECTED]{RESET}" if is_wa else f"{C_YELLOW}[NOT CONNECTED - QR REQUIRED]{RESET}"
 
-    selected_prof_key = (active_b.get("sender_profile") if active_b else None) or "gethotelstays_india"
-    ghs_prof = config.get_smtp_config(selected_prof_key)
-    ghs_email = ghs_prof.get("email", "gethotelstays.india@gmail.com")
+    profiles, _ = config.list_smtp_profiles()
+    ghs_keys = [k for k in profiles.keys() if "gethotelstays" in k.lower() and profiles[k].get("password")]
+    ghs_emails = [profiles[k].get("email", "") for k in ghs_keys if profiles[k].get("email")]
+    pool_label = f"Multi-Sender Swarm ({len(ghs_emails)} Accounts: {' + '.join(ghs_emails)})" if len(ghs_emails) > 1 else (ghs_emails[0] if ghs_emails else "gethotelstays02@gmail.com")
 
     print(f"\n  {C_WHITE}2. Select Outreach Channel & Sender Account:{RESET}")
-    print(f"     {C_CYAN}[1]{RESET} Email Only         — via {C_GREEN}{ghs_email}{RESET}")
-    print(f"     {C_CYAN}[2]{RESET} WhatsApp Only      — via Linked WhatsApp Web {wa_label}")
-    print(f"     {C_CYAN}[3]{RESET} Dual Multi-Channel — Both Email ({ghs_email}) + WhatsApp {C_YELLOW}(Recommended){RESET}")
-    print(f"     {C_CYAN}[S]{RESET} Switch Sender Email — (Currently: {C_YELLOW}{ghs_email}{RESET})")
-    ch_choice = input(f"     Choice [1-3, or S to switch sender] (Default 3): ").strip().lower()
+    print(f"     {C_CYAN}[1]{RESET} Dual Multi-Channel — Both Email ({C_GREEN}{pool_label}{RESET}) + WhatsApp {wa_label} {C_YELLOW}(Recommended - Fastest){RESET}")
+    print(f"     {C_CYAN}[2]{RESET} Email Only         — via {C_GREEN}{pool_label}{RESET}")
+    print(f"     {C_CYAN}[3]{RESET} WhatsApp Only      — via Linked WhatsApp Web {wa_label}")
+    print(f"     {C_CYAN}[S]{RESET} Switch Specific Sender — (Active Pool: {C_YELLOW}{len(ghs_emails)} Accounts Rotating{RESET})")
+    ch_choice = input(f"     Choice [1-3, or S to switch sender] (Default 1): ").strip().lower()
 
+    selected_prof_key = None
     if ch_choice == "s":
         selected_prof_key = select_sender_account_interactive(active_id)
         ghs_prof = config.get_smtp_config(selected_prof_key)
-        ghs_email = ghs_prof.get("email", "gethotelstays.india@gmail.com")
-        print(f"\n  {C_GREEN}Sender set to: {ghs_email}. Now select outreach channel:{RESET}")
-        print(f"     {C_CYAN}[1]{RESET} Email Only │ {C_CYAN}[2]{RESET} WhatsApp Only │ {C_CYAN}[3]{RESET} Dual Multi-Channel")
-        ch_choice = input(f"     Choice [1-3] (Default 3): ").strip()
+        ghs_email = ghs_prof.get("email", "gethotelstays02@gmail.com")
+        print(f"\n  {C_GREEN}Single sender locked to: {ghs_email}. Now select outreach channel:{RESET}")
+        print(f"     {C_CYAN}[1]{RESET} Dual Multi-Channel │ {C_CYAN}[2]{RESET} Email Only │ {C_CYAN}[3]{RESET} WhatsApp Only")
+        ch_choice = input(f"     Choice [1-3] (Default 1): ").strip()
 
-    if ch_choice == "1":
+    if ch_choice == "2":
         channel_mode = "EMAIL"
-    elif ch_choice == "2":
+    elif ch_choice == "3":
         channel_mode = "WHATSAPP"
     else:
         channel_mode = "BOTH"
@@ -370,18 +437,26 @@ def run_247_hotel_onboarding_loop():
 
     # Destination rotation list based on target region
     base_destinations = [city]
-    if "goa" in city.lower():
+    city_lower = city.lower()
+    if any(k in city_lower for k in ["india", "all", "nation", "country"]):
+        # All-India Top Hospitality Hubs with highest website & verified email density
+        base_destinations = [
+            "Goa", "Jaipur", "Udaipur", "Mumbai", "Delhi NCR", "Chandigarh", 
+            "Bengaluru", "Agra", "Rishikesh", "Kochi", "Munnar", "Shimla", 
+            "Manali", "Amritsar", "Pondicherry", "Varanasi", "Ooty", "Jodhpur"
+        ]
+    elif "goa" in city_lower:
         base_destinations += ["North Goa", "South Goa", "Calangute", "Candolim", "Anjuna", "Panaji", "Baga", "Morjim", "Palolem"]
-    elif "rajasthan" in city.lower() or "jaipur" in city.lower():
+    elif "rajasthan" in city_lower or "jaipur" in city_lower:
         base_destinations += ["Jaipur", "Udaipur", "Jodhpur", "Jaisalmer", "Pushkar", "Mount Abu", "Bikaner"]
-    elif "himachal" in city.lower() or "manali" in city.lower():
-        base_destinations += ["Manali", "Shimla", "Dharamshala", "Kasol", "Kullu", "Spiti", "Bir"]
-    elif "kerala" in city.lower():
+    elif "himachal" in city_lower or "manali" in city_lower:
+        base_destinations += ["Manali", "Shimla", "Dharamshala", "Kullu", "Chandigarh", "Kalka", "Solan", "Dalhousie", "Rishikesh"]
+    elif "kerala" in city_lower:
         base_destinations += ["Munnar", "Kochi", "Alleppey", "Wayanad", "Varkala", "Kovalam", "Thekkady"]
-    elif "uttarakhand" in city.lower() or "rishikesh" in city.lower():
+    elif "uttarakhand" in city_lower or "rishikesh" in city_lower:
         base_destinations += ["Rishikesh", "Mussoorie", "Nainital", "Dehradun", "Haridwar", "Auli"]
     else:
-        base_destinations += [f"{city} Central", f"{city} North", f"{city} South", "Goa", "Jaipur", "Udaipur", "Manali", "Rishikesh"]
+        base_destinations += ["Goa", "Jaipur", "Udaipur", "Mumbai", "Delhi NCR", "Chandigarh", "Rishikesh", "Shimla", "Manali"]
 
     # De-duplicate while preserving initial priority
     seen = set()
@@ -413,42 +488,55 @@ def run_247_hotel_onboarding_loop():
         print(f"  {C_YELLOW}PROGRESS: [ {delivered_in_mission} / {target_goal} DELIVERED ] ({pct:.1f}%) │ Remaining Needed: {remaining_to_deliver}{RESET}")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
 
-        try:
-            # Step 0: Priority Overdue Follow-up Catch-up (Offline Downtime Awareness)
-            try:
-                overdue = db.get_overdue_followups(business_id=active_id, interval_days=getattr(config, "FOLLOW_UP_INTERVAL_DAYS", 3))
-                if overdue:
-                    print(f"  {C_YELLOW}[0/4] ⚡ PRIORITY PROTOCOL: Found {len(overdue)} overdue follow-up leads (Laptop was offline). Dispatching now...{RESET}")
-                    email_engine.dispatch_followups(profile_name=selected_prof_key, business_id=active_id)
-            except Exception:
-                pass
+        # Check if email channel is requested, but today's email quota is already 100% full
+        if channel_mode in ["EMAIL", "BOTH"]:
+            swarm_info = db.get_swarm_daily_stats(active_id)
+            working_accs = [a for a in swarm_info["accounts"] if a["key"] not in getattr(email_engine, "_FAILED_AUTH_PROFILES", set())]
+            all_quota_done = all(a["quota_reached"] for a in working_accs) if working_accs else True
+            if all_quota_done:
+                tot_done = sum(a["delivered_today"] for a in working_accs)
+                quota_per_acc = config.get_max_delivered_quota(active_id)
+                print(f"\n{C_CYAN}  ╔═══════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+                print(f"  {C_GREEN}║             ⭐ AAJ KA DAILY EMAIL OUTREACH QUOTA COMPLETE HO GAYA!                     ║{RESET}")
+                print(f"  {C_CYAN}╠═══════════════════════════════════════════════════════════════════════════════════════╣{RESET}")
+                print(f"  {C_WHITE}║  Boss, sabhi active accounts se aaj ka {quota_per_acc}-email quota ({tot_done} delivered) poora ho chuka hai! ║{RESET}")
+                print(f"  {C_YELLOW}║  Ab agle din raat 12:00 baje ke baad (new calendar day) fresh hunt try karein.        ║{RESET}")
+                print(f"  {C_CYAN}╚═══════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
+                if channel_mode == "EMAIL":
+                    input("  Press Enter to return to main menu...")
+                    break
+                else:
+                    print(f"  {C_YELLOW}[ℹ️ EMAIL QUOTA REACHED] Email quota satisfied for today. Continuing with WhatsApp outreach...{RESET}\n")
 
-            # Step 1: Scrape candidates on Google Maps (batch of 15 if queue is low)
-            ready_ghs = len(db.get_leads_ready_for_initial_email(business_id=active_id, limit=20))
-            if ready_ghs < 5:
-                print(f"  {C_CYAN}[1/4] Discovery queue low ({ready_ghs} ready). Scraping hotels on Maps in {current_city}...{RESET}")
-                discovered = maps_crawler.crawl_google_maps(
+        try:
+            # Step 1: 5-in-1 Omnichannel Lead Discovery (Maps + Dorking + Instagram + Justdial + OTA) (Maps + Dorking + Instagram + Justdial + OTA)
+            ready_ghs = len(db.get_leads_ready_for_initial_email(business_id=active_id, limit=50))
+            if ready_ghs < 20:
+                needed_leads = max(60, min(250, remaining_to_deliver * 2))
+                print(f"  {C_CYAN}[1/4] Discovery buffer low ({ready_ghs} ready). Deploying 5-in-1 Omnichannel Swarm in {current_city}...{RESET}")
+                omni_hunter.hunt_omnichannel_swarm(
                     city=current_city,
                     country=country,
                     niche="Hotels",
-                    max_places=15,
-                    headless=True,
+                    goal=needed_leads,
                     business_id=active_id
                 )
-                print(f"        {C_GREEN}✓ Discovered {len(discovered)} potential properties on Maps{RESET}")
             else:
-                print(f"  {C_GREEN}[1/4] Discovery queue healthy ({ready_ghs} verified leads ready). Skipping map scrape.{RESET}")
+                print(f"  {C_GREEN}[1/4] Discovery buffer healthy ({ready_ghs} verified leads ready). Skipping sweep.{RESET}")
 
             # Step 2: Audit websites & extract verified contacts concurrently
-            print(f"  {C_CYAN}[2/4] Parallel website auditing & live MX email verification...{RESET}")
-            audited = website_auditor.audit_pending_leads(limit=15, business_id=active_id)
-            print(f"        {C_GREEN}✓ Extracted details from {len(audited)} properties{RESET}")
+            pending_count = len(db.get_pending_audits(business_id=active_id, limit=20))
+            if pending_count > 0:
+                print(f"  {C_CYAN}[2/4] Parallel website auditing & live MX email verification ({pending_count} pending)...{RESET}")
+                audited = website_auditor.audit_pending_leads(limit=100, business_id=active_id)
+                print(f"        {C_GREEN}✓ Extracted details from {len(audited)} properties{RESET}")
 
             # Step 3: Dispatch Emails if selected
             emails_sent_wave = 0
             if channel_mode in ["EMAIL", "BOTH"]:
-                print(f"  {C_CYAN}[3/4] Dispatching official partner onboarding emails via {ghs_email}...{RESET}")
-                emails_sent_wave = email_engine.dispatch_initial_emails(limit=min(15, remaining_to_deliver), profile_name=selected_prof_key, business_id=active_id)
+                dispatch_desc = pool_label if not selected_prof_key else selected_prof_key
+                print(f"  {C_CYAN}[3/4] Dispatching official partner onboarding emails via {dispatch_desc}...{RESET}")
+                emails_sent_wave = email_engine.dispatch_initial_emails(limit=min(20, remaining_to_deliver), profile_name=selected_prof_key, business_id=active_id)
                 print(f"        {C_GREEN}✓ Successfully delivered {emails_sent_wave} onboarding emails{RESET}")
 
             # Step 4: Dispatch WhatsApp if selected
@@ -456,8 +544,10 @@ def run_247_hotel_onboarding_loop():
             if channel_mode in ["WHATSAPP", "BOTH"]:
                 if whatsapp_engine.is_whatsapp_logged_in():
                     print(f"  {C_CYAN}[3b/4] Dispatching WhatsApp onboarding outreach to mobile contacts...{RESET}")
-                    wa_sent_wave = whatsapp_engine.dispatch_whatsapp_queue(limit=min(5, remaining_to_deliver), business_id=active_id, headless=True)
+                    wa_sent_wave = whatsapp_engine.dispatch_whatsapp_queue(limit=min(15, remaining_to_deliver), business_id=active_id, headless=True)
                     print(f"        {C_GREEN}✓ Successfully delivered {wa_sent_wave} WhatsApp messages{RESET}")
+                else:
+                    print(f"  {C_YELLOW}[!] WhatsApp Web is not linked. Run login_whatsapp.bat or Option [Q] to enable dual-channel.{RESET}")
 
             # Follow-ups (maintain 2-day sequence)
             try:
@@ -508,17 +598,69 @@ def run_247_aloria_loop():
     niche = tgt.get("niche") or "Restaurants"
 
     print(f"\n{C_CYAN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
-    print(f"  {C_CYAN}║               🚀 24/7 AUTONOMOUS CLIENT ACQUISITION ENGINE ONLINE                             ║{RESET}")
+    print(f"  {C_CYAN}║               🚀 ALORIA LABS CLIENT ACQUISITION & WEB MODERNIZATION ENGINE                    ║{RESET}")
     print(f"  {C_CYAN}║             Mission: High-Converting Web Modernization Discovery & Outreach                  ║{RESET}")
     print(f"  {C_CYAN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}")
-    print(f"  {C_WHITE}Target:{RESET}  {C_YELLOW}{niche}{RESET} in {C_CYAN}{city}, {country}{RESET}")
-    print(f"  {C_DIM}Mode: 24/7 continuous autonomous execution. Press Ctrl+C anytime to pause/return.{RESET}\n")
+    print(f"  {C_WHITE}Target:{RESET}  {C_YELLOW}{niche}{RESET} in {C_CYAN}{city}, {country}{RESET}\n")
+
+    # Ask how many people/leads to email
+    try:
+        quota_input = input(f"  {C_GREEN}Kitne logon ko email bhejna hai? (Target Goal, e.g. 5, 10, 25, 50) [10]: {RESET}").strip()
+        target_goal = int(quota_input) if quota_input.isdigit() and int(quota_input) > 0 else 10
+    except (KeyboardInterrupt, EOFError):
+        return
+
+    # Ask execution mode: single wave vs continuous
+    try:
+        mode_choice = input(f"  {C_GREEN}Execution Mode: [1] Stop after {target_goal} emails  [2] 24/7 Continuous Loop [1]: {RESET}").strip()
+        stop_on_goal = (mode_choice != "2")
+    except (KeyboardInterrupt, EOFError):
+        return
+
+    delivered_start = db.get_delivered_count(business_id=active_id, channel="EMAIL")
+
+    print(f"\n  {C_GREEN}✓ MISSION CONFIRMED: Target goal of {target_goal} DELIVERED EMAILS.{RESET}")
+    if stop_on_goal:
+        print(f"  {C_DIM}Engine will stop and return to menu once {target_goal} emails are delivered.{RESET}")
+    else:
+        print(f"  {C_DIM}Mode: 24/7 continuous autonomous execution. Press Ctrl+C anytime to pause.{RESET}")
+    print(f"  {C_DIM}Press Ctrl+C anytime to pause/return to menu.{RESET}\n")
+    time.sleep(1)
 
     cycle = 1
     while True:
+        # Check progress towards goal
+        current_total = db.get_delivered_count(business_id=active_id, channel="EMAIL")
+        delivered_in_mission = current_total - delivered_start
+        remaining_to_deliver = max(0, target_goal - delivered_in_mission)
+
+        if delivered_in_mission >= target_goal and stop_on_goal:
+            print(f"\n{C_GREEN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+            print(f"  {C_GREEN}║     🎉 MISSION ACCOMPLISHED: Successfully delivered {delivered_in_mission} emails to {niche} in {city}! ║{RESET}")
+            print(f"  {C_GREEN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
+            input("  Press Enter to return to main menu...")
+            break
+
+        pct = min(100.0, (delivered_in_mission / target_goal) * 100) if target_goal > 0 else 0
         print(f"\n{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
         print(f"  {C_WHITE}► [WAVE #{cycle}] CLIENT DISCOVERY WAVE: {C_GREEN}{niche.upper()} IN {city.upper()}, {country.upper()}{RESET}")
+        print(f"  {C_YELLOW}PROGRESS: [ {delivered_in_mission} / {target_goal} DELIVERED ] ({pct:.1f}%) │ Remaining Needed: {remaining_to_deliver}{RESET}")
         print(f"{C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{RESET}")
+        # Check if Aloria today's email quota is already reached
+        aloria_swarm = db.get_swarm_daily_stats("aloria_labs")
+        working_accs = [a for a in aloria_swarm["accounts"] if a["key"] not in getattr(email_engine, "_FAILED_AUTH_PROFILES", set())]
+        all_quota_done = all(a["quota_reached"] for a in working_accs) if working_accs else True
+        if all_quota_done:
+            tot_done = sum(a["delivered_today"] for a in working_accs)
+            quota_per_acc = config.get_max_delivered_quota("aloria_labs")
+            print(f"\n{C_CYAN}  ╔═══════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+            print(f"  {C_GREEN}║             ⭐ AAJ KA DAILY EMAIL OUTREACH QUOTA COMPLETE HO GAYA!                     ║{RESET}")
+            print(f"  {C_CYAN}╠═══════════════════════════════════════════════════════════════════════════════════════╣{RESET}")
+            print(f"  {C_WHITE}║  Boss, Aloria Labs se aaj ka {quota_per_acc}-email quota ({tot_done} delivered) poora ho chuka hai!    ║{RESET}")
+            print(f"  {C_YELLOW}║  Ab agle din raat 12:00 baje ke baad (new calendar day) fresh hunt try karein.        ║{RESET}")
+            print(f"  {C_CYAN}╚═══════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
+            input("  Press Enter to return to main menu...")
+            break
 
         try:
             # Step 0: Priority Overdue Follow-up Catch-up (Offline Downtime Awareness)
@@ -530,38 +672,53 @@ def run_247_aloria_loop():
             except Exception:
                 pass
 
-            # 1. Google Maps Hunt (batch size 15 for high pipeline throughput)
-            ready_in_db = len(db.get_leads_ready_for_initial_email(business_id=active_id, limit=20))
-            if ready_in_db < 5:
-                print(f"  {C_CYAN}[1/4] Discovery queue low ({ready_in_db} ready). Scraping local business listings on Maps...{RESET}")
-                maps_crawler.crawl_google_maps(
+            # 1. 5-in-1 Omnichannel Lead Discovery (Maps + Dorking + Instagram + Justdial + OTA)
+            ready_in_db = len(db.get_leads_ready_for_initial_email(business_id=active_id, limit=50))
+            if ready_in_db < 20:
+                needed_leads = max(60, min(250, remaining_to_deliver * 2))
+                print(f"  {C_CYAN}[1/4] Discovery buffer low ({ready_in_db} ready). Deploying 5-in-1 Omnichannel Swarm in {city}...{RESET}")
+                omni_hunter.hunt_omnichannel_swarm(
                     city=city,
                     country=country,
                     niche=niche,
-                    max_places=15,
-                    headless=True,
+                    goal=needed_leads,
                     business_id=active_id
                 )
             else:
-                print(f"  {C_GREEN}[1/4] Discovery queue healthy ({ready_in_db} verified leads ready). Skipping map scrape.{RESET}")
+                print(f"  {C_GREEN}[1/4] Discovery buffer healthy ({ready_in_db} verified leads ready). Skipping sweep.{RESET}")
 
             # 2. Parallel Audit & Contact Extraction
-            print(f"  {C_CYAN}[2/4] Concurrently auditing websites & performing live MX verification...{RESET}")
-            website_auditor.audit_pending_leads(limit=15, business_id=active_id)
+            pending_count = len(db.get_pending_audits(business_id=active_id, limit=20))
+            if pending_count > 0:
+                print(f"  {C_CYAN}[2/4] Concurrently auditing websites & performing live MX verification ({pending_count} pending)...{RESET}")
+                website_auditor.audit_pending_leads(limit=100, business_id=active_id)
 
             # 3. Dispatch Initial Pitches
             active_b = business_manager.get_business(active_id)
             selected_prof = (active_b.get("sender_profile") if active_b else None) or "gmail"
             aloria_cfg = config.get_smtp_config(selected_prof)
             aloria_email_disp = aloria_cfg.get("email", "alorialabs@gmail.com")
-            print(f"  {C_CYAN}[3/4] Dispatching tailored pitches via {aloria_email_disp} (Turbo Pacing)...{RESET}")
-            sent = email_engine.dispatch_initial_emails(limit=15, profile_name=selected_prof, business_id=active_id)
+            batch_to_send = min(20, remaining_to_deliver)
+            print(f"  {C_CYAN}[3/4] Dispatching tailored pitches via {aloria_email_disp} (Limit: {batch_to_send})...{RESET}")
+            sent = email_engine.dispatch_initial_emails(limit=batch_to_send, profile_name=selected_prof, business_id=active_id)
             print(f"        {C_GREEN}✓ Dispatched {sent} tailored pitches{RESET}")
 
             # 4. Dispatch Follow-ups
             print(f"  {C_CYAN}[4/4] Dispatching scheduled follow-ups via {aloria_email_disp}...{RESET}")
             fu_sent = email_engine.dispatch_followups(profile_name=selected_prof, business_id=active_id)
             print(f"        {C_GREEN}✓ Dispatched {fu_sent} follow-ups{RESET}")
+
+            # Update delivered count after wave
+            current_total = db.get_delivered_count(business_id=active_id, channel="EMAIL")
+            delivered_in_mission = current_total - delivered_start
+            remaining_to_deliver = max(0, target_goal - delivered_in_mission)
+
+            if delivered_in_mission >= target_goal and stop_on_goal:
+                print(f"\n{C_GREEN}╔═══════════════════════════════════════════════════════════════════════════════════════════════╗{RESET}")
+                print(f"  {C_GREEN}║     🎉 MISSION ACCOMPLISHED: Successfully delivered {delivered_in_mission} emails to {niche} in {city}! ║{RESET}")
+                print(f"  {C_GREEN}╚═══════════════════════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
+                input("  Press Enter to return to main menu...")
+                break
 
             cycle += 1
 
@@ -570,13 +727,13 @@ def run_247_aloria_loop():
             print(f"\n  {C_DIM}Wave #{cycle-1} complete. Continuous pacing active ({cooldown}s). Next wave starts automatically...{RESET}")
             for sec in range(cooldown, 0, -5):
                 m, s = divmod(sec, 60)
-                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next cycle in {m:02d}:{s:02d} — Press Ctrl+C to return to menu...{RESET}   ")
+                sys.stdout.write(f"\r  {C_YELLOW}⏳ Next cycle in {m:02d}:{s:02d} — Goal: {delivered_in_mission}/{target_goal} (Press Ctrl+C to return)...{RESET}   ")
                 sys.stdout.flush()
                 time.sleep(5)
             print()
 
         except KeyboardInterrupt:
-            print(f"\n\n  {C_YELLOW}[!] Client acquisition engine paused by operator.{RESET}\n")
+            print(f"\n\n  {C_YELLOW}[!] Client acquisition engine paused by operator. Delivered: {delivered_in_mission} / {target_goal} emails.{RESET}\n")
             time.sleep(1)
             break
         except Exception as e:
@@ -640,6 +797,11 @@ def run_cockpit_loop():
             except Exception as e:
                 print(f"  {C_RED}[!] WhatsApp login error: {e}{RESET}")
             input("\n  Press Enter to return to menu...")
+            continue
+
+        # [H] Direct Lead Hunt (1-Browser 10-Tabs Swarm)
+        if choice == "h":
+            handle_direct_hunt(active_id)
             continue
 
         # [F] Priority Overdue Follow-ups

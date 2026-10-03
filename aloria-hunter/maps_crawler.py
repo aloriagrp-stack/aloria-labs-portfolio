@@ -1,7 +1,17 @@
 import os
+import sys
 import time
 import re
 from urllib.parse import quote_plus, unquote
+
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 # Set Playwright browser path on D drive before importing playwright
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
@@ -13,12 +23,12 @@ import ui
 
 def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", max_places=25, headless=None, business_id="aloria_labs", on_step=None, should_stop=None):
     if headless is None:
-        headless = config.HEADLESS
+        headless = getattr(config, "HEADLESS", True)
 
     query = f"{niche} in {city}, {country}"
-    print(f"  {ui.C_CYAN}[⚡ GOOGLE MAPS CRAWLER]{ui.RESET} Query: '{ui.C_WHITE}{query}{ui.RESET}' │ Quota: {ui.C_YELLOW}{max_places}{ui.RESET}")
+    print(f"  {ui.C_CYAN}[⚡ GOOGLE MAPS CRAWLER]{ui.RESET} Query: '{ui.C_WHITE}{query}{ui.RESET}' │ Quota: {ui.C_YELLOW}{max_places}{ui.RESET} │ Mode: {'100% Headless (Silent BG)' if headless else 'Visible Screen'}")
     if on_step:
-        on_step(f"Starting Google Maps sweep for {max_places} {niche} in {city}, {country}...")
+        on_step(f"Starting Google Maps background sweep for {max_places} {niche} in {city}, {country} (Silent Background Mode)...")
 
     discovered = []
 
@@ -29,9 +39,15 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
             if should_stop and should_stop():
                 return discovered
 
+            launch_args = ["--disable-blink-features=AutomationControlled", "--no-sandbox", "--disable-gpu"]
+            if headless:
+                launch_args.extend(["--headless=new", "--window-position=-2400,-2400"])
+            else:
+                launch_args.append("--start-maximized")
+
             browser = p.chromium.launch(
                 headless=headless,
-                args=["--disable-blink-features=AutomationControlled", "--start-maximized"]
+                args=launch_args
             )
             context = browser.new_context(
                 viewport={"width": 1366, "height": 768},
@@ -79,19 +95,24 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                 except Exception:
                     pass
 
-            time.sleep(3)
+            time.sleep(2.5)
 
             # Scroll the feed to load results
             ui.log_crawler_step(3, 4, "Streaming listings viewport...")
-            scroll_count = max(4, min(25, (max_places // 2) + 2))
+            scroll_count = max(10, min(40, int(max_places * 0.45) + 6))
             for scroll_idx in range(scroll_count):
                 try:
                     feed = page.locator(feed_selector)
-                    feed.evaluate("el => el.scrollBy(0, 3000)")
-                    time.sleep(1.2)
+                    feed.evaluate("el => el.scrollBy(0, 3500)")
+                    time.sleep(0.9)
+                    # Adaptive break: check if enough candidate cards have already populated
+                    if scroll_idx % 4 == 0:
+                        card_cnt = page.locator('div[role="feed"] a[href*="/maps/place/"]').count()
+                        if card_cnt >= max_places + 15:
+                            break
                 except Exception:
-                    page.mouse.wheel(0, 1000)
-                    time.sleep(1)
+                    page.mouse.wheel(0, 1500)
+                    time.sleep(0.8)
 
             # Find all place card links in the feed
             place_links = page.locator('div[role="feed"] a[href*="/maps/place/"]').all()
@@ -113,14 +134,14 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
 
                 try:
                     # Click place card to open detail panel
-                    link_loc.click(timeout=5000)
-                    time.sleep(1.8)
+                    link_loc.click(timeout=4000)
+                    time.sleep(0.8)
 
                     # Extract Business Title
                     title = ""
                     try:
                         title_loc = page.locator('h1.DUwDvf, div.lMbq3e h1, h1[tabindex="-1"]').first
-                        if title_loc.is_visible(timeout=3000):
+                        if title_loc.is_visible(timeout=2500):
                             title = title_loc.inner_text().strip()
                             if title:
                                 title = title.split("\n")[0].strip()
@@ -200,6 +221,10 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         pass
 
                     # Insert into SQLite State Machine
+                    # If a hotel lead has NO website, route it directly to Aloria Labs (Golden Lead for Web Dev)
+                    is_hotel_lead = any(h in (niche or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn"]) or "hotel" in title.lower()
+                    target_biz_id = "aloria_labs" if (not website_url and is_hotel_lead) else business_id
+
                     lead_id = db.insert_lead(
                         business_name=title,
                         country=country,
@@ -210,12 +235,24 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         rating=rating,
                         reviews_count=reviews_count,
                         website_url=website_url,
-                        business_id=business_id
+                        business_id=target_biz_id
                     )
 
-                    ui.log_discovered_place(count + 1, max_places, title, website_url, phone, rating)
+                    if lead_id is None:
+                        # Already cataloged in database from previous runs
+                        if on_step:
+                            on_step(f"[DEDUPLICATED] '{title}' already cataloged in DB. Scanning next candidate...")
+                        continue
+
+                    count += 1
+                    ui.log_discovered_place(count, max_places, title, website_url, phone, rating)
                     if on_step:
-                        on_step(f"Verified & saved to ledger [{count + 1}/{max_places}]: {title} {'(Domain: ' + website_url + ')' if website_url else '(No Website - Golden Lead)'}")
+                        if not website_url and is_hotel_lead:
+                            on_step(f"★ GOLDEN LEAD CAPTURED [{count}/{max_places}]: {title} (No Website ➔ Routed to Aloria Labs Hotel Web Dev)")
+                        elif website_url:
+                            on_step(f"Verified & saved to ledger [{count}/{max_places}]: {title} (Domain: {website_url} ➔ GHS Onboarding)")
+                        else:
+                            on_step(f"Verified & saved to ledger [{count}/{max_places}]: {title} (No Website)")
 
                     discovered.append({
                         "id": lead_id,
@@ -226,7 +263,6 @@ def crawl_google_maps(city="Algiers", country="Algeria", niche="Restaurants", ma
                         "rating": rating,
                         "reviews": reviews_count
                     })
-                    count += 1
 
                 except Exception as e:
                     # Skip problematic individual card and keep crawling

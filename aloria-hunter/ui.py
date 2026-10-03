@@ -1,11 +1,13 @@
 import os
 import sys
 
-# Ensure UTF-8 console on Windows
+# Ensure UTF-8 console on Windows with replacement fallback
 if sys.platform == "win32":
     try:
         if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore
     except Exception:
         pass
 
@@ -103,12 +105,13 @@ def log_audit_result(email, vulnerabilities, response_time):
     else:
         print(f"    {C_GREEN}[✓ HEALTHY]{RESET}        {C_DIM}No major infrastructure flaws detected{RESET}")
 
-def log_email_dispatch(lead_name, email, subject, success, status_msg=""):
+def log_email_dispatch(lead_name, email, subject, success, status_msg="", sender=""):
+    sender_badge = f"{C_CYAN}[FROM: {sender}]{RESET} " if sender else ""
     if success:
-        print(f"  {C_GREEN}[✉ OUTREACH SENT]{RESET}   {C_WHITE}To:{RESET} {C_GREEN}{email}{RESET} │ {C_DIM}{lead_name}{RESET}")
+        print(f"  {C_GREEN}[✉ OUTREACH SENT]{RESET}   {sender_badge}{C_WHITE}To:{RESET} {C_GREEN}{email}{RESET} │ {C_DIM}{lead_name}{RESET}")
         print(f"     {C_DIM}Subject: '{subject}'{RESET}")
     else:
-        print(f"  {C_RED}[✗ OUTREACH FAILED]{RESET} {C_WHITE}To:{RESET} {C_RED}{email}{RESET} │ {C_YELLOW}{status_msg}{RESET}")
+        print(f"  {C_RED}[✗ OUTREACH FAILED]{RESET} {sender_badge}{C_WHITE}To:{RESET} {C_RED}{email}{RESET} │ {C_YELLOW}{status_msg}{RESET}")
 
 def log_stats_dashboard(stats):
     total = stats.get('total', 0)

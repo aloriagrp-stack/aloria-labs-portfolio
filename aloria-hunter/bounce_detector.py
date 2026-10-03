@@ -1,8 +1,6 @@
 import imaplib
 import email
 import re
-from datetime import datetime, timedelta
-from pathlib import Path
 import config
 import db
 import ui
@@ -194,8 +192,12 @@ def scan_all_profiles():
     for prof_key in profiles.keys():
         res = scan_inbox_bounces(profile_name=prof_key, silent=False)
         if res.get("success"):
-            total_new += res.get("newly_blacklisted", 0)
-            all_bounces.extend(res.get("bounced_emails", []))
+            newly = res.get("newly_blacklisted", 0)
+            if isinstance(newly, int):
+                total_new += newly
+            b_emails = res.get("bounced_emails", [])
+            if isinstance(b_emails, list):
+                all_bounces.extend(b_emails)
     return {
         "total_newly_blacklisted": total_new,
         "all_bounces": list(set(all_bounces))

@@ -11,15 +11,27 @@
         "Real Estate Agencies",
         "Medical Clinics"
       ],
-      "target_country": "",
-      "target_city": "",
-      "target_niche": "",
+      "target_country": "Russia",
+      "target_city": "Moscow",
+      "target_niche": "Restaurants",
       "sender_profile": "gmail",
       "sender_display_name": "Shriyansh Aloria — Aloria Labs",
       "pitches": {
         "case_a_no_website": {
           "subject": "Quick question regarding {business_name}'s online presence in {city}",
           "body": "Hi {business_name} Team,\n\nI was looking up top-rated {niche} in {city} and noticed your Google Maps listing has great reviews ({rating}★ across {reviews_count} customers), but you currently don't have an official website connected to your profile.\n\nOver 68% of local customers in {city} look for a direct menu, pricing, or instant booking before visiting. Without a direct web presence, that revenue leaks to competitors with instant ordering.\n\nAt Aloria Labs, we deploy high-speed, modern digital platforms with zero friction. We built a live interactive concept for {business_name}—would you be open to a 3-minute screen preview this week?\n\nBest regards,\n{sender_name}\nAloria Labs — Engineering High-Performance Digital Infrastructure\nhttps://alorialabs.in | direct: info@alorialabs.in"
+        },
+        "hotel_no_website": {
+          "subject": "Official Direct Booking Website for {business_name} (Stop 25% OTA Commissions)",
+          "body": "Hi {business_name} Team,\n\nI was researching premier stays in {city} and came across {business_name} on Google Maps.\n\nYour property has fantastic guest ratings ({rating}★ across {reviews_count} reviews), but I noticed you currently do not have an official direct booking website connected to your profile.\n\nRight now, travellers looking for {business_name} are forced to book through OTAs like MakeMyTrip, Goibibo or Booking.com—where you lose 20% to 25% of your hard-earned revenue on every single room—or worse, they end up booking competitor hotels in {city} that offer instant direct booking.\n\nAt Aloria Labs, we engineer custom, luxury hotel websites with:\n• Direct Booking Engine (Keep 100% of your guest booking revenue with ₹0 commission)\n• High-Resolution Room, Suite & Amenity Photo Showcases\n• Instant 1-Click WhatsApp Booking Button for guests\n• Mobile-Optimized Google SEO for travellers searching {city}\n\nWe would love to build a live interactive concept for {business_name}. Simply reply “SEND DEMO” and our design team will prepare a free, live preview of your hotel's new website within 24 hours.\n\nBest regards,\n\nShriyansh Aloria\nFounder & Chief Systems Architect\nAloria Labs\nhttps://alorialabs.in | direct: info@alorialabs.in",
+          "follow_up_1": {
+            "subject": "Re: Official Direct Booking Website for {business_name}",
+            "body": "Hi {business_name} Team,\n\nJust bumping my previous note regarding an official direct booking website for {business_name}.\n\nWith peak travel season approaching, having your own direct website allows you to keep 100% of your guest booking revenue instead of paying 20%+ to OTAs.\n\nWould you like our team to send over a free 60-second interactive preview tailored for {business_name}?\n\nBest regards,\n\nShriyansh Aloria\nFounder & Chief Systems Architect\nAloria Labs\nhttps://alorialabs.in"
+          },
+          "follow_up_2": {
+            "subject": "Final check-in: {business_name} Direct Booking Website",
+            "body": "Hi {business_name} Team,\n\nI understand you are likely busy managing daily guest hospitality and hotel operations at {business_name}.\n\nI won't follow up again, but if you ever decide to launch an official direct booking website and capture guest revenue directly in {city}, feel free to reach back out anytime.\n\nWishing {business_name} a fully booked season!\n\nBest regards,\n\nShriyansh Aloria\nFounder & Chief Systems Architect\nAloria Labs\nhttps://alorialabs.in"
+          }
         },
         "case_b_audit": {
           "subject": "Empirical audit notes on {business_name}'s website",
@@ -45,10 +57,10 @@
         "Resorts",
         "Guesthouses"
       ],
-      "target_country": "delhi",
+      "target_country": "India",
       "target_city": "india",
       "target_niche": "Hotels",
-      "sender_profile": "gethotelstays_india",
+      "sender_profile": "gethotelstays",
       "sender_display_name": "Shriyansh Aloria — GetHotelStays",
       "whatsapp_pitch": "Hi {business_name} Team 👋\n\nWe’d love to onboard {business_name} on GetHotelStays.\n\nThere are ZERO upfront costs:\n\n✓ ₹0 Onboarding Fee\n✓ ₹0 Monthly Fee\n✓ ₹0 Listing Fee\n✓ Only 12% commission when you receive a booking through us\n\nYou only pay when we bring you a booking.\n\nWe’re currently expanding our hotel network and would love to have your property onboard.\n\nInterested? We can share the onboarding details here.",
       "pitches": {
