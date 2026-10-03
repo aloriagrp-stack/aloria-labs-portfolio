@@ -36,3 +36,5 @@ jobs:
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_DIR || './' }}
           dangerous-clean-slate: false
+          timeout: 600000
+          log-level: verbose
