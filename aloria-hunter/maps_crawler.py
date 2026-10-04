@@ -13,10 +13,14 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Set Playwright browser path on D drive before importing playwright
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
+# Set Playwright browser path if exists
+if os.path.exists("D:\\playwright-browsers"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
 
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None
 import config
 import db
 import ui

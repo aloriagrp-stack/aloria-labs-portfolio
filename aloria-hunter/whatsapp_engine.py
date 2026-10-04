@@ -2,15 +2,24 @@ import os
 import re
 import time
 import urllib.parse
-from pathlib import Path
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None
 import db
 import business_manager
 import ui
 
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
-SESSION_DIR = Path("D:/playwright-browsers/whatsapp_profile")
-SESSION_DIR.mkdir(parents=True, exist_ok=True)
+if os.path.exists("D:/playwright-browsers"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:/playwright-browsers"
+    SESSION_DIR = Path("D:/playwright-browsers/whatsapp_profile")
+else:
+    SESSION_DIR = Path(os.path.expanduser("~/.whatsapp_profile"))
+
+try:
+    SESSION_DIR.mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 
