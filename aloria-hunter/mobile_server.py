@@ -1288,8 +1288,14 @@ async def post_chat_stream(request: Request):
 
         except Exception as stream_err:
             logger.exception("Error during chat stream processing")
-            yield f"data: {json.dumps({'type': 'thought', 'step': f'Notice: {str(stream_err)[:80]}'})}\n\n"
-            yield f"data: {json.dumps({'type': 'done', 'sender': 'Aloria Hunter', 'reply': f'⚠️ **Encountered an issue**: {str(stream_err)}.\n\nPlease check that your browser drivers are ready, or try another command like **\"Run audits\"** or **\"Status\"**.', 'thought': f'Recovered from {type(stream_err).__name__}.'})}\n\n"
+            notice_step = f"Notice: {str(stream_err)[:80]}"
+            yield f"data: {json.dumps({'type': 'thought', 'step': notice_step})}\n\n"
+            err_msg = (
+                f"⚠️ **Encountered an issue**: {str(stream_err)}.\n\n"
+                "Please check that your browser drivers are ready, or try another command like **'Run audits'** or **'Status'**."
+            )
+            err_thought = f"Recovered from {type(stream_err).__name__}."
+            yield f"data: {json.dumps({'type': 'done', 'sender': 'Aloria Hunter', 'reply': err_msg, 'thought': err_thought})}\n\n"
 
     return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
