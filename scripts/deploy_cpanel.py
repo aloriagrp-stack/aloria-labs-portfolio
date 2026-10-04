@@ -1,54 +1,44 @@
 import os
 import sys
 import time
-import io
+import zipfile
+import urllib.request
 from pathlib import Path
 from ftplib import FTP, FTP_TLS
 
-def get_ftp_connection(host, user, password):
-    print(f"Connecting to FTP server: {host} (port 21)...")
+DEPLOY_SECRET = "shriyansh0402_aloria_secure_deploy_2026"
+LIVE_DEPLOY_URL = f"https://alorialabs.in/api_deploy.php?token={DEPLOY_SECRET}"
+CHROME_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+
+def build_zip(source_dir, output_zip):
+    source_dir = Path(source_dir)
+    output_zip = Path(output_zip)
+    if output_zip.exists():
+        output_zip.unlink()
+    with zipfile.ZipFile(output_zip, "w", zipfile.ZIP_DEFLATED) as z:
+        for root, dirs, files in os.walk(source_dir):
+            for file in files:
+                fp = Path(root) / file
+                rel = fp.relative_to(source_dir)
+                z.write(fp, arcname=str(rel).replace("\\", "/"))
+    print(f"Built {output_zip.name}: {output_zip.stat().st_size} bytes")
+
+def get_ftp(host, user, password):
+    print(f"Connecting to FTP ({host}:21)...")
     try:
         ftp = FTP(timeout=45)
         ftp.connect(host, 21)
         ftp.login(user, password)
         ftp.set_pasv(True)
-        print("Connected to standard FTP.")
+        print("Connected via standard FTP.")
         return ftp
     except Exception as e:
-        print(f"Standard FTP connection failed: {e}. Trying FTPS...")
+        print(f"Standard FTP failed: {e}. Trying FTPS...")
         ftp = FTP_TLS(timeout=45)
         ftp.connect(host, 21)
         ftp.login(user, password)
-        ftp.prot_p()
         ftp.set_pasv(True)
         return ftp
-
-def upload_dir_ftp(ftp, local_dir):
-    local_dir = Path(local_dir)
-    count = 0
-    for root, dirs, files in os.walk(local_dir):
-        rel_root = Path(root).relative_to(local_dir)
-        current_remote = str(rel_root).replace("\\", "/")
-        if current_remote != ".":
-            parts = current_remote.split("/")
-            accum = ""
-            for p in parts:
-                accum = f"{accum}/{p}" if accum else p
-                try:
-                    ftp.mkd(accum)
-                except Exception:
-                    pass
-        for file in files:
-            local_fp = Path(root) / file
-            remote_target = str(local_fp.relative_to(local_dir)).replace("\\", "/")
-            try:
-                with open(local_fp, "rb") as f:
-                    ftp.storbinary(f"STOR {remote_target}", f, blocksize=8192)
-                count += 1
-                print(f"  ✓ {remote_target}")
-            except Exception as e:
-                print(f"  ⚠️ Error uploading {remote_target}: {e}")
-    return count
 
 def main():
     host = os.environ.get("FTP_SERVER") or os.environ.get("FTP_HOST")
@@ -62,59 +52,70 @@ def main():
 
     dist_dir = Path("dist")
     if not dist_dir.exists():
-        print("ERROR: dist directory missing. Run 'npm run build' first.")
+        print("ERROR: dist directory missing.")
         sys.exit(1)
 
-    # 1. Connect to FTP
-    ftp = get_ftp_connection(host, user, password)
+    # 1. Build deploy.zip
+    deploy_zip = Path("deploy.zip")
+    build_zip(dist_dir, deploy_zip)
 
-    # 2. Upload Production Frontend to public_html
-    print(f"\n[1/2] Deploying Frontend Bundle to {ftp_dir} ...")
+    # 2. Build aloria_python_backend.zip
+    pkg_dir = Path("backend_cpanel_pkg")
+    backend_zip = Path("aloria_python_backend.zip")
+    if pkg_dir.exists():
+        build_zip(pkg_dir, backend_zip)
+
+    # 3. Connect to FTP & upload to public_html
+    ftp = get_ftp(host, user, password)
     try:
         ftp.cwd(ftp_dir)
     except Exception:
         ftp.cwd("public_html")
 
-    uploaded_frontend = upload_dir_ftp(ftp, dist_dir)
-    print(f"🎉 Frontend Deployment Complete! ({uploaded_frontend} files synced)")
+    # Upload api_deploy.php
+    api_deploy_file = Path("public/api_deploy.php")
+    if api_deploy_file.exists():
+        print("Uploading api_deploy.php ...")
+        with open(api_deploy_file, "rb") as f:
+            ftp.storbinary("STOR api_deploy.php", f, blocksize=4096)
 
-    # 3. Upload Backend to aloria-api
-    backend_dir = Path("backend_cpanel_pkg")
-    if backend_dir.exists():
-        print("\n[2/2] Deploying Python Backend to aloria-api ...")
-        try:
-            ftp.cwd("/home/vgyuvmpi/aloria-api")
-        except Exception:
-            try:
-                ftp.cwd("../../aloria-api")
-            except Exception:
-                try:
-                    ftp.cwd("../aloria-api")
-                except Exception as e:
-                    print(f"Could not enter aloria-api directory: {e}")
+    # Upload deploy.zip
+    print(f"Uploading {deploy_zip.name} ...")
+    with open(deploy_zip, "rb") as f:
+        ftp.storbinary(f"STOR {deploy_zip.name}", f, blocksize=8192)
 
-        uploaded_backend = upload_dir_ftp(ftp, backend_dir)
-        print(f"🎉 Backend Deployment Complete! ({uploaded_backend} files synced)")
-
-        # Restart Phusion Passenger app
-        try:
-            ftp.mkd("tmp")
-        except Exception:
-            pass
-        try:
-            ftp.storbinary("STOR tmp/restart.txt", io.BytesIO(f"restart {time.time()}\n".encode()))
-            print("🚀 Phusion Passenger Application Restarted via tmp/restart.txt!")
-        except Exception as e:
-            print(f"Passenger restart notice: {e}")
+    # Upload aloria_python_backend.zip
+    if backend_zip.exists():
+        print(f"Uploading {backend_zip.name} ...")
+        with open(backend_zip, "rb") as f:
+            ftp.storbinary(f"STOR {backend_zip.name}", f, blocksize=8192)
 
     try:
         ftp.quit()
     except Exception:
         pass
 
-    print("\n=======================================================")
-    print("✅ FULL PRODUCTION DEPLOYMENT FINISHED SUCCESSFULLY!")
-    print("=======================================================\n")
+    # 4. Trigger server-side extraction
+    print("\nTriggering server-side extraction via HTTPS...")
+    req = urllib.request.Request(
+        LIVE_DEPLOY_URL,
+        headers={"User-Agent": CHROME_UA, "X-Aloria-Deploy-Key": DEPLOY_SECRET}
+    )
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                body = r.read().decode("utf-8")
+                print("Extraction response:", body)
+                if r.status == 200:
+                    print("✅ Extraction complete!")
+                    break
+        except Exception as e:
+            print(f"Attempt {attempt+1} notice: {e}")
+            time.sleep(2)
+
+    # Cleanup local zips
+    deploy_zip.unlink(missing_ok=True)
+    print("Deployment finished successfully!")
 
 if __name__ == "__main__":
     main()
