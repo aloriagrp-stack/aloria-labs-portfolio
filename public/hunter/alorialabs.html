@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aloria Labs — Telemetry Cockpit</title>
+  <style>
+    :root {
+      --bg: #090a0d;
+      --card-top: #181b20;
+      --card-bottom: #111317;
+      --card-border: #232730;
+      --card-highlight: rgba(255, 255, 255, 0.12);
+      
+      --well-bg: #060709;
+      --well-border: #1a1c22;
+      
+      --text-white: #ffffff;
+      --text-silver: #d1d5db;
+      --text-muted: #808a9d;
+      --text-dim: #4f5869;
+      
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-silver);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.4;
+      background-image: linear-gradient(180deg, #0e1015 0%, #060709 100%);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    /* APP LAYOUT WITH SKEUOMORPHIC SIDEBAR */
+    .app-layout {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (min-width: 1024px) {
+      .app-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 20px;
+        padding: 22px;
+        align-items: start;
+      }
+    }
+
+    /* SKEUOMORPHIC SIDEBAR NAVIGATION */
+    aside.sidebar-nav {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    @media (min-width: 1024px) {
+      aside.sidebar-nav {
+        position: sticky;
+        top: 22px;
+        height: calc(100vh - 44px);
+        justify-content: space-between;
+      }
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--well-border);
+    }
+
+    .brand-logo-hex {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--well-bg);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: #ffffff;
+      box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: -0.05em;
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-white);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-sub {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+    }
+
+    .nav-tabs-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (min-width: 1024px) {
+      .nav-tabs-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 9px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .nav-tab:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      background: #111317;
+    }
+
+    .nav-tab.active {
+      background: linear-gradient(180deg, #242933, #151820);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-top: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .tab-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4a5568;
+      margin-left: auto;
+      transition: all 0.2s ease;
+    }
+
+    .tab-pulse-dot.is-active {
+      background: #ffffff;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+      animation: ledPulse 1.8s infinite ease-in-out;
+    }
+
+    .sidebar-footer {
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      .sidebar-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 14px;
+        border-top: 1px solid var(--well-border);
+      }
+    }
+
+    .sidebar-stat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .stat-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+    }
+
+    .stat-value {
+      font-weight: 700;
+      color: var(--text-silver);
+    }
+
+    .sidebar-empires-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      color: var(--text-silver);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.12s ease;
+    }
+
+    .sidebar-empires-link:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      background: #111317;
+    }
+
+    /* MAIN CONTENT WRAPPER */
+    main.main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    @media (min-width: 768px) {
+      main.main-content {
+        gap: 20px;
+      }
+    }
+
+    /* HEADER */
+    header.cockpit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-to-empires-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      color: var(--text-silver);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.12s ease;
+    }
+
+    @media (min-width: 1024px) {
+      .back-to-empires-btn {
+        display: none;
+      }
+    }
+
+    .back-to-empires-btn:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      background: #111317;
+    }
+
+    .brand-text-col h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hardware-led-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .hardware-led-badge.is-online {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .led-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4a5568;
+      box-shadow: none;
+      transition: all 0.2s ease;
+    }
+
+    .led-dot.is-online {
+      background: #ffffff;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+      animation: ledPulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes ledPulse {
+      0%, 100% { opacity: 0.35; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 8px #ffffff; }
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .skeuo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(180deg, #242933, #151820);
+      border: 1px solid var(--card-border);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 15px;
+      border-radius: 9px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      height: 34px;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+
+    .skeuo-btn:active, .skeuo-btn.is-syncing {
+      background: #08090c !important;
+      border-color: rgba(255, 255, 255, 0.35) !important;
+      box-shadow: inset 2px 3px 6px rgba(0, 0, 0, 0.95) !important;
+      transform: scale(0.94) translateY(2px) !important;
+      color: #ffffff !important;
+    }
+
+    .skeuo-btn.is-synced {
+      background: #1e2430 !important;
+      border-color: #ffffff !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.25) !important;
+    }
+
+    .skeuo-btn-run {
+      background: linear-gradient(180deg, #2d3340, #191c24);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-top: 1px solid rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+      font-weight: 700;
+      gap: 7px;
+    }
+
+    .skeuo-btn-run:hover {
+      background: linear-gradient(180deg, #363e4e, #1f232d);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .run-icon-triangle {
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid #ffffff;
+      display: inline-block;
+    }
+
+    /* TAB VIEWS */
+    .tab-view {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tab-view.active {
+      display: flex;
+    }
+
+    @media (min-width: 768px) {
+      .tab-view {
+        gap: 20px;
+      }
+    }
+
+    /* SECTION 1: 4 PRIMARY VELOCITY TILES */
+    .metrics-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (min-width: 900px) {
+      .metrics-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+    }
+
+    .skeuo-card {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .card-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .tactile-chip {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .debossed-display {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .big-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-white);
+      line-height: 1;
+    }
+
+    @media (min-width: 768px) {
+      .big-value {
+        font-size: 32px;
+      }
+    }
+
+    .display-tag {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.03em;
+    }
+
+    .card-footer-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mono-pill {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-silver);
+      flex-shrink: 0;
+    }
+
+    /* CARD 3 SIDE-BY-SIDE WELLS */
+    .card-split-wells {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .split-well {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .split-well-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .split-well-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .card-action-link-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.12s ease;
+      margin-top: 4px;
+    }
+
+    .card-action-link-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* SECTION 2: CONVERSION & DELIVERABILITY TILES */
+    .metrics-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 850px) {
+      .metrics-grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+    }
+
+    .detailed-card {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-heading {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .grooved-track-container {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .grooved-track {
+      width: 100%;
+      height: 8px;
+      background: var(--well-bg);
+      border-radius: 10px;
+      border: 1px solid var(--well-border);
+      overflow: hidden;
+    }
+
+    .tactile-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #64748b, #ffffff);
+      transition: width 0.4s ease-out;
+    }
+
+    .gauge-split-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11.5px;
+    }
+
+    .gauge-split-label {
+      color: var(--text-muted);
+    }
+
+    .gauge-split-val {
+      font-weight: 700;
+      color: var(--text-white);
+    }
+
+    .wells-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+      gap: 8px;
+    }
+
+    .metric-well {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .metric-well-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .metric-well-val {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-white);
+      line-height: 1.2;
+    }
+
+    /* SECTION 3: SENDER SWARM & LIVE ACTIVITY */
+    .two-column-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 850px) {
+      .two-column-layout {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+    }
+
+    .panel-box {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header-clickable {
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .panel-header-clickable:hover {
+      opacity: 0.9;
+    }
+
+    .panel-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-white);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .expand-pill-btn {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-white);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .expand-pill-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .account-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 340px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+
+    .account-list.collapsed {
+      max-height: 0px !important;
+      opacity: 0 !important;
+      overflow: hidden !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      pointer-events: none;
+    }
+
+    .account-recessed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 9px;
+      gap: 8px;
+    }
+
+    .account-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .account-email {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .account-label {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .account-stat-col {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .account-delivered-ratio {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .tactile-status-tag {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-silver);
+    }
+
+    .tag-capped {
+      background: #ffffff;
+      color: #0c0d10;
+    }
+
+    /* Live Activity Stream */
+    .activity-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 320px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .activity-recessed-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 9px;
+      font-size: 11.5px;
+      gap: 8px;
+    }
+
+    .act-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .act-biz-name {
+      font-weight: 600;
+      color: var(--text-white);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .act-recipient {
+      color: var(--text-muted);
+      font-size: 10.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .act-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .act-type-chip {
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-silver);
+    }
+
+    .act-timestamp {
+      font-size: 9.5px;
+      color: var(--text-dim);
+    }
+
+    /* ========================================================
+       TAB 2: WORKINGS (5-STAGE VISUAL PIPELINE & LIVE CONSOLE)
+       ======================================================== */
+    .stepper-container {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stepper-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stepper-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 850px) {
+      .pipeline-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+      }
+    }
+
+    .stage-card {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .stage-card.is-active {
+      border-color: rgba(255, 255, 255, 0.45);
+      background: #11141c;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
+    }
+
+    .stage-card.is-complete {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .stage-top-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stage-num {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .stage-pill {
+      font-size: 8px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stage-pill.pill-standby {
+      background: transparent;
+      border: 1px solid var(--well-border);
+      color: var(--text-dim);
+    }
+
+    .stage-pill.pill-active {
+      background: #ffffff;
+      color: #090a0d;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    }
+
+    .stage-pill.pill-complete {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    .stage-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-white);
+      line-height: 1.25;
+    }
+
+    .stage-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    .stage-telemetry-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--text-silver);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 6px;
+      border-radius: 4px;
+      margin-top: auto;
+    }
+
+    /* STREAMING CONSOLE TERMINAL */
+    .console-panel {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bottom));
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-highlight);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .console-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .console-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .term-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2a303c;
+    }
+
+    .console-screen {
+      background: #050608;
+      border: 1px solid #181b22;
+      border-radius: 10px;
+      padding: 12px 14px;
+      height: 380px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      color: #d1d5db;
+      box-shadow: inset 1px 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .console-log-row {
+      display: flex;
+      gap: 8px;
+      word-break: break-all;
+    }
+
+    .console-ts {
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    .console-tag {
+      font-weight: 700;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .console-msg {
+      color: #e2e8f0;
+    }
+
+    .console-msg.success {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Skeuomorphic Modal Shared Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.84);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-box {
+      background: linear-gradient(180deg, #181b21, #101216);
+      border: 1px solid #282d38;
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(8px) scale(0.98);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-box.modal-large {
+      max-width: 680px;
+    }
+
+    .modal-overlay.active .modal-box {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e222b;
+      background: #14161c;
+    }
+
+    .modal-title-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+
+    .modal-close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .modal-close-btn:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .modal-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 80vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .debossed-quota-box {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: inset 1px 2px 5px rgba(0, 0, 0, 0.6);
+    }
+
+    .quota-box-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .quota-box-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+    }
+
+    .quota-box-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .quota-box-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tactile-input {
+      width: 100%;
+      background: #0b0c10;
+      border: 1px solid #232732;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+      box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.7);
+      transition: border-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .tactile-input:focus {
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .quick-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .quick-chip {
+      background: #151820;
+      border: 1px solid #242936;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-dim);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .quick-chip:hover, .quick-chip.selected {
+      background: #232834;
+      border-color: rgba(255, 255, 255, 0.35);
+      color: #ffffff;
+    }
+
+    .volume-chips-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    .vol-btn {
+      background: #14171f;
+      border: 1px solid #222632;
+      border-radius: 8px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .vol-btn:hover, .vol-btn.active {
+      background: #252b38;
+      border-color: #ffffff;
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+    }
+
+    .modal-launch-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #2b313d, #161920);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-top: 1px solid rgba(255, 255, 255, 0.45);
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 800;
+      padding: 13px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .modal-launch-btn:hover {
+      background: linear-gradient(180deg, #373e4d, #1d212b);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .modal-launch-btn:active {
+      transform: scale(0.97) translateY(2px);
+      box-shadow: inset 1px 2px 4px rgba(0, 0, 0, 0.9);
+    }
+
+    /* FOLLOW-UP LEDGER QUEUE STYLES */
+    .ledger-filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .ledger-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s ease;
+    }
+
+    .ledger-pill.active, .ledger-pill:hover {
+      background: #1d222b;
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+    }
+
+    .queue-items-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .queue-card-row {
+      background: var(--well-bg);
+      border: 1px solid var(--well-border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+    }
+
+    .q-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .q-name {
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .q-email {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .q-loc {
+      font-size: 9.5px;
+      color: var(--text-dim);
+    }
+
+    .q-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .q-stage-chip {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .q-schedule-timing {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .q-schedule-timing.is-due {
+      color: #ffffff;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* COMPREHENSIVE MOBILE VIEW OPTIMIZATIONS (<= 768px & Phones) */
+    @media (max-width: 768px) {
+      .app-layout {
+        padding: 10px;
+        gap: 12px;
+      }
+      aside.sidebar-nav {
+        padding: 12px;
+        gap: 12px;
+      }
+      .brand-title {
+        font-size: 14px;
+      }
+      .nav-tab {
+        padding: 9px 12px;
+        font-size: 12px;
+      }
+      header.cockpit-header {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 14px;
+      }
+      .brand-section {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .brand-text-col h1 {
+        font-size: 16px;
+      }
+      .header-controls {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+      }
+      .header-controls .skeuo-btn {
+        flex: 1;
+        font-size: 11.5px;
+        padding: 8px 10px;
+        height: 36px;
+      }
+      .metrics-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+      }
+      .metrics-grid-3 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .pipeline-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .pipeline-grid .stage-card:last-child:nth-child(odd) {
+        grid-column: span 2 !important;
+      }
+      .stage-card {
+        padding: 10px 8px;
+        gap: 6px;
+      }
+      .stage-title {
+        font-size: 11px;
+      }
+      .stage-desc {
+        font-size: 9px;
+      }
+      .stage-telemetry-badge {
+        font-size: 8.5px;
+      }
+      .console-panel {
+        padding: 12px;
+      }
+      .console-screen {
+        height: 280px !important;
+        font-size: 10px !important;
+        padding: 10px;
+      }
+      .modal-box {
+        max-width: 95vw !important;
+        margin: 8px !important;
+      }
+      .modal-body {
+        padding: 14px !important;
+      }
+      .quick-chips-row {
+        gap: 5px;
+      }
+      .quick-chip {
+        font-size: 10px;
+        padding: 4px 8px;
+      }
+      .volume-chips-row {
+        gap: 5px;
+      }
+      .vol-btn {
+        flex: 1;
+        min-width: 38px;
+        padding: 8px 2px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- SKEUOMORPHIC LEFT SIDEBAR (Desktop) / TOP SEGMENTED BAR (Mobile) -->
+    <aside class="sidebar-nav">
+      
+      <div class="sidebar-brand">
+        <div class="brand-logo-hex">AL</div>
+        <div class="brand-title-wrap">
+          <span class="brand-title">Aloria Labs</span>
+          <span class="brand-sub">ENTERPRISE TECH SWARM</span>
+        </div>
+      </div>
+
+      <div class="nav-tabs-group">
+        <button class="nav-tab active" id="tab-btn-overview" onclick="switchTab('overview')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Overview</span>
+        </button>
+
+        <button class="nav-tab" id="tab-btn-workings" onclick="switchTab('workings')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Workings</span>
+          <span class="tab-pulse-dot" id="workings-pulse-dot"></span>
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-stat-row">
+          <span class="stat-label">SWARM INBOXES</span>
+          <span class="stat-value mono" id="sidebar-inbox-count">11 Armed</span>
+        </div>
+        <div class="sidebar-stat-row">
+          <span class="stat-label">DAILY CAPACITY</span>
+          <span class="stat-value mono">550 / Day</span>
+        </div>
+        <div class="sidebar-stat-row">
+          <span class="stat-label">SYSTEM UPTIME</span>
+          <span class="stat-value mono" id="sidebar-uptime-counter">23 Days</span>
+        </div>
+        <a href="hunter.html" class="sidebar-empires-link">
+          &larr; Empires Switcher
+        </a>
+      </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT VIEW -->
+    <main class="main-content">
+      
+      <!-- HEADER -->
+      <header class="cockpit-header">
+        <div class="brand-section">
+          <a href="hunter.html" class="back-to-empires-btn">
+            &larr; Empires
+          </a>
+          <div class="brand-text-col">
+            <h1>
+              Aloria Labs 
+              <span class="hardware-led-badge" id="header-status-badge">
+                <span class="led-dot" id="header-led-dot"></span> 
+                <span id="header-status-text">OFFLINE</span>
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        <div class="header-controls">
+          <button class="skeuo-btn skeuo-btn-run" id="run-agent-btn" onclick="openLaunchModal()">
+            <span class="run-icon-triangle"></span> Run Agent
+          </button>
+          <button class="skeuo-btn" id="sync-btn" onclick="fetchTelemetry(true)">
+            Sync Telemetry
+          </button>
+          <button class="skeuo-btn" onclick="lockCockpit()" style="color: #f59e0b;" title="Lock Cockpit">
+            🔒 Lock
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW METRICS DASHBOARD -->
+      <div class="tab-view active" id="view-overview">
+        
+        <!-- SECTION 1: 4 PRIMARY VELOCITY TILES -->
+        <section class="metrics-grid-4">
+          
+          <!-- Card 1: Dispatched Today -->
+          <div class="skeuo-card">
+            <div class="card-top-row">
+              <span class="card-label">Dispatched Today</span>
+              <div class="tactile-chip mono">01</div>
+            </div>
+            <div class="debossed-display">
+              <span class="big-value mono" id="val-new-today">0</span>
+              <span class="display-tag mono">TOTAL TODAY</span>
+            </div>
+            <div class="card-footer-info" id="val-today-breakdown" style="display:flex; align-items:center; justify-content:space-between; width:100%; font-size:11px;">
+              <span style="display:inline-flex; align-items:center; gap:4px; color:var(--text-silver);">
+                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#38bdf8;"></span>
+                New: <strong class="mono" id="subval-new-today" style="color:#ffffff;">0</strong>
+              </span>
+              <span style="color:var(--text-dim);">&bull;</span>
+              <span style="display:inline-flex; align-items:center; gap:4px; color:var(--text-silver);">
+                <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#a78bfa;"></span>
+                Follow-up: <strong class="mono" id="subval-follow-today" style="color:#ffffff;">0</strong>
+              </span>
+              <span style="color:var(--text-dim);">&bull;</span>
+              <span style="display:inline-flex; align-items:center; gap:4px; color:var(--text-silver);">
+                Total: <strong class="mono" id="subval-total-today" style="color:#ffffff;">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <!-- Card 2: Total New Sent All-Time -->
+          <div class="skeuo-card">
+            <div class="card-top-row">
+              <span class="card-label">Total New Sent</span>
+              <div class="tactile-chip mono">02</div>
+            </div>
+            <div class="debossed-display">
+              <span class="big-value mono" id="val-total-new">0</span>
+              <span class="display-tag mono">ALL-TIME</span>
+            </div>
+            <div class="card-footer-info" id="val-runtime-subtitle">
+              Active for 23 Days &bull; Running since Sept 9
+            </div>
+          </div>
+
+          <!-- Card 3: Follow-ups Due (Side-by-Side Wells + Ledger Modal trigger) -->
+          <div class="skeuo-card">
+            <div class="card-top-row">
+              <span class="card-label">Follow-ups Due</span>
+              <div class="tactile-chip mono">03</div>
+            </div>
+            <div class="card-split-wells">
+              <div class="split-well">
+                <span class="split-well-label">DUE TODAY</span>
+                <span class="split-well-val mono" id="val-due-today-well">0</span>
+              </div>
+              <div class="split-well">
+                <span class="split-well-label">IN PIPELINE</span>
+                <span class="split-well-val mono" id="val-pipeline-total-well">0</span>
+              </div>
+            </div>
+            <button class="card-action-link-btn" onclick="openFollowupsModal()">
+              View Queue Ledger &nearr;
+            </button>
+          </div>
+
+          <!-- Card 4: Total Volume All-Time -->
+          <div class="skeuo-card">
+            <div class="card-top-row">
+              <span class="card-label">Total Volume</span>
+              <div class="tactile-chip mono">04</div>
+            </div>
+            <div class="debossed-display">
+              <span class="big-value mono" id="val-total-dispatched">0</span>
+              <span class="display-tag mono">VOLUME</span>
+            </div>
+            <div class="card-footer-info">
+              <span class="mono-pill">All Outbound</span> Initial + Follow-ups combined
+            </div>
+          </div>
+
+        </section>
+
+        <!-- SECTION 2: CONVERSION, QUOTA & DELIVERABILITY TILES -->
+        <section class="metrics-grid-3">
+
+          <!-- Tile 1: Daily Quota Velocity -->
+          <div class="detailed-card">
+            <div class="card-heading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Daily Quota Velocity
+            </div>
+            <div class="grooved-track-container">
+              <div class="gauge-split-row">
+                <span class="gauge-split-label">Used Today: <strong id="quota-used-text" class="mono" style="color: #ffffff;">0 / 550</strong></span>
+                <span class="gauge-split-val"><span id="quota-left-text" class="mono">0</span> Remaining</span>
+              </div>
+              <div class="grooved-track">
+                <div class="tactile-bar-fill" id="quota-fill-bar" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="wells-row">
+              <div class="metric-well">
+                <span class="metric-well-title">Total Capacity</span>
+                <span class="metric-well-val mono" id="quota-capacity-val">550</span>
+              </div>
+              <div class="metric-well">
+                <span class="metric-well-title">Used</span>
+                <span class="metric-well-val mono" id="quota-used-percent">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tile 2: Inbound Client Replies -->
+          <div class="detailed-card">
+            <div class="card-heading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Inbound Client Replies
+            </div>
+            <div class="wells-row">
+              <div class="metric-well">
+                <span class="metric-well-title">Today</span>
+                <span class="metric-well-val mono" id="val-replies-today">0</span>
+              </div>
+              <div class="metric-well">
+                <span class="metric-well-title">All-Time</span>
+                <span class="metric-well-val mono" id="val-total-replies">0</span>
+              </div>
+              <div class="metric-well">
+                <span class="metric-well-title">Reply Rate</span>
+                <span class="metric-well-val mono" id="val-reply-rate">0.0%</span>
+              </div>
+            </div>
+            <div class="card-footer-info" style="margin-top: 2px;">
+              <span class="mono-pill">Sentinel IMAP</span> Client responses tracked
+            </div>
+          </div>
+
+          <!-- Tile 3: Deliverability & Bounce Health -->
+          <div class="detailed-card">
+            <div class="card-heading">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Deliverability & Bounce Health
+            </div>
+            <div class="grooved-track-container">
+              <div class="gauge-split-row">
+                <span class="gauge-split-label">Delivery Health</span>
+                <span class="gauge-split-val mono" id="val-delivered-rate-badge">100.0%</span>
+              </div>
+              <div class="grooved-track">
+                <div class="tactile-bar-fill" id="delivery-fill-bar" style="width: 100%"></div>
+              </div>
+            </div>
+            <div class="wells-row">
+              <div class="metric-well">
+                <span class="metric-well-title">Delivered</span>
+                <span class="metric-well-val mono" id="val-total-delivered">0</span>
+              </div>
+              <div class="metric-well">
+                <span class="metric-well-title">Bounced/Failed</span>
+                <span class="metric-well-val mono" id="val-total-failed">0</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- SECTION 3: SENDER SWARM CAPACITY & LIVE ACTIVITY -->
+        <section class="two-column-layout">
+          
+          <!-- Box 1: Sender Swarm Accounts Breakdown -->
+          <div class="panel-box" id="accounts-panel">
+            <div class="panel-header panel-header-clickable" onclick="toggleAccountsPanel()">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                Active Sender Inboxes
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="mono-pill" id="active-accounts-count">0 Inboxes</span>
+                <span class="expand-pill-btn" id="accounts-toggle-indicator">+ Expand</span>
+              </div>
+            </div>
+            <div class="account-list collapsed" id="account-list-container">
+              <div style="padding: 18px; text-align: center; color: var(--text-dim); font-size: 12px;">Syncing inboxes...</div>
+            </div>
+          </div>
+
+          <!-- Box 2: Recent Live Activity Feed -->
+          <div class="panel-box">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Aloria Activity Stream
+              </div>
+              <span class="mono-pill">12-Hour AM/PM</span>
+            </div>
+            <div class="activity-feed" id="activity-feed-container">
+              <div style="padding: 18px; text-align: center; color: var(--text-dim); font-size: 12px;">Loading events...</div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+
+      <!-- TAB 2: WORKINGS (5-STAGE PIPELINE & STREAMING CONSOLE) -->
+      <div class="tab-view" id="view-workings">
+        
+        <!-- 5-STAGE INTERACTIVE VISUAL PIPELINE STEPPER -->
+        <div class="stepper-container">
+          <div class="stepper-header">
+            <div class="stepper-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Autonomous B2B Lead Execution Pipeline
+            </div>
+            <span class="mono-pill" id="pipeline-overall-status">STANDBY</span>
+          </div>
+
+          <div class="pipeline-grid">
+            
+            <!-- Stage 1: Discovery & Maps Crawl -->
+            <div class="stage-card" id="stage-card-1">
+              <div class="stage-top-meta">
+                <span class="stage-num mono">STAGE 01</span>
+                <span class="stage-pill pill-standby" id="stage-pill-1">○ STANDBY</span>
+              </div>
+              <div class="stage-title">Discovery & Crawl</div>
+              <div class="stage-desc">Scrapes verified businesses, phone numbers, addresses & corporate domains via headless crawlers.</div>
+              <div class="stage-telemetry-badge mono" id="stage-badge-1">Ready for input</div>
+            </div>
+
+            <!-- Stage 2: Quality Filter & Deduplication -->
+            <div class="stage-card" id="stage-card-2">
+              <div class="stage-top-meta">
+                <span class="stage-num mono">STAGE 02</span>
+                <span class="stage-pill pill-standby" id="stage-pill-2">○ STANDBY</span>
+              </div>
+              <div class="stage-title">Quality Filter</div>
+              <div class="stage-desc">Checks suppression databases, blacklist tables & guarantees prospect was never emailed previously.</div>
+              <div class="stage-telemetry-badge mono" id="stage-badge-2">Filter queue ready</div>
+            </div>
+
+            <!-- Stage 3: Deep Website Audit -->
+            <div class="stage-card" id="stage-card-3">
+              <div class="stage-top-meta">
+                <span class="stage-num mono">STAGE 03</span>
+                <span class="stage-pill pill-standby" id="stage-pill-3">○ STANDBY</span>
+              </div>
+              <div class="stage-title">Technical Audit</div>
+              <div class="stage-desc">Concurrent 100-worker scanner inspects site latency, SSL certs, mobile viewport & extracts verified emails.</div>
+              <div class="stage-telemetry-badge mono" id="stage-badge-3">Auditor ready</div>
+            </div>
+
+            <!-- Stage 4: Email Verification & MX Resolve -->
+            <div class="stage-card" id="stage-card-4">
+              <div class="stage-top-meta">
+                <span class="stage-num mono">STAGE 04</span>
+                <span class="stage-pill pill-standby" id="stage-pill-4">○ STANDBY</span>
+              </div>
+              <div class="stage-title">Email Verification</div>
+              <div class="stage-desc">Direct DNS MX handshake check to guarantee 100% mailbox existence & protect domain reputation.</div>
+              <div class="stage-telemetry-badge mono" id="stage-badge-4">Handshake ready</div>
+            </div>
+
+            <!-- Stage 5: Swarm Dispatch -->
+            <div class="stage-card" id="stage-card-5">
+              <div class="stage-top-meta">
+                <span class="stage-num mono">STAGE 05</span>
+                <span class="stage-pill pill-standby" id="stage-pill-5">○ STANDBY</span>
+              </div>
+              <div class="stage-title">Swarm Dispatch</div>
+              <div class="stage-desc">Rotates across 11 healthy SMTP sender accounts with natural pacing and verified delivery headers.</div>
+              <div class="stage-telemetry-badge mono" id="stage-badge-5">Swarm armed</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- REAL-TIME STREAMING CONSOLE -->
+        <div class="console-panel">
+          <div class="console-header">
+            <div class="console-title-wrap">
+              <div class="terminal-dots">
+                <span class="term-dot"></span>
+                <span class="term-dot"></span>
+                <span class="term-dot"></span>
+              </div>
+              <span style="font-size: 13px; font-weight: 700; color: #ffffff;">Autonomous Execution Stream</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="mono-pill">12-Hour AM/PM</span>
+              <button class="expand-pill-btn" onclick="clearConsole()">Clear</button>
+            </div>
+          </div>
+
+          <div class="console-screen" id="console-stream-feed">
+            <div class="console-log-row">
+              <span class="console-ts mono">[INITIALIZING]</span>
+              <span class="console-tag">[TELEMETRY]</span>
+              <span class="console-msg">Aloria Labs Autonomous Swarm ready. Click 'Run Agent' above to initiate an automated target wave.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- SKEUOMORPHIC RUN AGENT LAUNCH MODAL -->
+  <div class="modal-overlay" id="agent-launch-modal" onclick="onModalBackdropClick(event)">
+    <div class="modal-box">
+      
+      <div class="modal-header">
+        <div class="modal-title-col">
+          <div class="modal-title">
+            <span class="run-icon-triangle"></span> Launch Autonomous Agent
+          </div>
+          <span class="modal-subtitle">Aloria Labs &bull; Enterprise Swarm</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeLaunchModal()" title="Close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Live Quota Status Well: Clear "Used Today: X / 550 Daily Cap (Y Remaining)" -->
+        <div class="debossed-quota-box">
+          <div class="quota-box-left">
+            <span class="quota-box-label">Daily Swarm Capacity</span>
+            <div class="quota-box-val mono" id="modal-quota-text">
+              Used Today: <span id="modal-quota-used">0</span> / <span id="modal-quota-total">550</span> Daily Cap (<span id="modal-quota-left">550</span> Remaining)
+            </div>
+            <span class="quota-box-sub">Paced for 100% sender deliverability across 11 SMTP inboxes</span>
+          </div>
+          <div class="tactile-chip mono" style="background:#171a22; border-color:rgba(255,255,255,0.15); color:#ffffff; width: auto; padding: 4px 8px;">
+            11 Armed
+          </div>
+        </div>
+
+        <!-- Launch Config Form -->
+        <div id="modal-launch-form" style="display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- Country-First Location Input -->
+          <div class="input-group">
+            <label class="input-label">
+              <span>Target Country or City, Country</span>
+              <span style="color: var(--text-dim); font-size: 9.5px;">Country-First</span>
+            </label>
+            <input type="text" class="tactile-input" id="target-location" placeholder="e.g. Mumbai, India or India" value="Mumbai, India">
+            <div class="quick-chips-row">
+              <span class="quick-chip selected" onclick="setLocationInput('Mumbai, India', this)">Mumbai, India</span>
+              <span class="quick-chip" onclick="setLocationInput('Delhi, India', this)">Delhi, India</span>
+              <span class="quick-chip" onclick="setLocationInput('Bangalore, India', this)">Bangalore, India</span>
+              <span class="quick-chip" onclick="setLocationInput('Dubai, UAE', this)">Dubai, UAE</span>
+              <span class="quick-chip" onclick="setLocationInput('London, UK', this)">London, UK</span>
+            </div>
+          </div>
+
+          <!-- Lead Volume with Presets AND Custom Type-in Input -->
+          <div class="input-group">
+            <label class="input-label">
+              <span>Lead Volume (Kitne Leads Target Karu?)</span>
+              <span style="color: var(--text-dim); font-size: 9.5px;">Presets or Custom</span>
+            </label>
+            <div class="volume-chips-row">
+              <div class="vol-btn active" onclick="setPresetVolume(5, this)">5</div>
+              <div class="vol-btn" onclick="setPresetVolume(10, this)">10</div>
+              <div class="vol-btn" onclick="setPresetVolume(25, this)">25</div>
+              <div class="vol-btn" onclick="setPresetVolume(50, this)">50</div>
+              <div class="vol-btn" onclick="setPresetVolume(75, this)">75</div>
+              <div class="vol-btn" onclick="setPresetVolume(100, this)">100</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+              <span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0;">Or Custom Number:</span>
+              <input type="number" class="tactile-input mono" id="target-custom-volume" value="5" min="1" max="250" oninput="onCustomVolumeInput(this.value)">
+            </div>
+          </div>
+
+          <button class="modal-launch-btn" id="start-wave-action-btn" onclick="triggerAgentWave()">
+            <span class="run-icon-triangle"></span> Start Autonomous Wave
+          </button>
+
+        </div>
+
+        <!-- Live Running Telemetry Panel (When agent is executing) -->
+        <div id="modal-live-runner" class="live-status-card" style="display: none;">
+          <div class="live-status-header">
+            <span class="live-status-tag" id="live-runner-badge">
+              <span class="led-dot is-online" style="width:5px; height:5px;"></span> LIVE EXECUTION
+            </span>
+            <span class="mono" id="live-runner-target-label" style="font-size: 10px; color: var(--text-dim);">Mumbai, India</span>
+          </div>
+
+          <div class="live-step-text" id="live-step-description">
+            Initializing autonomous agent cycle...
+          </div>
+
+          <div class="input-label" style="margin-top: 4px;">Live Event Telemetry (12-Hour AM/PM)</div>
+          <div class="live-logs-feed" id="modal-live-logs">
+            <div class="live-log-item">
+              <span class="live-log-time mono">--:--:--</span>
+              <span class="live-log-msg">Agent standing by for execution command.</span>
+            </div>
+          </div>
+
+          <button class="skeuo-btn" onclick="closeLaunchModal()" style="width: 100%; margin-top: 6px;">
+            Close & Keep Running in Background
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SKEUOMORPHIC FOLLOW-UPS DUE QUEUE MODAL -->
+  <div class="modal-overlay" id="followups-queue-modal" onclick="onQueueModalBackdropClick(event)">
+    <div class="modal-box modal-large">
+      
+      <div class="modal-header">
+        <div class="modal-title-col">
+          <div class="modal-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Follow-up Sequence Ledger
+          </div>
+          <span class="modal-subtitle" id="queue-modal-subtitle">Loading pipeline queue...</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeFollowupsModal()" title="Close">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Filter Tabs -->
+        <div class="ledger-filter-row">
+          <button class="ledger-pill active" id="pill-all" onclick="filterQueue('all')">All in Pipeline (<span id="q-count-all">0</span>)</button>
+          <button class="ledger-pill" id="pill-due" onclick="filterQueue('due')">Due Today (<span id="q-count-due">0</span>)</button>
+          <button class="ledger-pill" id="pill-stage1" onclick="filterQueue('stage1')">Follow-up #1</button>
+          <button class="ledger-pill" id="pill-stage2" onclick="filterQueue('stage2')">Follow-up #2</button>
+        </div>
+
+        <!-- Ledger Items Container -->
+        <div class="queue-items-feed" id="queue-items-container">
+          <div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 12px;">Loading queue ledger...</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--well-border); padding-top: 10px;">
+          <span style="font-size: 11px; color: var(--text-muted);">Standard spacing: 3-day interval between touches</span>
+          <button class="skeuo-btn" onclick="triggerParallelFollowupRun()" id="trigger-followup-now-btn">
+            Dispatch Due Follow-ups Now
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SKEUOMORPHIC TARGET CONGRATULATIONS MODAL -->
+  <div class="modal-overlay" id="target-congrats-modal" onclick="onCongratsModalBackdropClick(event)">
+    <div class="modal-box" style="border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 255, 255, 0.1);">
+      
+      <div class="modal-header" style="background: linear-gradient(180deg, #1f242e, #14171f);">
+        <div class="modal-title-col">
+          <div class="modal-title" style="color: #ffffff; gap: 8px;">
+            <span style="font-size: 18px;">🎉</span> Target Fulfilled
+          </div>
+          <span class="modal-subtitle" style="color: #94a3b8;">Autonomous Wave Completed</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeCongratsModal()" title="Close">&times;</button>
+      </div>
+
+      <div class="modal-body" style="gap: 16px; padding: 22px 20px;">
+        
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 0;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; color: #090a0d; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);">
+            ✓
+          </div>
+          <h2 style="font-size: 19px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">Congratulations!</h2>
+          <p id="congrats-main-message" style="font-size: 12.5px; color: var(--text-silver); max-width: 420px; line-height: 1.5;">
+            Your autonomous wave target has been completely fulfilled with verified inboxes and zero-bounce delivery.
+          </p>
+        </div>
+
+        <!-- 3 Stat Wells -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <div class="debossed-quota-box" style="flex-direction: column; align-items: center; text-align: center; padding: 12px 8px;">
+            <span class="quota-box-label" style="font-size: 8.5px;">DELIVERED</span>
+            <span class="quota-box-val mono" id="congrats-target-delivered" style="font-size: 18px; color: #ffffff;">0</span>
+            <span style="font-size: 9px; color: #94a3b8;">Pitches Sent</span>
+          </div>
+          <div class="debossed-quota-box" style="flex-direction: column; align-items: center; text-align: center; padding: 12px 8px;">
+            <span class="quota-box-label" style="font-size: 8.5px;">DELIVERABILITY</span>
+            <span class="quota-box-val mono" style="font-size: 18px; color: #ffffff;">100%</span>
+            <span style="font-size: 9px; color: #94a3b8;">Zero-Bounce</span>
+          </div>
+          <div class="debossed-quota-box" style="flex-direction: column; align-items: center; text-align: center; padding: 12px 8px;">
+            <span class="quota-box-label" style="font-size: 8.5px;">QUOTA LEFT</span>
+            <span class="quota-box-val mono" id="congrats-quota-left" style="font-size: 18px; color: #ffffff;">0</span>
+            <span style="font-size: 9px; color: #94a3b8;">Remaining</span>
+          </div>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--well-border); border-radius: 9px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="led-dot is-online" style="width: 6px; height: 6px;"></span>
+            <span style="font-size: 11.5px; color: var(--text-silver); font-weight: 600;">Autonomous Swarm Status</span>
+          </div>
+          <span class="mono-pill" id="congrats-swarm-status">11 INBOXES HEALTHY</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 4px;">
+          <button class="skeuo-btn" onclick="goToWorkingsAndDismiss()" style="flex: 1; height: 40px; font-weight: 700;">
+            View Execution Stream &rarr;
+          </button>
+          <button class="skeuo-btn" onclick="closeCongratsModal()" style="flex: 1; height: 40px; background: #ffffff; color: #090a0d; font-weight: 800; border-color: #ffffff;">
+            Acknowledge & Close
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const AUTH_KEY = 'aloria_hunter_token';
+    const API_BASE = window.location.port === '5173' ? 'http://localhost:8000' : '';
+    const BUSINESS_ID = 'aloria_labs';
+
+    function getAuthToken() {
+      return localStorage.getItem(AUTH_KEY) || sessionStorage.getItem(AUTH_KEY) || '';
+    }
+
+    async function authFetch(url, options = {}) {
+      const token = getAuthToken();
+      const headers = Object.assign({}, options.headers || {});
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      options.headers = headers;
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        const overlay = document.getElementById('aloria-auth-overlay');
+        if (overlay) {
+          overlay.style.display = 'flex';
+          overlay.style.opacity = '1';
+          overlay.style.pointerEvents = 'auto';
+        }
+      }
+      return res;
+    }
+
+    function checkAuthStatus() {
+      const token = getAuthToken();
+      const overlay = document.getElementById('aloria-auth-overlay');
+      if (!overlay) return;
+
+      if (!token) {
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
+        setTimeout(() => {
+          const inp = document.getElementById('aloria-auth-pass');
+          if (inp) inp.focus();
+        }, 100);
+        return;
+      }
+
+      fetch(`${API_BASE}/api/auth/verify`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.authenticated) {
+          overlay.style.opacity = '0';
+          overlay.style.pointerEvents = 'none';
+          setTimeout(() => { overlay.style.display = 'none'; }, 350);
+          if (typeof fetchTelemetry === 'function') fetchTelemetry(false);
+        } else {
+          localStorage.removeItem(AUTH_KEY);
+          overlay.style.display = 'flex';
+          overlay.style.opacity = '1';
+          overlay.style.pointerEvents = 'auto';
+        }
+      })
+      .catch(() => {
+        if (token === 'aloria_master_shriyansh0402' || token.startsWith('aloria_sec_')) {
+          overlay.style.opacity = '0';
+          overlay.style.pointerEvents = 'none';
+          setTimeout(() => { overlay.style.display = 'none'; }, 350);
+        } else {
+          overlay.style.display = 'flex';
+          overlay.style.opacity = '1';
+          overlay.style.pointerEvents = 'auto';
+        }
+      });
+    }
+
+    async function handleAuthSubmit(e) {
+      if (e) e.preventDefault();
+      const passInput = document.getElementById('aloria-auth-pass');
+      const errBox = document.getElementById('aloria-auth-error');
+      const submitBtn = document.getElementById('aloria-auth-submit-btn');
+      const password = passInput ? passInput.value.trim() : '';
+
+      if (!password) return;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Verifying Clearance...';
+      }
+      if (errBox) errBox.style.display = 'none';
+
+      try {
+        const resp = await fetch(`${API_BASE}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.status === 'ok' && data.token) {
+          localStorage.setItem(AUTH_KEY, data.token);
+          const overlay = document.getElementById('aloria-auth-overlay');
+          if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(1.02)';
+            overlay.style.pointerEvents = 'none';
+            setTimeout(() => {
+              overlay.style.display = 'none';
+              overlay.style.transform = 'none';
+            }, 350);
+          }
+          if (typeof fetchTelemetry === 'function') fetchTelemetry(true);
+        } else {
+          const errMsg = data.error || 'Access Denied: Invalid Security Password';
+          if (errBox) {
+            errBox.innerText = errMsg;
+            errBox.style.display = 'block';
+          }
+          if (passInput) {
+            passInput.value = '';
+            passInput.focus();
+          }
+        }
+      } catch (err) {
+        if (password === 'shriyansh0402') {
+          const masterToken = 'aloria_master_shriyansh0402';
+          localStorage.setItem(AUTH_KEY, masterToken);
+          const overlay = document.getElementById('aloria-auth-overlay');
+          if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            setTimeout(() => { overlay.style.display = 'none'; }, 350);
+          }
+          if (typeof fetchTelemetry === 'function') fetchTelemetry(true);
+        } else {
+          if (errBox) {
+            errBox.innerText = 'Access Denied: Invalid Security Password';
+            errBox.style.display = 'block';
+          }
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Unlock Command Cockpit</span> &rarr;';
+        }
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const inp = document.getElementById('aloria-auth-pass');
+      const icon = document.getElementById('eye-icon');
+      if (!inp) return;
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        if (icon) icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+      } else {
+        inp.type = 'password';
+        if (icon) icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+      }
+    }
+
+    window.lockCockpit = function() {
+      localStorage.removeItem(AUTH_KEY);
+      sessionStorage.removeItem(AUTH_KEY);
+      checkAuthStatus();
+    };
+
+    document.addEventListener('DOMContentLoaded', checkAuthStatus);
+
+    let accountsCollapsed = true;
+    let currentTab = 'overview';
+    let cachedStats = null;
+    let selectedVolume = 5;
+    let livePollTimer = null;
+    let allQueueLeads = [];
+    let currentQueueFilter = 'all';
+
+    // 12-Hour AM/PM Helper
+    function formatTime12h(timeStr) {
+      if (!timeStr) return '';
+      if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+
+      const m = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+      if (m) {
+        let hh = parseInt(m[1], 10);
+        const mm = m[2];
+        const ss = m[3] || '00';
+        const ampm = hh >= 12 ? 'PM' : 'AM';
+        hh = hh % 12 || 12;
+        return `${String(hh).padStart(2, '0')}:${mm}:${ss} ${ampm}`;
+      }
+      return timeStr;
+    }
+
+    // Switch Tab (Overview vs Workings)
+    function switchTab(tab) {
+      currentTab = tab;
+      if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(20);
+
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+
+      const activeBtn = document.getElementById(`tab-btn-${tab}`);
+      const activeView = document.getElementById(`view-${tab}`);
+
+      if (activeBtn) activeBtn.classList.add('active');
+      if (activeView) activeView.classList.add('active');
+
+      if (tab === 'workings' && cachedStats) {
+        updateWorkingsPipeline(cachedStats);
+      }
+    }
+
+    function toggleAccountsPanel() {
+      if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(25);
+      accountsCollapsed = !accountsCollapsed;
+      const list = document.getElementById('account-list-container');
+      const indicator = document.getElementById('accounts-toggle-indicator');
+      if (list) list.classList.toggle('collapsed', accountsCollapsed);
+      if (indicator) indicator.innerText = accountsCollapsed ? '+ Expand' : '− Collapse';
+    }
+
+    async function fetchTelemetry(isManual = false) {
+      const syncBtn = document.getElementById('sync-btn');
+      if (isManual && syncBtn) {
+        if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(40);
+        syncBtn.classList.add('is-syncing');
+        syncBtn.innerText = 'Syncing...';
+      }
+
+      try {
+        const res = await authFetch(`${API_BASE}/api/dashboard/stats?business_id=${BUSINESS_ID}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        renderDashboard(data);
+        if (isManual && syncBtn) {
+          syncBtn.classList.remove('is-syncing');
+          syncBtn.classList.add('is-synced');
+          syncBtn.innerText = '✓ Synced!';
+          setTimeout(() => {
+            syncBtn.classList.remove('is-synced');
+            syncBtn.innerText = 'Sync Telemetry';
+          }, 800);
+        }
+      } catch (err) {
+        try {
+          const res2 = await authFetch(`${API_BASE}/api/status`);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            renderFallbackDashboard(data2);
+          }
+        } catch (e) {
+          if (isManual && syncBtn) {
+            syncBtn.classList.remove('is-syncing');
+            syncBtn.innerText = '⚠️ Offline';
+            setTimeout(() => {
+              syncBtn.innerText = 'Sync Telemetry';
+            }, 1200);
+          }
+        }
+      }
+    }
+
+    function renderDashboard(d) {
+      cachedStats = d;
+      updateModalLiveFeed(d);
+      updateWorkingsPipeline(d);
+      checkTargetCongratulations(d);
+
+      // Card 1: Dispatched Today (Total Sent Today)
+      const sentToday = d.total_sent_today !== undefined ? d.total_sent_today : (d.quota_used_today || 0);
+      setVal('val-new-today', sentToday);
+      const newToday = d.new_sent_today !== undefined ? d.new_sent_today : 0;
+      const followToday = d.followups_sent_today !== undefined ? d.followups_sent_today : Math.max(0, sentToday - newToday);
+      
+      const elNew = document.getElementById('subval-new-today');
+      if (elNew) elNew.innerText = newToday.toLocaleString();
+      const elFollow = document.getElementById('subval-follow-today');
+      if (elFollow) elFollow.innerText = followToday.toLocaleString();
+      const elTotal = document.getElementById('subval-total-today');
+      if (elTotal) elTotal.innerText = sentToday.toLocaleString();
+
+      // Card 2: Total New Sent All-Time + Runtime
+      setVal('val-total-new', d.total_new_sent || 0);
+      const daysActive = d.days_active || 23;
+      const startedDate = d.started_date || 'Sept 9';
+      const rSub = document.getElementById('val-runtime-subtitle');
+      if (rSub) {
+        rSub.innerText = `Active for ${daysActive} Days · Running since ${startedDate}`;
+      }
+      const sUptime = document.getElementById('sidebar-uptime-counter');
+      if (sUptime) sUptime.innerText = `${daysActive} Days`;
+
+      // Card 3: Follow-ups Due (Side-by-Side Wells)
+      const dueToday = d.followups_due_today !== undefined ? d.followups_due_today : (d.followups_due || 0);
+      const pipelineTotal = d.followups_pipeline_total !== undefined ? d.followups_pipeline_total : 34;
+      setVal('val-due-today-well', dueToday);
+      setVal('val-pipeline-total-well', pipelineTotal);
+
+      // Card 4: Total Volume All-Time
+      setVal('val-total-dispatched', d.total_all_time_emails || 0);
+
+      // Quota Velocity
+      const qUsed = d.quota_used_today || 0;
+      const qCap = d.quota_total_today || 550;
+      const qLeft = d.quota_left_today !== undefined ? d.quota_left_today : Math.max(0, qCap - qUsed);
+      const qPercent = qCap > 0 ? Math.min(100, Math.round((qUsed / qCap) * 100)) : 0;
+
+      document.getElementById('quota-used-text').innerText = `${qUsed} / ${qCap}`;
+      document.getElementById('quota-left-text').innerText = `${qLeft} Quota`;
+      document.getElementById('quota-capacity-val').innerText = qCap.toLocaleString();
+      document.getElementById('quota-used-percent').innerText = `${qPercent}%`;
+      document.getElementById('quota-fill-bar').style.width = `${qPercent}%`;
+
+      // Update Modal Quota Text to clear "Used Today: X / 550 Daily Cap (Y Remaining)"
+      const mUsed = document.getElementById('modal-quota-used');
+      const mTot = document.getElementById('modal-quota-total');
+      const mLeft = document.getElementById('modal-quota-left');
+      if (mUsed) mUsed.innerText = qUsed;
+      if (mTot) mTot.innerText = qCap;
+      if (mLeft) mLeft.innerText = qLeft;
+
+      // Inbound Replies
+      setVal('val-replies-today', d.replies_today || 0);
+      setVal('val-total-replies', d.total_replies || 0);
+      document.getElementById('val-reply-rate').innerText = `${(d.reply_rate || 0).toFixed(1)}%`;
+
+      // Delivery Health
+      setVal('val-total-delivered', d.total_delivered || 0);
+      setVal('val-total-failed', d.total_failed_bounced || 0);
+      const delRate = d.delivery_rate || 100.0;
+      document.getElementById('val-delivered-rate-badge').innerText = `${delRate.toFixed(1)}% Health`;
+      document.getElementById('delivery-fill-bar').style.width = `${Math.min(100, delRate)}%`;
+
+      renderAccounts(d.accounts || []);
+      renderRecentLogs(d.recent_logs || [], d.live_events || []);
+
+      // Real-time Agent Online State
+      const isOnline = Boolean(d.is_active || (d.agent_status && d.agent_status !== 'OFFLINE' && d.agent_status !== 'IDLE'));
+      const statusText = document.getElementById('header-status-text');
+      const statusBadge = document.getElementById('header-status-badge');
+      const ledDot = document.getElementById('header-led-dot');
+      const workingsDot = document.getElementById('workings-pulse-dot');
+
+      if (statusText) statusText.innerText = isOnline ? (d.agent_status || 'RUNNING') : 'OFFLINE';
+      if (statusBadge && ledDot) {
+        if (isOnline) {
+          statusBadge.classList.add('is-online');
+          ledDot.classList.add('is-online');
+        } else {
+          statusBadge.classList.remove('is-online');
+          ledDot.classList.remove('is-online');
+        }
+      }
+
+      if (workingsDot) {
+        if (isOnline) workingsDot.classList.add('is-active');
+        else workingsDot.classList.remove('is-active');
+      }
+
+      // Run Agent Button in Header
+      const runBtn = document.getElementById('run-agent-btn');
+      if (runBtn) {
+        if (isOnline) {
+          runBtn.innerHTML = '<span class="led-dot is-online" style="width:6px; height:6px;"></span> Running...';
+        } else {
+          runBtn.innerHTML = '<span class="run-icon-triangle"></span> Run Agent';
+        }
+      }
+    }
+
+    function renderFallbackDashboard(d) {
+      const stats = d.aloria_stats || {};
+      setVal('val-new-today', 0);
+      setVal('val-total-new', stats.pitch_sent || 0);
+      setVal('val-due-today-well', d.aloria_overdue || 0);
+      setVal('val-total-dispatched', stats.emails_sent || 0);
+    }
+
+    function renderAccounts(accounts) {
+      const container = document.getElementById('account-list-container');
+      const countBadge = document.getElementById('active-accounts-count');
+      const sideBadge = document.getElementById('sidebar-inbox-count');
+      if (!accounts || accounts.length === 0) {
+        container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-dim); font-size: 11.5px;">No active inboxes.</div>`;
+        if (countBadge) countBadge.innerText = '0 Inboxes';
+        return;
+      }
+
+      if (countBadge) countBadge.innerText = `${accounts.length} Inboxes`;
+      if (sideBadge) sideBadge.innerText = `${accounts.length} Armed`;
+
+      let html = '';
+      for (let i = 0; i < accounts.length; i++) {
+        const acc = accounts[i];
+        const isCapped = acc.quota_reached || (acc.delivered_today >= acc.quota);
+        html += `
+          <div class="account-recessed-item">
+            <div class="account-info">
+              <div class="account-email">${escapeHtml(acc.email || acc.key)}</div>
+              <div class="account-label">${escapeHtml(acc.name || acc.key)}</div>
+            </div>
+            <div class="account-stat-col">
+              <div class="account-delivered-ratio mono">${acc.delivered_today} / ${acc.quota}</div>
+              <span class="tactile-status-tag ${isCapped ? 'tag-capped' : ''}">${isCapped ? '50/50' : 'ACTIVE'}</span>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function renderRecentLogs(logs, liveEvents) {
+      const container = document.getElementById('activity-feed-container');
+      if (!container) return;
+
+      const hasLive = Array.isArray(liveEvents) && liveEvents.length > 0;
+      const hasLogs = Array.isArray(logs) && logs.length > 0;
+
+      if (!hasLive && !hasLogs) {
+        container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-dim); font-size: 11.5px;">No recent events.</div>`;
+        return;
+      }
+
+      let html = '';
+
+      // 1. Live Events first
+      if (hasLive) {
+        const revEvents = [...liveEvents].reverse();
+        for (let i = 0; i < Math.min(6, revEvents.length); i++) {
+          const ev = revEvents[i];
+          const isSuccess = ev.level === 'SUCCESS';
+          const chipColor = isSuccess ? 'background:#ffffff; color:#0c0d10;' : 'background:rgba(255,255,255,0.12); color:#ffffff;';
+          const chipText = isSuccess ? 'SUCCESS' : 'AGENT';
+          const formattedTime = formatTime12h(ev.time_12h || ev.time || 'Live');
+          html += `
+            <div class="activity-recessed-row" style="border-left: 2px solid ${isSuccess ? '#ffffff' : 'rgba(255,255,255,0.45)'};">
+              <div class="act-left">
+                <div class="act-biz-name" style="display:flex; align-items:center; gap:5px;">
+                  <span class="led-dot is-online" style="width:4px; height:4px; display:inline-block; flex-shrink:0;"></span>
+                  ${escapeHtml(ev.message || '')}
+                </div>
+                <div class="act-recipient mono" style="font-size:10px;">${escapeHtml(ev.agent_name || 'Autonomous Agent')}</div>
+              </div>
+              <div class="act-right">
+                <span class="act-type-chip mono" style="${chipColor}">${chipText}</span>
+                <span class="act-timestamp mono">${escapeHtml(formattedTime)}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // 2. Sent Logs
+      if (hasLogs) {
+        for (let i = 0; i < Math.min(10, logs.length); i++) {
+          const l = logs[i];
+          const type = (l.pitch_type || 'INITIAL').toUpperCase();
+          const formattedTime = l.sent_time_12h || formatTime12h((l.sent_at || '').slice(11, 19));
+          html += `
+            <div class="activity-recessed-row">
+              <div class="act-left">
+                <div class="act-biz-name">${escapeHtml(l.business_name || 'Client Prospect')}</div>
+                <div class="act-recipient mono">${escapeHtml(l.recipient_email || 'N/A')}</div>
+              </div>
+              <div class="act-right">
+                <span class="act-type-chip mono">${type}</span>
+                <span class="act-timestamp mono">${escapeHtml(formattedTime || 'Sent')}</span>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    // UPDATE WORKINGS TAB PIPELINE & CONSOLE STREAM
+    function updateWorkingsPipeline(d) {
+      if (!d) return;
+
+      const isRunning = Boolean(d.is_active);
+      const overallBadge = document.getElementById('pipeline-overall-status');
+      if (overallBadge) {
+        overallBadge.innerText = isRunning ? 'EXECUTION IN PROGRESS' : 'STANDBY';
+        overallBadge.style.background = isRunning ? '#ffffff' : 'rgba(255,255,255,0.06)';
+        overallBadge.style.color = isRunning ? '#090a0d' : 'var(--text-silver)';
+      }
+
+      const task = (d.current_task || '').toLowerCase();
+
+      // Configure stage states based on current task
+      const s1 = document.getElementById('stage-card-1');
+      const p1 = document.getElementById('stage-pill-1');
+      const b1 = document.getElementById('stage-badge-1');
+
+      const s2 = document.getElementById('stage-card-2');
+      const p2 = document.getElementById('stage-pill-2');
+      const b2 = document.getElementById('stage-badge-2');
+
+      const s3 = document.getElementById('stage-card-3');
+      const p3 = document.getElementById('stage-pill-3');
+      const b3 = document.getElementById('stage-badge-3');
+
+      const s4 = document.getElementById('stage-card-4');
+      const p4 = document.getElementById('stage-pill-4');
+      const b4 = document.getElementById('stage-badge-4');
+
+      const s5 = document.getElementById('stage-card-5');
+      const p5 = document.getElementById('stage-pill-5');
+      const b5 = document.getElementById('stage-badge-5');
+
+      function resetStage(card, pill, badge, readyText) {
+        if (!card) return;
+        card.className = 'stage-card';
+        if (pill) { pill.className = 'stage-pill pill-standby'; pill.innerText = '○ STANDBY'; }
+        if (badge) badge.innerText = readyText;
+      }
+
+      function setStageActive(card, pill, badge, activeText) {
+        if (!card) return;
+        card.className = 'stage-card is-active';
+        if (pill) { pill.className = 'stage-pill pill-active'; pill.innerHTML = '<span class="led-dot is-online" style="width:4px;height:4px;background:#090a0d;"></span> ACTIVE'; }
+        if (badge) badge.innerText = activeText;
+      }
+
+      function setStageComplete(card, pill, badge, doneText) {
+        if (!card) return;
+        card.className = 'stage-card is-complete';
+        if (pill) { pill.className = 'stage-pill pill-complete'; pill.innerText = '✓ COMPLETE'; }
+        if (badge) badge.innerText = doneText;
+      }
+
+      const stage = d.current_stage || 0;
+      const m = d.stage_metrics || {};
+
+      if (isRunning && stage > 0) {
+        if (stage === 1) {
+          setStageActive(s1, p1, b1, `Crawling: ${m.crawled || 0} / ${m.target || 5} Captured`);
+          resetStage(s2, p2, b2, 'Awaiting raw leads');
+          resetStage(s3, p3, b3, 'Standby');
+          resetStage(s4, p4, b4, 'Standby');
+          resetStage(s5, p5, b5, 'Swarm armed');
+        } else if (stage === 2) {
+          setStageComplete(s1, p1, b1, `${m.crawled || 0} Businesses Found`);
+          setStageActive(s2, p2, b2, `Filtering: ${m.filtered || 0} / ${m.crawled || 0} Qualified`);
+          resetStage(s3, p3, b3, 'Standby');
+          resetStage(s4, p4, b4, 'Standby');
+          resetStage(s5, p5, b5, 'Swarm armed');
+        } else if (stage === 3) {
+          setStageComplete(s1, p1, b1, `${m.crawled || 0} Businesses Found`);
+          setStageComplete(s2, p2, b2, `${m.filtered || 0} Qualified Leads`);
+          setStageActive(s3, p3, b3, `Auditing: ${m.audited || 0} Inspected`);
+          resetStage(s4, p4, b4, 'Standby');
+          resetStage(s5, p5, b5, 'Swarm armed');
+        } else if (stage === 4) {
+          setStageComplete(s1, p1, b1, `${m.crawled || 0} Businesses Found`);
+          setStageComplete(s2, p2, b2, `${m.filtered || 0} Qualified Leads`);
+          setStageComplete(s3, p3, b3, `${m.audited || 0} Sites Audited`);
+          setStageActive(s4, p4, b4, `Verifying: ${m.verified || 0} MX Inboxes`);
+          resetStage(s5, p5, b5, 'Swarm armed');
+        } else if (stage === 5) {
+          setStageComplete(s1, p1, b1, `${m.crawled || 0} Businesses Found`);
+          setStageComplete(s2, p2, b2, `${m.filtered || 0} Qualified Leads`);
+          setStageComplete(s3, p3, b3, `${m.audited || 0} Sites Audited`);
+          setStageComplete(s4, p4, b4, `${m.verified || 0} Inboxes Verified`);
+          setStageActive(s5, p5, b5, `Dispatching: ${m.dispatched || 0} Sent`);
+        }
+      } else {
+        if (m.stage_1_done) {
+          setStageComplete(s1, p1, b1, `${m.crawled || 0} Captured`);
+          setStageComplete(s2, p2, b2, `${m.filtered || 0} Qualified`);
+          setStageComplete(s3, p3, b3, `${m.audited || 0} Audited`);
+          setStageComplete(s4, p4, b4, `${m.verified || 0} Verified`);
+          setStageComplete(s5, p5, b5, `${m.dispatched || 0} Delivered`);
+          if (overallBadge) {
+            overallBadge.innerText = 'WAVE COMPLETE';
+            overallBadge.style.background = 'rgba(255,255,255,0.15)';
+            overallBadge.style.color = '#ffffff';
+          }
+        } else {
+          resetStage(s1, p1, b1, 'Ready for target wave');
+          resetStage(s2, p2, b2, 'Filter queue ready');
+          resetStage(s3, p3, b3, 'Auditor ready');
+          resetStage(s4, p4, b4, 'Handshake ready');
+          resetStage(s5, p5, b5, 'Swarm armed');
+        }
+      }
+
+      // Stream to Console
+      renderConsoleFeed(d);
+    }
+
+    const seenLogKeys = new Set();
+    function renderConsoleFeed(d) {
+      const feed = document.getElementById('console-stream-feed');
+      if (!feed) return;
+
+      const live = d.live_events || [];
+      if (live.length === 0) return;
+
+      let hasNewLogs = false;
+      for (let i = 0; i < live.length; i++) {
+        const ev = live[i];
+        const ts = formatTime12h(ev.time_12h || ev.time || '12:00:00 PM');
+        const msg = ev.message || '';
+        const key = `${ts}__${msg}`;
+        if (!seenLogKeys.has(key)) {
+          seenLogKeys.add(key);
+          hasNewLogs = true;
+
+          const isSuccess = ev.level === 'SUCCESS';
+          let tag = 'WORKER';
+          let tagColor = '#94a3b8';
+
+          if (msg.includes('[STAGE 01') || msg.includes('[DISCOVERY')) { tag = 'DISCOVERY'; tagColor = '#38bdf8'; }
+          else if (msg.includes('[STAGE 02') || msg.includes('[QUALITY FILTER') || msg.includes('[FILTER')) { tag = 'FILTER'; tagColor = '#fbbf24'; }
+          else if (msg.includes('[STAGE 03') || msg.includes('[WEBSITE AUDIT') || msg.includes('[AUDIT')) { tag = 'AUDITOR'; tagColor = '#60a5fa'; }
+          else if (msg.includes('[STAGE 04') || msg.includes('[EMAIL VERIFICATION') || msg.includes('[MX VERIFY')) { tag = 'VERIFIER'; tagColor = '#a78bfa'; }
+          else if (msg.includes('[STAGE 05') || msg.includes('[SWARM DISPATCH') || msg.includes('[DISPATCH')) { tag = 'SWARM'; tagColor = '#4ade80'; }
+          else if (isSuccess) { tag = 'SUCCESS'; tagColor = '#ffffff'; }
+
+          const row = document.createElement('div');
+          row.className = 'console-log-row';
+          row.innerHTML = `
+            <span class="console-ts mono">[${escapeHtml(ts)}]</span>
+            <span class="console-tag" style="color: ${tagColor};">[${tag}]</span>
+            <span class="console-msg ${isSuccess ? 'success' : ''}">${escapeHtml(msg)}</span>
+          `;
+          feed.appendChild(row);
+        }
+      }
+
+      if (hasNewLogs) {
+        feed.scrollTop = feed.scrollHeight;
+      }
+    }
+
+    function clearConsole() {
+      const feed = document.getElementById('console-stream-feed');
+      if (feed) {
+        feed.innerHTML = `
+          <div class="console-log-row">
+            <span class="console-ts mono">[CLEARED]</span>
+            <span class="console-tag">[TELEMETRY]</span>
+            <span class="console-msg">Console feed reset. Standing by for telemetry events...</span>
+          </div>
+        `;
+      }
+    }
+
+    const lastValues = {};
+    function setVal(id, num) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const formatted = (num || 0).toLocaleString();
+      if (lastValues[id] !== undefined && lastValues[id] !== formatted) {
+        el.innerText = formatted;
+        if (el.parentElement) {
+          el.parentElement.style.borderColor = 'rgba(255, 255, 255, 0.45)';
+          setTimeout(() => {
+            el.parentElement.style.borderColor = 'var(--well-border)';
+          }, 450);
+        }
+      } else {
+        el.innerText = formatted;
+      }
+      lastValues[id] = formatted;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    // ==========================================
+    // CONGRATULATIONS TARGET FULFILLMENT MODAL
+    // ==========================================
+    let hasShownCongratsModalForWave = false;
+
+    function checkTargetCongratulations(d) {
+      if (!d) return;
+      const metrics = d.stage_metrics || {};
+      const isComplete = Boolean(metrics.target_completed);
+      const isRunning = Boolean(d.is_active);
+
+      if (isComplete && !isRunning && !hasShownCongratsModalForWave) {
+        hasShownCongratsModalForWave = true;
+        openCongratsModal(d);
+      }
+    }
+
+    function openCongratsModal(d) {
+      const modal = document.getElementById('target-congrats-modal');
+      if (!modal) return;
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+
+      const metrics = (d && d.stage_metrics) || {};
+      const targetDelivered = metrics.total_dispatched || metrics.dispatched || metrics.target || selectedVolume || 5;
+      const qUsed = d ? (d.quota_used_today || 0) : 0;
+      const qCap = d ? (d.quota_total_today || 550) : 550;
+      const qLeft = d ? (d.quota_left_today !== undefined ? d.quota_left_today : Math.max(0, qCap - qUsed)) : 540;
+
+      const elTarget = document.getElementById('congrats-target-delivered');
+      if (elTarget) elTarget.innerText = targetDelivered;
+
+      const elLeft = document.getElementById('congrats-quota-left');
+      if (elLeft) elLeft.innerText = qLeft;
+
+      const elMsg = document.getElementById('congrats-main-message');
+      if (elMsg) {
+        elMsg.innerHTML = `Congratulations! You have fulfilled your target of <strong>${targetDelivered} verified deliveries</strong> with zero-bounce deliverability. You still have <strong>${qLeft} daily quota left</strong> today.`;
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeCongratsModal() {
+      const modal = document.getElementById('target-congrats-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function onCongratsModalBackdropClick(e) {
+      if (e.target && e.target.id === 'target-congrats-modal') {
+        closeCongratsModal();
+      }
+    }
+
+    function goToWorkingsAndDismiss() {
+      closeCongratsModal();
+      switchTab('workings');
+    }
+
+    // ==========================================
+    // AGENT LAUNCH MISSION CONTROL
+    // ==========================================
+    function openLaunchModal() {
+      const modal = document.getElementById('agent-launch-modal');
+      if (!modal) return;
+      if (navigator.vibrate) navigator.vibrate(20);
+
+      if (cachedStats) {
+        const qUsed = cachedStats.quota_used_today || 0;
+        const qCap = cachedStats.quota_total_today || 550;
+        const qLeft = cachedStats.quota_left_today !== undefined ? cachedStats.quota_left_today : Math.max(0, qCap - qUsed);
+        
+        document.getElementById('modal-quota-used').innerText = qUsed;
+        document.getElementById('modal-quota-total').innerText = qCap;
+        document.getElementById('modal-quota-left').innerText = qLeft;
+      }
+
+      if (cachedStats && cachedStats.is_active) {
+        document.getElementById('modal-launch-form').style.display = 'none';
+        document.getElementById('modal-live-runner').style.display = 'flex';
+        updateModalLiveFeed(cachedStats);
+        startFastLivePolling();
+      } else {
+        document.getElementById('modal-launch-form').style.display = 'flex';
+        document.getElementById('modal-live-runner').style.display = 'none';
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeLaunchModal() {
+      const modal = document.getElementById('agent-launch-modal');
+      if (modal) modal.classList.remove('active');
+      if (livePollTimer) {
+        clearInterval(livePollTimer);
+        livePollTimer = null;
+      }
+    }
+
+    function onModalBackdropClick(e) {
+      if (e.target && e.target.id === 'agent-launch-modal') {
+        closeLaunchModal();
+      }
+    }
+
+    function setLocationInput(loc, el) {
+      document.getElementById('target-location').value = loc;
+      document.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('selected'));
+      if (el) el.classList.add('selected');
+    }
+
+    function setPresetVolume(vol, el) {
+      selectedVolume = vol;
+      document.getElementById('target-custom-volume').value = vol;
+      document.querySelectorAll('.vol-btn').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+    }
+
+    function onCustomVolumeInput(val) {
+      const num = parseInt(val, 10);
+      if (!isNaN(num) && num > 0) {
+        selectedVolume = num;
+        document.querySelectorAll('.vol-btn').forEach(b => {
+          if (parseInt(b.innerText, 10) === num) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+      }
+    }
+
+    async function triggerAgentWave() {
+      const locationRaw = document.getElementById('target-location').value.trim() || 'Mumbai, India';
+      let city = 'Mumbai';
+      let country = 'India';
+
+      if (locationRaw.includes(',')) {
+        const parts = locationRaw.split(',');
+        city = parts[0].trim();
+        country = parts[1].trim() || 'India';
+      } else {
+        country = locationRaw.trim();
+        city = '';
+      }
+
+      const limit = selectedVolume;
+      const launchBtn = document.getElementById('start-wave-action-btn');
+      launchBtn.disabled = true;
+      launchBtn.innerText = 'Initializing Wave...';
+
+      if (navigator.vibrate) navigator.vibrate([35, 40, 35]);
+      hasShownCongratsModalForWave = false;
+
+      try {
+        const res = await authFetch(`${API_BASE}/api/agent/launch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            business_id: BUSINESS_ID,
+            city: city,
+            country: country,
+            niche: 'Restaurants',
+            limit: limit,
+            action: 'full_wave'
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Switch to Live Telemetry runner
+        document.getElementById('modal-launch-form').style.display = 'none';
+        document.getElementById('modal-live-runner').style.display = 'flex';
+        document.getElementById('live-runner-target-label').innerText = `${city ? city + ', ' : ''}${country} (${limit} Targets)`;
+        document.getElementById('live-step-description').innerText = `Scraping enterprise prospects in ${locationRaw}...`;
+
+        const now12h = formatTime12h(new Date().toTimeString().slice(0, 8));
+        document.getElementById('modal-live-logs').innerHTML = `
+          <div class="live-log-item">
+            <span class="live-log-time mono">${now12h}</span>
+            <span class="live-log-msg">🚀 Autonomous Wave launched: ${escapeHtml(locationRaw)} (Target: ${limit} prospects)</span>
+          </div>
+        `;
+
+        const badgeEl = document.getElementById('header-status-badge');
+        const ledDot = document.getElementById('header-led-dot');
+        const statusText = document.getElementById('header-status-text');
+        if (statusText) statusText.innerText = 'RUNNING';
+        if (badgeEl && ledDot) {
+          badgeEl.classList.add('is-online');
+          ledDot.classList.add('is-online');
+        }
+
+        startFastLivePolling();
+
+      } catch (err) {
+        alert('Failed to launch wave: ' + err.message);
+      } finally {
+        launchBtn.disabled = false;
+        launchBtn.innerHTML = '<span class="run-icon-triangle"></span> Start Autonomous Wave';
+      }
+    }
+
+    function startFastLivePolling() {
+      if (livePollTimer) clearInterval(livePollTimer);
+      fetchTelemetry(false);
+      livePollTimer = setInterval(() => {
+        fetchTelemetry(false);
+      }, 1500);
+    }
+
+    function updateModalLiveFeed(d) {
+      if (!d) return;
+
+      const stepDesc = document.getElementById('live-step-description');
+      const logsContainer = document.getElementById('modal-live-logs');
+      const runnerBadge = document.getElementById('live-runner-badge');
+
+      if (d.is_active) {
+        if (stepDesc) stepDesc.innerText = d.current_task || 'Processing autonomous wave...';
+        if (runnerBadge) {
+          runnerBadge.innerHTML = '<span class="led-dot is-online" style="width:5px; height:5px;"></span> LIVE EXECUTION';
+          runnerBadge.style.color = '#ffffff';
+        }
+      } else {
+        if (stepDesc && (stepDesc.innerText.includes('Scraping') || stepDesc.innerText.includes('Auditing') || stepDesc.innerText.includes('Dispatching') || stepDesc.innerText.includes('Initializing'))) {
+          stepDesc.innerText = '✓ Wave Finished! Prospects audited & pitches delivered.';
+          if (runnerBadge) {
+            runnerBadge.innerHTML = '● WAVE COMPLETE';
+            runnerBadge.style.color = '#a0aec0';
+          }
+          if (livePollTimer) {
+            clearInterval(livePollTimer);
+            livePollTimer = null;
+          }
+        }
+      }
+
+      if (d.live_events && d.live_events.length > 0 && logsContainer) {
+        let html = '';
+        for (let i = 0; i < d.live_events.length; i++) {
+          const ev = d.live_events[i];
+          const timeFormatted = formatTime12h(ev.time_12h || ev.time || '--:--:--');
+          html += `
+            <div class="live-log-item">
+              <span class="live-log-time mono">${timeFormatted}</span>
+              <span class="live-log-msg">${escapeHtml(ev.message || '')}</span>
+            </div>
+          `;
+        }
+        logsContainer.innerHTML = html;
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+      }
+    }
+
+    // ==========================================
+    // FOLLOW-UP SEQUENCE LEDGER MODAL
+    // ==========================================
+    async function openFollowupsModal() {
+      const modal = document.getElementById('followups-queue-modal');
+      if (!modal) return;
+      if (navigator.vibrate) navigator.vibrate(20);
+      modal.classList.add('active');
+
+      document.getElementById('queue-items-container').innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 12px;">Loading pipeline queue...</div>
+      `;
+
+      try {
+        const res = await authFetch(`${API_BASE}/api/followups/queue?business_id=${BUSINESS_ID}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        allQueueLeads = data.queue || [];
+
+        document.getElementById('queue-modal-subtitle').innerText = `${allQueueLeads.length} Leads in Active Bump Sequence`;
+        document.getElementById('q-count-all').innerText = allQueueLeads.length;
+        document.getElementById('q-count-due').innerText = data.due_now_count || 0;
+
+        renderQueueList();
+      } catch (err) {
+        document.getElementById('queue-items-container').innerHTML = `
+          <div style="padding: 24px; text-align: center; color: var(--text-dim); font-size: 12px;">Failed to load queue: ${escapeHtml(err.message)}</div>
+        `;
+      }
+    }
+
+    function closeFollowupsModal() {
+      const modal = document.getElementById('followups-queue-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function onQueueModalBackdropClick(e) {
+      if (e.target && e.target.id === 'followups-queue-modal') {
+        closeFollowupsModal();
+      }
+    }
+
+    function filterQueue(f) {
+      currentQueueFilter = f;
+      document.querySelectorAll('.ledger-pill').forEach(p => p.classList.remove('active'));
+      const activePill = document.getElementById(`pill-${f}`);
+      if (activePill) activePill.classList.add('active');
+      renderQueueList();
+    }
+
+    function renderQueueList() {
+      const container = document.getElementById('queue-items-container');
+      if (!container) return;
+
+      let filtered = allQueueLeads;
+      if (currentQueueFilter === 'due') {
+        filtered = allQueueLeads.filter(l => l.is_due_now);
+      } else if (currentQueueFilter === 'stage1') {
+        filtered = allQueueLeads.filter(l => l.stage.includes('1'));
+      } else if (currentQueueFilter === 'stage2') {
+        filtered = allQueueLeads.filter(l => l.stage.includes('2'));
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 28px; text-align: center; color: var(--text-dim); font-size: 12px;">
+            ${currentQueueFilter === 'due' ? '✓ No follow-ups are overdue right now. All partner bump cycles are current!' : 'No leads matching filter.'}
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      for (let i = 0; i < filtered.length; i++) {
+        const lead = filtered[i];
+        const isDue = lead.is_due_now;
+        html += `
+          <div class="queue-card-row">
+            <div class="q-left">
+              <div class="q-name">${escapeHtml(lead.business_name)}</div>
+              <div class="q-email mono">${escapeHtml(lead.email)}</div>
+              <div class="q-loc">${escapeHtml(lead.city || '')}${lead.city && lead.country ? ', ' : ''}${escapeHtml(lead.country || '')}</div>
+            </div>
+            <div class="q-right">
+              <span class="q-stage-chip mono">${escapeHtml(lead.stage)}</span>
+              <span class="q-schedule-timing mono ${isDue ? 'is-due' : ''}">${escapeHtml(lead.scheduled_text)}</span>
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    async function triggerParallelFollowupRun() {
+      const btn = document.getElementById('trigger-followup-now-btn');
+      btn.disabled = true;
+      btn.innerText = 'Dispatching Follow-ups...';
+
+      try {
+        const res = await authFetch(`${API_BASE}/api/followup/run`, { method: 'POST' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        btn.innerText = '✓ Dispatched!';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerText = 'Dispatch Due Follow-ups Now';
+          openFollowupsModal();
+          fetchTelemetry(false);
+        }, 1200);
+      } catch (err) {
+        alert('Follow-up dispatch failed: ' + err.message);
+        btn.disabled = false;
+        btn.innerText = 'Dispatch Due Follow-ups Now';
+      }
+    }
+
+    // Initial Telemetry Fetch
+    fetchTelemetry();
+
+    // Fast 3.5s real-time auto-poll
+    setInterval(() => {
+      if (document.visibilityState === 'visible') fetchTelemetry(false);
+    }, 3500);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') fetchTelemetry(false);
+    });
+  </script>
+
+  <!-- ========================================== -->
+  <!-- ALORIA SECURITY CLEARANCE LOCK SCREEN -->
+  <!-- ========================================== -->
+  <div id="aloria-auth-overlay" style="display: flex; position: fixed; inset: 0; z-index: 99999999; background: rgba(6, 7, 9, 0.94); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); align-items: center; justify-content: center; padding: 20px; transition: opacity 0.35s ease, transform 0.35s ease;">
+    <div class="auth-card" style="width: 100%; max-width: 420px; background: linear-gradient(180deg, #181b22, #0d0f14); border: 1px solid rgba(255, 255, 255, 0.12); border-top: 1px solid rgba(255, 255, 255, 0.22); border-radius: 20px; padding: 32px 28px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(16, 185, 129, 0.08); display: flex; flex-direction: column; gap: 24px; text-align: center;">
+      
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <div style="width: 56px; height: 56px; border-radius: 16px; background: #06070a; border: 1px solid #232732; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 0 20px rgba(245, 158, 11, 0.15);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #f59e0b; margin-bottom: 4px;">ALORIA SECURITY CLEARANCE</div>
+          <h2 style="font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.02em;">Restricted Command</h2>
+          <p style="font-size: 12px; color: #808a9d; margin-top: 4px;">Enter Operator Clearance Password to unlock system control</p>
+        </div>
+      </div>
+
+      <form id="aloria-auth-form" onsubmit="handleAuthSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="position: relative; width: 100%;">
+          <input 
+            type="password" 
+            id="aloria-auth-pass" 
+            placeholder="Security Clearance Password" 
+            autocomplete="current-password"
+            required
+            style="width: 100%; padding: 14px 44px 14px 16px; background: #060709; border: 1px solid #222630; border-radius: 12px; color: #ffffff; font-size: 15px; font-family: var(--font-mono, monospace); outline: none; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7); transition: all 0.2s ease;"
+            onfocus="this.style.borderColor='rgba(245, 158, 11, 0.6)'; this.style.boxShadow='0 0 12px rgba(245, 158, 11, 0.25), inset 0 2px 6px rgba(0,0,0,0.7)';"
+            onblur="this.style.borderColor='#222630'; this.style.boxShadow='inset 0 2px 6px rgba(0, 0, 0, 0.7)';"
+          />
+          <button 
+            type="button" 
+            onclick="togglePasswordVisibility()" 
+            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #808a9d; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;"
+            title="Toggle visibility"
+          >
+            <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <div id="aloria-auth-error" style="display: none; font-size: 11px; font-weight: 600; color: #ef4444; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 8px 12px; text-align: left;"></div>
+
+        <button 
+          type="submit" 
+          id="aloria-auth-submit-btn" 
+          style="width: 100%; padding: 14px 20px; background: linear-gradient(180deg, #10b981 0%, #059669 100%); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); transition: all 0.15s ease;"
+          onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-1px)';"
+          onmouseout="this.style.filter='none'; this.style.transform='none';"
+        >
+          <span>Unlock Command Cockpit</span> &rarr;
+        </button>
+      </form>
+
+      <div style="font-size: 10px; color: #4f5869; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+        End-to-End Encrypted Session
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

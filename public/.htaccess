@@ -7,6 +7,10 @@
   RewriteRule "(^|/)\.(?!well-known)" - [F]
   RewriteRule \.(env|git|json|yml|yaml|py|sql|sh|bat|log|md|bak|config)$ - [F,NC]
 
+  # Redirect /hunter subpaths to root cockpits
+  RewriteRule ^hunter/gethotelstays(\.html)?$ /gethotelstays.html [L,R=301]
+  RewriteRule ^hunter/alorialabs(\.html)?$ /alorialabs.html [L,R=301]
+
   # Ensure /hunter redirects cleanly to hunter/
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^hunter$ hunter/ [L,R=301]

@@ -27,22 +27,15 @@ jobs:
       - name: 🔨 Build Production Bundle
         run: npm run build
 
-      - name: 🚀 Sync to cPanel via lftp
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🚀 Sync to cPanel via Resilient FTP Engine
         env:
-          FTP_HOST: ${{ secrets.FTP_SERVER }}
-          FTP_USER: ${{ secrets.FTP_USERNAME }}
-          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
-          FTP_DIR: ${{ secrets.FTP_DIR || './' }}
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
-          lftp -u "$FTP_USER","$FTP_PASS" "$FTP_HOST" -e "
-            set ftp:ssl-allow yes;
-            set ssl:verify-certificate no;
-            set ftp:passive-mode yes;
-            set ftp:fix-pasv-address yes;
-            set ftp:ignore-pasv-address yes;
-            set net:timeout 30;
-            set net:max-retries 3;
-            mirror -R ./dist/ \"$FTP_DIR\" --verbose --parallel=3;
-            quit
-          "
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_DIR: ${{ secrets.FTP_DIR }}
+        run: python scripts/deploy_cpanel.py
