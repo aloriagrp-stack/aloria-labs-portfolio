@@ -11,11 +11,15 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-import colorama
-from colorama import Fore, Back, Style
-
-# Initialize colorama with Windows virtual terminal processing enabled
-colorama.init(autoreset=True)
+try:
+    import colorama
+    from colorama import Fore, Back, Style
+    colorama.init(autoreset=True)
+except ImportError:
+    class DummyColor:
+        def __getattr__(self, name):
+            return ""
+    Fore = Back = Style = DummyColor()
 
 # Color shortcuts
 C_CYAN = Fore.CYAN + Style.BRIGHT
