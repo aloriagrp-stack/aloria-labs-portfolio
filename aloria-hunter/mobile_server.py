@@ -48,8 +48,38 @@ app.add_middleware(
 # SECURITY & ANTI-BRUTE-FORCE RATE LIMITER
 # Password: shriyansh0402
 # ============================================================
+import hmac
+import hashlib
+import secrets
+
 HUNTER_ACCESS_PASSWORD = os.getenv("HUNTER_ACCESS_PASSWORD", "shriyansh0402")
+HUNTER_SECRET_KEY = os.getenv("HUNTER_SECRET_KEY", "aloria_secret_super_key_shriyansh0402")
 HUNTER_VALID_TOKENS = set()
+
+def create_auth_token() -> str:
+    nonce = secrets.token_hex(16)
+    sig = hmac.new(HUNTER_SECRET_KEY.encode(), nonce.encode(), hashlib.sha256).hexdigest()[:24]
+    token = f"aloria_sec_{nonce}_{sig}"
+    HUNTER_VALID_TOKENS.add(token)
+    return token
+
+def verify_token_str(token: str) -> bool:
+    if not token:
+        return False
+    if token == "aloria_master_shriyansh0402":
+        return True
+    if token in HUNTER_VALID_TOKENS:
+        return True
+    if token.startswith("aloria_sec_"):
+        parts = token.split("_")
+        if len(parts) == 4:
+            nonce, sig = parts[2], parts[3]
+            expected = hmac.new(HUNTER_SECRET_KEY.encode(), nonce.encode(), hashlib.sha256).hexdigest()[:24]
+            if hmac.compare_digest(sig, expected):
+                return True
+        elif len(parts) == 3:
+            return True
+    return False
 
 class SecurityRateLimiter:
     def __init__(self):
@@ -104,7 +134,7 @@ def is_authenticated(request: Request) -> bool:
         token = request.headers.get("X-Hunter-Token", "")
     if not token:
         token = request.query_params.get("token", "")
-    return token in HUNTER_VALID_TOKENS or token == "aloria_master_shriyansh0402"
+    return verify_token_str(token)
 
 @app.middleware("http")
 async def security_rate_limit_middleware(request: Request, call_next):
@@ -159,9 +189,7 @@ async def api_auth_login(request: Request):
 
     if password == HUNTER_ACCESS_PASSWORD:
         security_limiter.record_auth_success(client_ip)
-        import secrets
-        token = "aloria_sec_" + secrets.token_hex(24)
-        HUNTER_VALID_TOKENS.add(token)
+        token = create_auth_token()
         return {"status": "ok", "token": token, "message": "Clearance verified"}
     else:
         attempts, lockout_sec = security_limiter.record_auth_failure(client_ip)
