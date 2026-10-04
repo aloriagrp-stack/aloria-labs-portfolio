@@ -53,6 +53,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(["status" => "error", "message" => "aloria_python_backend.zip not found"]);
         exit;
     }
+    if ($action === 'pull_file' && !empty($_GET['file'])) {
+        $file = basename($_GET['file']);
+        $raw_url = "https://raw.githubusercontent.com/aloriagrp-stack/aloria-labs-portfolio/main/" . $file;
+        $ctx = stream_context_create([
+            "http" => ["header" => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/128.0.0.0 Safari/537.36\r\n"]
+        ]);
+        $content = file_get_contents($raw_url, false, $ctx);
+        if ($content !== false && strlen($content) > 500) {
+            file_put_contents(__DIR__ . '/' . $file, $content);
+            echo json_encode(["status" => "success", "file" => $file, "bytes" => strlen($content)]);
+            exit;
+        }
+        echo json_encode(["status" => "error", "message" => "Failed to fetch file from GitHub"]);
+        exit;
+    }
     echo json_encode(["status" => "ready", "engine" => "Aloria Labs Deployment Receiver v1.0", "timestamp" => time()]);
     exit;
 }
