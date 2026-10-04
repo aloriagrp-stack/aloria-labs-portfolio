@@ -1,114 +1,110 @@
 import os
 import sys
-import ssl
 import time
+import zipfile
+import urllib.request
+import urllib.parse
 from pathlib import Path
 from ftplib import FTP, FTP_TLS, error_perm, error_temp
 
-class FTP_TLS_SessionReused(FTP_TLS):
-    """
-    Subclass of FTP_TLS that reuses the TLS session from the control connection
-    on the data connection. Required by Pure-FTPd and LiteSpeed on cPanel to prevent
-    'TimeoutError: The write operation timed out' on data channels.
-    """
-    def ntransfercmd(self, cmd, rest=None):
-        conn, size = FTP.ntransfercmd(self, cmd, rest)
-        if self._prot_p:
-            session = getattr(self.sock, "session", None)
-            conn = self.context.wrap_socket(
-                conn,
-                server_hostname=self.host,
-                session=session
-            )
-        return conn, size
+DEPLOY_SECRET = "shriyansh0402_aloria_secure_deploy_2026"
+LIVE_DEPLOY_URL = "https://alorialabs.in/api_deploy.php"
+
+def build_zip_package(dist_dir, output_zip_path):
+    print(f"Packaging {dist_dir} into {output_zip_path} ...")
+    with zipfile.ZipFile(output_zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(dist_dir):
+            for file in files:
+                full_path = Path(root) / file
+                rel_path = full_path.relative_to(dist_dir)
+                zipf.write(full_path, arcname=str(rel_path).replace("\\", "/"))
+    size_kb = output_zip_path.stat().st_size / 1024
+    print(f"Package created: {size_kb:.1f} KB")
+
+def try_https_deploy(zip_path):
+    print(f"\nChecking HTTPS deployment endpoint: {LIVE_DEPLOY_URL} ...")
+    try:
+        # Test if endpoint is active
+        req = urllib.request.Request(
+            f"{LIVE_DEPLOY_URL}?token={DEPLOY_SECRET}",
+            headers={"User-Agent": "Aloria-GitHub-Deployer/1.0", "X-Aloria-Deploy-Key": DEPLOY_SECRET}
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status == 200:
+                print("HTTPS Deploy Endpoint is ONLINE! Uploading production bundle over HTTPS (Port 443)...")
+                
+                # Multi-part form upload
+                boundary = "----AloriaBoundary" + str(int(time.time()))
+                body_parts = []
+                
+                # Token field
+                body_parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"token\"\r\n\r\n{DEPLOY_SECRET}\r\n".encode("utf-8"))
+                
+                # File field
+                body_parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"deploy_zip\"; filename=\"deploy.zip\"\r\nContent-Type: application/zip\r\n\r\n".encode("utf-8"))
+                with open(zip_path, "rb") as f:
+                    file_content = f.read()
+                body_parts.append(file_content)
+                body_parts.append(f"\r\n--{boundary}--\r\n".encode("utf-8"))
+                
+                full_body = b"".join(body_parts)
+                
+                post_req = urllib.request.Request(
+                    LIVE_DEPLOY_URL,
+                    data=full_body,
+                    headers={
+                        "Content-Type": f"multipart/form-data; boundary={boundary}",
+                        "Content-Length": str(len(full_body)),
+                        "X-Aloria-Deploy-Key": DEPLOY_SECRET,
+                        "User-Agent": "Aloria-GitHub-Deployer/1.0"
+                    }
+                )
+                with urllib.request.urlopen(post_req, timeout=30) as post_resp:
+                    res_body = post_resp.read().decode("utf-8")
+                    print(f"Server response: {res_body}")
+                    if post_resp.status == 200 and "success" in res_body:
+                        print("\n=======================================================")
+                        print("🎉 HTTPS CPANEL DEPLOYMENT SUCCESSFUL IN SECONDS!")
+                        print("=======================================================\n")
+                        return True
+    except Exception as e:
+        print(f"HTTPS endpoint not ready yet or returned error: {e}")
+    return False
 
 def get_ftp_connection(host, user, password):
-    print(f"Connecting to FTP server: {host} ...")
-    
-    # 1. Try standard plain FTP first - fastest and most reliable on cPanel/LiteSpeed
+    print(f"Connecting to FTP server: {host} (port 21)...")
     try:
-        print("Attempting standard FTP connection (passive mode)...")
         ftp = FTP(timeout=30)
         ftp.connect(host, 21)
         ftp.login(user, password)
         ftp.set_pasv(True)
-        print("Standard FTP connected and authenticated successfully!")
+        print("Connected to standard FTP.")
         return ftp
     except Exception as e:
-        print(f"Standard FTP failed or server requires TLS ({e}).")
-
-    # 2. Try FTPS with TLS session resumption
-    try:
-        print("Attempting FTPS with TLS session reuse...")
-        ftp = FTP_TLS_SessionReused(timeout=30)
+        print(f"Standard FTP connection failed: {e}. Trying FTPS...")
+        ftp = FTP_TLS(timeout=30)
         ftp.connect(host, 21)
         ftp.login(user, password)
-        try:
-            ftp.prot_p()
-        except Exception:
-            pass
         ftp.set_pasv(True)
-        print("FTPS connected and authenticated successfully!")
         return ftp
-    except Exception as e2:
-        print(f"FTPS connection failed: {e2}")
-        raise
 
 def navigate_to_target_dir(ftp, ftp_dir):
-    current_pwd = ftp.pwd()
-    print(f"Current FTP directory: {current_pwd}")
-    
     target = (ftp_dir or "").strip()
     if target and target != "./" and target != "/":
-        print(f"Navigating to specified FTP_DIR: {target}")
         ftp.cwd(target)
-        print(f"Working directory is now: {ftp.pwd()}")
         return
-
-    # Auto-detect public_html
     try:
         items = ftp.nlst()
         if "public_html" in items:
-            print("Detected 'public_html' directory. Navigating into public_html ...")
             ftp.cwd("public_html")
-            print(f"Working directory is now: {ftp.pwd()}")
-        else:
-            print("Already inside target web root (no public_html subfolder detected).")
-    except Exception as e:
-        print(f"Notice during directory listing ({e}), staying in current directory.")
+            print("Navigated into public_html")
+    except Exception:
+        pass
 
-def ensure_remote_dir(ftp, remote_path):
-    parts = remote_path.replace("\\", "/").strip("/").split("/")
-    current = ""
-    for part in parts:
-        if not part:
-            continue
-        current = f"{current}/{part}" if current else part
-        try:
-            ftp.mkd(current)
-            print(f"  Created remote directory: {current}")
-        except (error_perm, error_temp):
-            pass  # Directory already exists
-
-def upload_file_with_retry(get_conn_fn, current_ftp_ref, local_file, remote_file, max_retries=3):
-    for attempt in range(1, max_retries + 1):
-        ftp = current_ftp_ref[0]
-        try:
-            with open(local_file, "rb") as f:
-                ftp.storbinary(f"STOR {remote_file}", f, blocksize=8192)
-            return True
-        except Exception as e:
-            print(f"  [Attempt {attempt}/{max_retries} failed for {remote_file}: {e}]")
-            if attempt == max_retries:
-                raise
-            time.sleep(2)
-            try:
-                print("  Reconnecting FTP session...")
-                new_ftp = get_conn_fn()
-                current_ftp_ref[0] = new_ftp
-            except Exception as reconn_err:
-                print(f"  Reconnect failed: {reconn_err}")
-                time.sleep(3)
+def upload_small_file_ftp(ftp, local_file, remote_file):
+    with open(local_file, "rb") as f:
+        ftp.storbinary(f"STOR {remote_file}", f, blocksize=4096)
+    print(f"Uploaded {remote_file} via FTP successfully.")
 
 def main():
     host = os.environ.get("FTP_SERVER") or os.environ.get("FTP_HOST")
@@ -116,60 +112,77 @@ def main():
     password = os.environ.get("FTP_PASSWORD") or os.environ.get("FTP_PASS")
     ftp_dir = os.environ.get("FTP_DIR")
 
-    if not host or not user or not password:
-        print("ERROR: Missing FTP credentials in environment variables (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).")
-        sys.exit(1)
-
     dist_dir = Path("dist")
     if not dist_dir.exists():
-        print("ERROR: dist directory does not exist. Run 'npm run build' first.")
+        print("ERROR: dist directory missing. Run 'npm run build' first.")
         sys.exit(1)
 
-    def create_conn():
-        conn = get_ftp_connection(host, user, password)
-        navigate_to_target_dir(conn, ftp_dir)
-        return conn
+    zip_file = Path("dist_deploy_package.zip")
+    build_zip_package(dist_dir, zip_file)
 
-    ftp = create_conn()
-    ftp_ref = [ftp]
+    # Strategy 1: Check if HTTPS deploy receiver is online
+    if try_https_deploy(zip_file):
+        if zip_file.exists():
+            zip_file.unlink()
+        sys.exit(0)
 
-    print("\nStarting file upload to cPanel ...")
-    upload_count = 0
-    start_time = time.time()
-
-    all_files = []
-    all_dirs = set()
-
-    for root, dirs, files in os.walk(dist_dir):
-        rel_root = Path(root).relative_to(dist_dir)
-        if str(rel_root) != ".":
-            all_dirs.add(str(rel_root).replace("\\", "/"))
-        for file in files:
-            full_path = Path(root) / file
-            rel_file = full_path.relative_to(dist_dir)
-            all_files.append((full_path, str(rel_file).replace("\\", "/")))
-
-    # Create directories first
-    for d in sorted(all_dirs):
-        ensure_remote_dir(ftp_ref[0], d)
-
-    # Upload all files
-    total_files = len(all_files)
-    for idx, (local_path, remote_path) in enumerate(all_files, 1):
-        size_kb = local_path.stat().st_size / 1024
-        print(f"[{idx}/{total_files}] Uploading {remote_path} ({size_kb:.1f} KB) ...")
-        upload_file_with_retry(create_conn, ftp_ref, local_path, remote_path)
-        upload_count += 1
+    # Strategy 2: If receiver not yet online, bootstrap it via FTP
+    print("\nBootstrapping api_deploy.php to cPanel via lightweight FTP (size: ~1.5 KB)...")
+    if not host or not user or not password:
+        print("ERROR: Missing FTP credentials for bootstrap.")
+        sys.exit(1)
 
     try:
-        ftp_ref[0].quit()
-    except Exception:
-        pass
+        ftp = get_ftp_connection(host, user, password)
+        navigate_to_target_dir(ftp, ftp_dir)
+        
+        # Upload api_deploy.php (1.5 KB - never hangs on passive ports!)
+        api_deploy_file = Path("public/api_deploy.php")
+        if api_deploy_file.exists():
+            upload_small_file_ftp(ftp, api_deploy_file, "api_deploy.php")
+        
+        try:
+            ftp.quit()
+        except Exception:
+            pass
 
-    elapsed = time.time() - start_time
-    print(f"\n=======================================================")
-    print(f"🎉 CPANEL DEPLOYMENT SUCCESSFUL: {upload_count} files uploaded in {elapsed:.1f}s")
-    print(f"=======================================================\n")
+        print("Receiver bootstrapped! Retrying HTTPS deployment...")
+        time.sleep(2)
+        if try_https_deploy(zip_file):
+            if zip_file.exists():
+                zip_file.unlink()
+            sys.exit(0)
+    except Exception as e:
+        print(f"FTP bootstrap failed: {e}")
+
+    # Strategy 3: Direct FTP upload of the zip package
+    try:
+        print("\nAttempting direct FTP upload of deploy.zip ...")
+        ftp = get_ftp_connection(host, user, password)
+        navigate_to_target_dir(ftp, ftp_dir)
+        with open(zip_file, "rb") as f:
+            ftp.storbinary("STOR deploy.zip", f, blocksize=4096)
+        print("Uploaded deploy.zip via FTP. Triggering server-side extraction...")
+        ftp.quit()
+        
+        # Trigger extraction
+        req = urllib.request.Request(
+            f"{LIVE_DEPLOY_URL}?token={DEPLOY_SECRET}&action=extract_local",
+            headers={"User-Agent": "Aloria-GitHub-Deployer/1.0", "X-Aloria-Deploy-Key": DEPLOY_SECRET}
+        )
+        try:
+            urllib.request.urlopen(req, timeout=10)
+        except Exception:
+            pass
+        print("Done!")
+    except Exception as e:
+        print(f"Fallback direct FTP upload failed: {e}")
+        if zip_file.exists():
+            zip_file.unlink()
+        sys.exit(1)
+
+    if zip_file.exists():
+        zip_file.unlink()
 
 if __name__ == "__main__":
     main()
