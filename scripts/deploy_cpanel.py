@@ -1,33 +1,58 @@
 import os
 import sys
+import ssl
 import time
 from pathlib import Path
 from ftplib import FTP, FTP_TLS, error_perm, error_temp
 
+class FTP_TLS_SessionReused(FTP_TLS):
+    """
+    Subclass of FTP_TLS that reuses the TLS session from the control connection
+    on the data connection. Required by Pure-FTPd and LiteSpeed on cPanel to prevent
+    'TimeoutError: The write operation timed out' on data channels.
+    """
+    def ntransfercmd(self, cmd, rest=None):
+        conn, size = FTP.ntransfercmd(self, cmd, rest)
+        if self._prot_p:
+            session = getattr(self.sock, "session", None)
+            conn = self.context.wrap_socket(
+                conn,
+                server_hostname=self.host,
+                session=session
+            )
+        return conn, size
+
 def get_ftp_connection(host, user, password):
     print(f"Connecting to FTP server: {host} ...")
-    # Try FTPS first, fallback to FTP
+    
+    # 1. Try standard plain FTP first - fastest and most reliable on cPanel/LiteSpeed
     try:
-        print("Attempting secure FTPS connection...")
-        ftp = FTP_TLS(timeout=60)
+        print("Attempting standard FTP connection (passive mode)...")
+        ftp = FTP(timeout=30)
         ftp.connect(host, 21)
         ftp.login(user, password)
-        ftp.prot_p()  # Switch data connection to secure TLS
+        ftp.set_pasv(True)
+        print("Standard FTP connected and authenticated successfully!")
+        return ftp
+    except Exception as e:
+        print(f"Standard FTP failed or server requires TLS ({e}).")
+
+    # 2. Try FTPS with TLS session resumption
+    try:
+        print("Attempting FTPS with TLS session reuse...")
+        ftp = FTP_TLS_SessionReused(timeout=30)
+        ftp.connect(host, 21)
+        ftp.login(user, password)
+        try:
+            ftp.prot_p()
+        except Exception:
+            pass
         ftp.set_pasv(True)
         print("FTPS connected and authenticated successfully!")
         return ftp
-    except Exception as e:
-        print(f"FTPS failed or not supported ({e}). Falling back to standard FTP...")
-        try:
-            ftp = FTP(timeout=60)
-            ftp.connect(host, 21)
-            ftp.login(user, password)
-            ftp.set_pasv(True)
-            print("Standard FTP connected and authenticated successfully!")
-            return ftp
-        except Exception as e2:
-            print(f"Standard FTP connection failed: {e2}")
-            raise
+    except Exception as e2:
+        print(f"FTPS connection failed: {e2}")
+        raise
 
 def navigate_to_target_dir(ftp, ftp_dir):
     current_pwd = ftp.pwd()
@@ -66,11 +91,11 @@ def ensure_remote_dir(ftp, remote_path):
             pass  # Directory already exists
 
 def upload_file_with_retry(get_conn_fn, current_ftp_ref, local_file, remote_file, max_retries=3):
-    ftp = current_ftp_ref[0]
     for attempt in range(1, max_retries + 1):
+        ftp = current_ftp_ref[0]
         try:
             with open(local_file, "rb") as f:
-                ftp.storbinary(f"STOR {remote_file}", f, blocksize=32768)
+                ftp.storbinary(f"STOR {remote_file}", f, blocksize=8192)
             return True
         except Exception as e:
             print(f"  [Attempt {attempt}/{max_retries} failed for {remote_file}: {e}]")
@@ -78,8 +103,9 @@ def upload_file_with_retry(get_conn_fn, current_ftp_ref, local_file, remote_file
                 raise
             time.sleep(2)
             try:
-                ftp = get_conn_fn()
-                current_ftp_ref[0] = ftp
+                print("  Reconnecting FTP session...")
+                new_ftp = get_conn_fn()
+                current_ftp_ref[0] = new_ftp
             except Exception as reconn_err:
                 print(f"  Reconnect failed: {reconn_err}")
                 time.sleep(3)
@@ -111,7 +137,6 @@ def main():
     upload_count = 0
     start_time = time.time()
 
-    # Collect all directories and files to deploy
     all_files = []
     all_dirs = set()
 
