@@ -1,0 +1,122 @@
+{
+  "active_profile": "gethotelstays",
+  "profiles": {
+    "gmail": {
+      "name": "Aloria Gmail (alorialabs@gmail.com)",
+      "email": "alorialabs@gmail.com",
+      "password": "osgd adhv gjlc qcby",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "info@alorialabs.in"
+    },
+    "info": {
+      "name": "Official Corporate (info@alorialabs.in)",
+      "email": "info@alorialabs.in",
+      "password": "",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "info@alorialabs.in"
+    },
+    "gethotelstays": {
+      "name": "GetHotelStays Official (gethotelstays02@gmail.com)",
+      "email": "gethotelstays02@gmail.com",
+      "password": "xzci itxw ngkv rmaw",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays02@gmail.com"
+    },
+    "gethotelstays_india": {
+      "name": "GetHotelStays India (gethotelstays.india@gmail.com)",
+      "email": "gethotelstays.india@gmail.com",
+      "password": "sxbz iyjo gqon pvtf",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.india@gmail.com"
+    },
+    "gethotelstays_india2": {
+      "name": "GetHotelStays India 2 (gethotelstays.india2@gmail.com)",
+      "email": "gethotelstays.india2@gmail.com",
+      "password": "sqpw fvvv kzwm ylul",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.india2@gmail.com"
+    },
+    "gethotelstays_official": {
+      "name": "GetHotelStays Official Team (gethotelstays.official@gmail.com)",
+      "email": "gethotelstays.official@gmail.com",
+      "password": "vmtm ryrj kffo fjor",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.official@gmail.com"
+    },
+    "gethotelstays_shriyansh": {
+      "name": "GetHotelStays Shriyansh (gethotelstays.shriyansh@gmail.com)",
+      "email": "gethotelstays.shriyansh@gmail.com",
+      "password": "sekb nfqj oozs egsg",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.shriyansh@gmail.com"
+    },
+    "gethotelstays_india3": {
+      "name": "GetHotelStays India 3 (gethotelstays.india3@gmail.com)",
+      "email": "gethotelstays.india3@gmail.com",
+      "password": "mvpq sfmr wavv ukgi",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.india3@gmail.com"
+    },
+    "gethotelstays_shriyansh77": {
+      "name": "Shriyansh Aloria (shriyanshaloria77@gmail.com)",
+      "email": "shriyanshaloria77@gmail.com",
+      "password": "klqm eprr vram fnin",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "shriyanshaloria77@gmail.com"
+    },
+    "gethotelstays_shriyansh0402": {
+      "name": "Shriyansh Aloria (shriyanshaloria0402@gmail.com)",
+      "email": "shriyanshaloria0402@gmail.com",
+      "password": "wszz gqmt jips pvec",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "shriyanshaloria0402@gmail.com"
+    },
+    "gethotelstays_ai": {
+      "name": "GetHotelStays AI (ai.gethotelstays@gmail.com)",
+      "email": "ai.gethotelstays@gmail.com",
+      "password": "wurs ptcm ekds eggx",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "ai.gethotelstays@gmail.com"
+    },
+    "gethotelstays4": {
+      "name": "GetHotelStays 4 (gethotelstays4@gmail.com)",
+      "email": "gethotelstays4@gmail.com",
+      "password": "wqtg jzke sgjo mgbf",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays4@gmail.com"
+    },
+    "gethotelstays3": {
+      "name": "GetHotelStays 3 (gethotelstays3@gmail.com)",
+      "email": "gethotelstays3@gmail.com",
+      "password": "jrqs cfow bqok uzsw",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays3@gmail.com"
+    }
+  }
+}

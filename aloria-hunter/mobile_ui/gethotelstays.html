@@ -2406,6 +2406,7 @@
     let cachedStats = null;
     let selectedVolume = 5;
     let livePollTimer = null;
+    let waveHasActuallyStarted = false;
     let allQueueLeads = [];
     let currentQueueFilter = 'all';
 
@@ -2593,32 +2594,27 @@
       renderRecentLogs(d.recent_logs || [], d.live_events || []);
 
       // Real-time Agent Online State
-      const isOnline = Boolean(d.is_active || (d.agent_status && d.agent_status !== 'OFFLINE' && d.agent_status !== 'IDLE'));
+      const isRunning = Boolean(d.is_active || (d.agent_status && d.agent_status === 'RUNNING'));
       const statusText = document.getElementById('header-status-text');
       const statusBadge = document.getElementById('header-status-badge');
       const ledDot = document.getElementById('header-led-dot');
       const workingsDot = document.getElementById('workings-pulse-dot');
 
-      if (statusText) statusText.innerText = isOnline ? (d.agent_status || 'RUNNING') : 'OFFLINE';
+      if (statusText) statusText.innerText = isRunning ? 'RUNNING' : 'ONLINE';
       if (statusBadge && ledDot) {
-        if (isOnline) {
-          statusBadge.classList.add('is-online');
-          ledDot.classList.add('is-online');
-        } else {
-          statusBadge.classList.remove('is-online');
-          ledDot.classList.remove('is-online');
-        }
+        statusBadge.classList.add('is-online');
+        ledDot.classList.add('is-online');
       }
 
       if (workingsDot) {
-        if (isOnline) workingsDot.classList.add('is-active');
+        if (isRunning) workingsDot.classList.add('is-active');
         else workingsDot.classList.remove('is-active');
       }
 
       // Run Agent Button in Header
       const runBtn = document.getElementById('run-agent-btn');
       if (runBtn) {
-        if (isOnline) {
+        if (isRunning) {
           runBtn.innerHTML = '<span class="led-dot is-online" style="width:6px; height:6px;"></span> Running...';
         } else {
           runBtn.innerHTML = '<span class="run-icon-triangle"></span> Run Agent';
@@ -3081,6 +3077,7 @@
 
       if (navigator.vibrate) navigator.vibrate([35, 40, 35]);
       hasShownCongratsModalForWave = false;
+      waveHasActuallyStarted = false;
 
       try {
         const res = await authFetch(`${API_BASE}/api/agent/launch`, {
@@ -3149,22 +3146,21 @@
       const runnerBadge = document.getElementById('live-runner-badge');
 
       if (d.is_active) {
+        waveHasActuallyStarted = true;
         if (stepDesc) stepDesc.innerText = d.current_task || 'Processing autonomous wave...';
         if (runnerBadge) {
           runnerBadge.innerHTML = '<span class="led-dot is-online" style="width:5px; height:5px;"></span> LIVE EXECUTION';
           runnerBadge.style.color = '#ffffff';
         }
-      } else {
-        if (stepDesc && (stepDesc.innerText.includes('Scraping') || stepDesc.innerText.includes('Auditing') || stepDesc.innerText.includes('Dispatching') || stepDesc.innerText.includes('Initializing'))) {
-          stepDesc.innerText = '✓ Wave Finished! Properties audited & pitches delivered.';
-          if (runnerBadge) {
-            runnerBadge.innerHTML = '● WAVE COMPLETE';
-            runnerBadge.style.color = '#a0aec0';
-          }
-          if (livePollTimer) {
-            clearInterval(livePollTimer);
-            livePollTimer = null;
-          }
+      } else if (waveHasActuallyStarted) {
+        stepDesc.innerText = '✓ Wave Finished! Properties audited & pitches delivered.';
+        if (runnerBadge) {
+          runnerBadge.innerHTML = '● WAVE COMPLETE';
+          runnerBadge.style.color = '#a0aec0';
+        }
+        if (livePollTimer) {
+          clearInterval(livePollTimer);
+          livePollTimer = null;
         }
       }
 
