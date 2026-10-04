@@ -33,6 +33,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     }
+    if ($action === 'sync_python') {
+        $backend_zip = __DIR__ . '/aloria_python_backend.zip';
+        $api_dir = dirname(__DIR__) . '/aloria-api';
+        if (!is_dir($api_dir)) {
+            @mkdir($api_dir, 0755, true);
+        }
+        if (file_exists($backend_zip)) {
+            $zip = new ZipArchive();
+            if ($zip->open($backend_zip) === TRUE) {
+                $zip->extractTo($api_dir);
+                $zip->close();
+                @mkdir($api_dir . '/tmp', 0755, true);
+                @touch($api_dir . '/tmp/restart.txt');
+                echo json_encode(["status" => "success", "message" => "Python backend synced and restarted!"]);
+                exit;
+            }
+        }
+        echo json_encode(["status" => "error", "message" => "aloria_python_backend.zip not found"]);
+        exit;
+    }
     echo json_encode(["status" => "ready", "engine" => "Aloria Labs Deployment Receiver v1.0", "timestamp" => time()]);
     exit;
 }
