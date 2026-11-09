@@ -2074,16 +2074,15 @@
               <span style="color: var(--text-dim); font-size: 9.5px;">Presets or Custom</span>
             </label>
             <div class="volume-chips-row">
-              <div class="vol-btn active" onclick="setPresetVolume(5, this)">5</div>
               <div class="vol-btn" onclick="setPresetVolume(10, this)">10</div>
               <div class="vol-btn" onclick="setPresetVolume(25, this)">25</div>
-              <div class="vol-btn" onclick="setPresetVolume(50, this)">50</div>
+              <div class="vol-btn active" onclick="setPresetVolume(50, this)">50</div>
               <div class="vol-btn" onclick="setPresetVolume(75, this)">75</div>
               <div class="vol-btn" onclick="setPresetVolume(100, this)">100</div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
               <span style="font-size: 11px; color: var(--text-muted); flex-shrink: 0;">Or Custom Number:</span>
-              <input type="number" class="tactile-input mono" id="target-custom-volume" value="5" min="1" max="250" oninput="onCustomVolumeInput(this.value)">
+              <input type="number" class="tactile-input mono" id="target-custom-volume" value="50" min="1" max="250" oninput="onCustomVolumeInput(this.value)">
             </div>
           </div>
 
@@ -2403,7 +2402,7 @@
     let accountsCollapsed = true;
     let currentTab = 'overview';
     let cachedStats = null;
-    let selectedVolume = 5;
+    let selectedVolume = 50;
     let livePollTimer = null;
     let waveHasActuallyStarted = false;
     let allQueueLeads = [];

@@ -6,14 +6,15 @@
       "tagline": "Autonomous Web Infrastructure & Custom Systems",
       "niche": "Software & Web Infrastructure",
       "default_niches": [
+        "MedSpas",
+        "Aesthetic Clinics",
+        "Roofing Contractors",
         "Restaurants",
-        "Cafes",
-        "Real Estate Agencies",
-        "Medical Clinics"
+        "Real Estate Agencies"
       ],
-      "target_country": "Russia",
-      "target_city": "Moscow",
-      "target_niche": "Restaurants",
+      "target_country": "USA",
+      "target_city": "Miami, FL",
+      "target_niche": "MedSpas",
       "sender_profile": "gmail",
       "sender_display_name": "Shriyansh Aloria — Aloria Labs",
       "pitches": {
@@ -57,7 +58,7 @@
         "Resorts",
         "Guesthouses"
       ],
-      "target_country": "India",
+      "target_country": "UAE",
       "target_city": "india",
       "target_niche": "Hotels",
       "sender_profile": "gethotelstays",

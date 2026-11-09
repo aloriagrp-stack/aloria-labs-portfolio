@@ -106,14 +106,10 @@ def generate_pitch(lead, email_type="INITIAL", sender_profile=None):
     website_url = lead["website_url"] or ""
     biz_id = lead.get("business_id") or "aloria_labs"
     is_hotel = any(h in (niche or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn", "homestay", "hostel", "lodging"]) or "hotel" in (name or "").lower()
-    is_golden_hotel = (not has_website) and is_hotel
+    is_golden_hotel = (not has_website) and is_hotel and biz_id == "aloria_labs"
 
-    # For Golden Hotel Leads (Hotels with NO website): Always route to Aloria Labs Hotel Web Dev Pitch!
-    if is_golden_hotel:
-        biz_id = "aloria_labs"
-
-    # For Aloria Labs (non-hotel golden leads): Use 500-problem intelligence library from Aloria Brain
-    if biz_id == "aloria_labs" and not is_golden_hotel:
+    # For Aloria Labs: Use Autonomous Niche & Flaw Intelligence from Aloria Brain
+    if biz_id == "aloria_labs":
         try:
             import aloria_brain
             subj, body, html_body, meta = aloria_brain.generate_dynamic_email(lead, email_type)
@@ -482,18 +478,21 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=N
     msg.attach(MIMEText(html_text, "html", "utf-8"))
 
     try:
+        clean_password = str(password).strip().replace(" ", "")
         if int(smtp_port) == 465:
             import ssl
             ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
             with smtplib.SMTP_SSL(smtp_server, 465, context=ssl_ctx, timeout=20) as server:
-                server.login(sender_email, password)
+                server.login(sender_email, clean_password)
                 server.sendmail(sender_email, [to_email], msg.as_string())
         else:
             with smtplib.SMTP(smtp_server, int(smtp_port), timeout=20) as server:
                 server.ehlo()
                 server.starttls()
                 server.ehlo()
-                server.login(sender_email, password)
+                server.login(sender_email, clean_password)
                 server.sendmail(sender_email, [to_email], msg.as_string())
         return True, sender_email
     except smtplib.SMTPAuthenticationError:
@@ -525,8 +524,14 @@ def send_single_initial_email(lead, profile_name=None, business_id=None, seen_in
     Returns (success_bool, status_str).
     """
     to_email = (lead.get("email") or "").strip().lower()
-    if not to_email:
+    # STRICT ANTI-HALLUCINATION GUARD:
+    # Never fabricate, guess, or dispatch an email if a genuine email was not actively extracted
+    if not to_email or "@" not in to_email or "." not in to_email or len(to_email) < 6:
+        db.mark_lead_invalid(lead["id"], reason="Invalid email address format")
         return False, "EMPTY_EMAIL"
+    if to_email in ["none", "n/a", "null", "undefined", "info@", "contact@", "no-email"]:
+        db.mark_lead_invalid(lead["id"], reason="Placeholder email address")
+        return False, "INVALID_SCRAPED_EMAIL"
 
     if seen_in_batch is not None:
         if to_email in seen_in_batch:
@@ -535,9 +540,10 @@ def send_single_initial_email(lead, profile_name=None, business_id=None, seen_in
         seen_in_batch.add(to_email)
 
     lead_biz = lead.get("business_id") or business_id or "aloria_labs"
-    is_lead_hotel = any(h in (lead.get("niche") or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn", "homestay", "hostel", "lodging"]) or "hotel" in (lead.get("business_name") or "").lower()
-    if not lead.get("has_website") and is_lead_hotel:
-        lead_biz = "aloria_labs"
+    if lead_biz != "gethotelstays" and business_id != "gethotelstays":
+        is_lead_hotel = any(h in (lead.get("niche") or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn", "homestay", "hostel", "lodging"]) or "hotel" in (lead.get("business_name") or "").lower()
+        if not lead.get("has_website") and is_lead_hotel:
+            lead_biz = "aloria_labs"
 
     import super_intelligence
     # SUPER INTELLIGENCE GATE: Reject junk aggregator ads, spam traps, or system pages
@@ -560,14 +566,17 @@ def send_single_initial_email(lead, profile_name=None, business_id=None, seen_in
     # STRICT PROTECTION CHECK 1: Never email a blacklisted, replied, or already contacted address
     if db.is_email_blacklisted(to_email):
         print(f"  {ui.C_RED}[🛡 SKIPPED BLACKLIST]{ui.RESET} {to_email} is on permanent blacklist. Skipping.")
+        db.mark_lead_invalid(lead["id"], reason="Permanent blacklist skip")
         return False, "BLACKLISTED"
 
     if db.is_email_or_domain_replied(to_email):
         print(f"  {ui.C_YELLOW}[🛡 SKIPPED: PREVIOUS REPLIED ENTITY]{ui.RESET} {to_email} or its domain has already replied. Pitch cancelled.")
+        db.mark_lead_replied(lead_id=lead["id"], email=to_email)
         return False, "ALREADY_REPLIED"
 
     if db.is_email_already_contacted(to_email, lead_biz):
         print(f"  {ui.C_YELLOW}[🛡 SKIPPED DEDUPLICATION]{ui.RESET} {to_email} already received outreach. Skipping.")
+        db.mark_lead_invalid(lead["id"], reason="Already contacted deduplication")
         return False, "ALREADY_CONTACTED"
 
     # ZERO-BOUNCE PRE-SEND VERIFICATION GATE:
@@ -654,6 +663,7 @@ def send_single_followup_email(lead, profile_name=None, business_id=None):
     # Blacklist check: never follow up on bounced/blacklisted inboxes
     if db.is_email_blacklisted(to_email) or lead.get("status") == "BOUNCED":
         print(f"  {ui.C_RED}[🛡 SKIPPED BOUNCED]{ui.RESET} {to_email} was flagged as bounced. Follow-up cancelled.")
+        db.mark_lead_invalid(lead["id"], reason="Flagged as bounced / blacklisted")
         return False, "BOUNCED"
 
     # ZERO-BOUNCE PRE-SEND VERIFICATION GATE:
@@ -668,9 +678,10 @@ def send_single_followup_email(lead, profile_name=None, business_id=None):
     new_count = curr_count + 1
     email_type = f"FOLLOW_UP_{new_count}"
     lead_biz = lead.get("business_id") or business_id or "aloria_labs"
-    is_lead_hotel = any(h in (lead.get("niche") or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn", "homestay", "hostel", "lodging"]) or "hotel" in (lead.get("business_name") or "").lower()
-    if not lead.get("has_website") and is_lead_hotel:
-        lead_biz = "aloria_labs"
+    if lead_biz != "gethotelstays" and business_id != "gethotelstays":
+        is_lead_hotel = any(h in (lead.get("niche") or "").lower() for h in ["hotel", "resort", "stay", "guest", "villa", "inn", "homestay", "hostel", "lodging"]) or "hotel" in (lead.get("business_name") or "").lower()
+        if not lead.get("has_website") and is_lead_hotel:
+            lead_biz = "aloria_labs"
 
     max_q = config.get_max_delivered_quota(lead_biz)
 
@@ -752,12 +763,18 @@ def send_single_followup_email(lead, profile_name=None, business_id=None):
         ui.log_email_dispatch(lead["business_name"], to_email, thread_subject, False, "SMTP Error", sender=sender)
         return False, "SMTP_ERROR"
 
-def run_pre_dispatch_inbox_audit():
+_LAST_INBOX_AUDIT_TIME = 0
+
+def run_pre_dispatch_inbox_audit(force=False):
     """
     Executes a pre-flight scan of all sender inboxes before dispatching an outreach wave.
-    Ensures any fresh incoming reply or bounce across all 11 accounts is caught,
-    registered in replied_contacts, and barred from receiving follow-ups.
+    Cached with a 10-minute cooldown to prevent blocking every dispatch wave with IMAP handshakes.
     """
+    global _LAST_INBOX_AUDIT_TIME
+    now = time.time()
+    if not force and (now - _LAST_INBOX_AUDIT_TIME) < 600:
+        return
+    _LAST_INBOX_AUDIT_TIME = now
     try:
         from agents.sentinel_agent import HotelSentinelAgent
         sentinel = HotelSentinelAgent()
@@ -766,9 +783,9 @@ def run_pre_dispatch_inbox_audit():
     except Exception as e:
         print(f"  {ui.C_YELLOW}[⚠️ PRE-DISPATCH SENTINEL WARNING]{ui.RESET} Inbox pre-scan skipped: {e}")
 
-def dispatch_initial_emails(limit=10, profile_name=None, business_id=None):
+def dispatch_initial_emails(limit=10, profile_name=None, business_id=None, lead_ids=None, country=None, niche=None):
     run_pre_dispatch_inbox_audit()
-    ready_leads = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit)
+    ready_leads = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit, lead_ids=lead_ids, country=country, niche=niche)
     print(f"  {ui.C_MAGENTA}[⚡ EMAIL ENGINE]{ui.RESET} Found {ui.C_WHITE}{len(ready_leads)}{ui.RESET} verified leads ready for initial pitch...")
 
     sent_count = 0
@@ -817,7 +834,7 @@ def dispatch_followups(profile_name=None, business_id=None, limit=None):
 
     return sent_count
 
-def dispatch_interleaved_wave(limit=5, followup_limit=None, profile_name=None, business_id=None, on_step=None):
+def dispatch_interleaved_wave(limit=5, followup_limit=None, profile_name=None, business_id=None, on_step=None, lead_ids=None):
     """
     Balanced Interleaved Outreach Dispatcher:
     Alternates sending newly audited leads (INITIAL Day 0 pitches) and overdue follow-ups
@@ -826,7 +843,7 @@ def dispatch_interleaved_wave(limit=5, followup_limit=None, profile_name=None, b
     """
     run_pre_dispatch_inbox_audit()
     effective_fu_limit = followup_limit if followup_limit is not None else limit
-    ready_initial = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit)
+    ready_initial = db.get_leads_ready_for_initial_email(business_id=business_id, limit=limit, lead_ids=lead_ids)
     interval_days = getattr(config, "FOLLOW_UP_INTERVAL_DAYS", 3)
     ready_fu = db.get_leads_ready_for_followup(
         business_id=business_id,
@@ -888,3 +905,28 @@ def dispatch_interleaved_wave(limit=5, followup_limit=None, profile_name=None, b
         "followup_sent": fu_sent,
         "total_sent": initial_sent + fu_sent
     }
+
+def dispatch_responsed_followups(limit=None, dry_run=False):
+    """
+    Dispatches specialized 'Responsed Follow-ups' for leads who previously replied,
+    where Shriyansh sent the last message (Step 2, 3 or 4), but the hotel has been silent for >= 2 days.
+    Guarantees that deep conversations (> 4 messages) are 100% excluded.
+    """
+    try:
+        import responsed_followup_engine
+        items = responsed_followup_engine.get_ready_responsed_followups()
+        if not items:
+            print(f"  {ui.C_YELLOW}[!] No pending responsed follow-ups in queue. Running fresh scan...{ui.RESET}")
+            responsed_followup_engine.scan_all_gethotelstays_accounts()
+            items = responsed_followup_engine.get_ready_responsed_followups()
+
+        cap = limit or len(items)
+        sent = 0
+        for item in items[:cap]:
+            ok, _ = responsed_followup_engine.dispatch_single_responsed_followup(item, dry_run=dry_run)
+            if ok:
+                sent += 1
+        return sent
+    except Exception as e:
+        print(f"  [!] Responsed follow-up engine error: {e}")
+        return 0

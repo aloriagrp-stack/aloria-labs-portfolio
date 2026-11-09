@@ -2,13 +2,40 @@
   "active_profile": "gethotelstays",
   "profiles": {
     "gmail": {
-      "name": "Aloria Gmail (alorialabs@gmail.com)",
+      "name": "Aloria Main (alorialabs@gmail.com)",
       "email": "alorialabs@gmail.com",
       "password": "osgd adhv gjlc qcby",
       "smtp_server": "smtp.gmail.com",
       "smtp_port": 587,
       "sender_name": "Shriyansh Aloria — Aloria Labs",
-      "reply_to": "info@alorialabs.in"
+      "reply_to": "shriyanshaloria@alorialabs.in"
+    },
+    "alorialabs_official": {
+      "name": "Aloria Official (alorialabs.official@gmail.com)",
+      "email": "alorialabs.official@gmail.com",
+      "password": "blix helj bqiq wjzq",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "shriyanshaloria@alorialabs.in"
+    },
+    "alorialabs_shriyansh": {
+      "name": "Aloria Shriyansh (alorialabs.shriyansh@gmail.com)",
+      "email": "alorialabs.shriyansh@gmail.com",
+      "password": "otzw gjrj xvif hiaa",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "shriyanshaloria@alorialabs.in"
+    },
+    "alorialabs_corporate": {
+      "name": "Aloria Corporate (shriyanshaloria@alorialabs.in)",
+      "email": "shriyanshaloria@alorialabs.in",
+      "password": "shriyansh@0402",
+      "smtp_server": "mail.alorialabs.in",
+      "smtp_port": 465,
+      "sender_name": "Shriyansh Aloria — Aloria Labs",
+      "reply_to": "shriyanshaloria@alorialabs.in"
     },
     "info": {
       "name": "Official Corporate (info@alorialabs.in)",
@@ -117,6 +144,15 @@
       "smtp_port": 587,
       "sender_name": "Shriyansh Aloria — GetHotelStays",
       "reply_to": "gethotelstays3@gmail.com"
+    },
+    "gethotelstays_shriyanshaloria": {
+      "name": "GetHotelStays Shriyansh Aloria (gethotelstays.shriyanshaloria@gmail.com)",
+      "email": "gethotelstays.shriyanshaloria@gmail.com",
+      "password": "auza wplx qqmx ckke",
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_name": "Shriyansh Aloria — GetHotelStays",
+      "reply_to": "gethotelstays.shriyanshaloria@gmail.com"
     }
   }
 }

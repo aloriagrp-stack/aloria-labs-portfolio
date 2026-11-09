@@ -764,7 +764,7 @@ async def launch_agent_wave(request: Request):
     country = str(data.get("country", "India")).strip() or "India"
     default_niche = "Hotels" if business_id == "gethotelstays" else "Restaurants"
     niche = str(data.get("niche", default_niche)).strip() or default_niche
-    limit = int(data.get("limit", 5))
+    limit = int(data.get("limit", 50))
     action = str(data.get("action", "full_wave")).strip() or "full_wave"
 
     agent_target = "hotel" if business_id == "gethotelstays" else "aloria"
@@ -1523,11 +1523,13 @@ def get_local_ip():
     except Exception:
         return "127.0.0.1"
 
-def run_server(host="0.0.0.0", port=8000):
+def run_server(host="0.0.0.0", port=None):
+    if port is None:
+        port = int(os.environ.get("PORT", 8000))
     ip = get_local_ip()
     print(f"\n🏹 [HUNTER MOBILE COMMAND SERVER ONLINE]")
-    print(f"  • Local Laptop:  http://localhost:{port}")
-    print(f"  • Mobile Access: http://{ip}:{port}  (Open this on your phone's browser)\n")
+    print(f"  • Local:  http://localhost:{port}")
+    print(f"  • Access: http://{ip}:{port}\n")
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 if __name__ == "__main__":

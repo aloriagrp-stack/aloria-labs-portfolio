@@ -2,6 +2,7 @@ import os
 import re
 import time
 import urllib.parse
+from pathlib import Path
 try:
     from playwright.sync_api import sync_playwright
 except ImportError:
@@ -86,6 +87,10 @@ def launch_whatsapp_login_qr():
     print(f"  {ui.C_DIM}Opening Chrome window... Scan the QR code using your phone's WhatsApp.{ui.RESET}")
     print(f"  {ui.C_YELLOW}Phone Steps: Open WhatsApp ➔ Settings / Three Dots ➔ Linked Devices ➔ Link a Device{ui.RESET}")
     print(f"{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}\n")
+
+    if sync_playwright is None:
+        print(f"  {ui.C_RED}[ERROR] Playwright is not installed. Run: pip install playwright && playwright install chromium{ui.RESET}")
+        return False
 
     with sync_playwright() as p:
         context = p.chromium.launch_persistent_context(
@@ -187,6 +192,10 @@ def dispatch_whatsapp_queue(limit=5, business_id="gethotelstays", headless=False
     print(f"  {ui.C_GREEN}[✓] Found {len(valid_mobile_leads)} verified mobile contacts for WhatsApp dispatch.{ui.RESET}")
 
     sent_count = 0
+
+    if sync_playwright is None:
+        print(f"  {ui.C_RED}[ERROR] Playwright is not installed. Run: pip install playwright && playwright install chromium{ui.RESET}")
+        return 0
 
     # Launch browser ONCE for the entire batch with full Chrome User-Agent
     with sync_playwright() as p:

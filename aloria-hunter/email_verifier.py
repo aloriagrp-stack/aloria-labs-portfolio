@@ -70,49 +70,93 @@ DISPOSABLE_DOMAINS = {
 FRAMEWORK_ARTIFACTS = {
     "bootstrap", "jquery", "react", "webpack", "fancybox", "psk-gallery",
     "aos", "core", "swiper", "lodash", "popper", "vue", "angular",
-    "wix-fonts", "font-awesome", "fontawesome", "elementor"
+    "wix-fonts", "font-awesome", "fontawesome", "elementor", "sentry",
+    "cloudflare", "schema.org", "w3.org", "github", "npm", "cdn"
+}
+
+# Major known public webmail providers (always valid, bypasses MX delays)
+KNOWN_PUBLIC_PROVIDERS = {
+    "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "yahoo.in",
+    "outlook.com", "hotmail.com", "live.com", "msn.com", "icloud.com",
+    "zoho.com", "zoho.in", "rediffmail.com", "protonmail.com", "yandex.com"
 }
 
 # In-memory LRU Cache for DNS MX lookups: {domain: (has_mx, [mx_hosts])}
 _MX_CACHE = {}
 
 def clean_syntax(email_str):
-    """Clean and perform Tier-1 syntax and string sanitization."""
+    """
+    Tier-1 Bulletproof syntax and fake email sanitization.
+    Strips code artifacts, CSS/image tags, package versions, while preserving
+    all genuine business emails (Gmail, Yahoo, Outlook, custom domains).
+    """
     if not email_str or not isinstance(email_str, str):
         return None
     email = email_str.strip().lower()
-    # Strip enclosing brackets, quotes, trailing dots/hyphens/commas
-    email = re.sub(r'^[<"\'\s]+|[>"\'\s,;.-]+$', '', email)
+    # Strip mailto prefix if present
+    email = re.sub(r'^mailto:', '', email, flags=re.I)
+    email = email.split('?')[0].split('#')[0]
+    # Strip enclosing brackets, quotes, trailing dots/hyphens/commas/slashes
+    email = re.sub(r'^[<"\'\s(\[]+|[>"\'\s,;.\-\)\]/]+$', '', email)
 
-    # Reject version strings (e.g. bootstrap@5.3.3, psk-gallery@1.1.0-5, fancybox@3.5.7)
+    # 1. Reject package versions or npm/code strings (e.g. wix-fonts@1.14.0, bootstrap@5.3.3)
     if re.search(r'@[0-9]+', email) or re.search(r'@[a-z0-9_-]*\d+\.\d+', email):
         return None
 
-    # Check against framework artifacts
+    # 2. Reject known framework and library artifacts
     for art in FRAMEWORK_ARTIFACTS:
-        if art in email and re.search(r'[\d.-]', email.split("@")[0] if "@" in email else ""):
+        if art in email:
             return None
 
-    # Reject asset extensions
+    # 3. Reject asset/media extensions (e.g. logo@2x.png, banner.jpg)
     if any(email.endswith(ext) for ext in IGNORED_EXTENSIONS):
         return None
 
-    # Strict regex check
+    # 4. Strict regex validation
     if not EMAIL_REGEX.match(email):
         return None
 
     local_part, domain = email.split("@", 1)
 
-    # Validate TLD has only letters and length between 2 and 12
-    tld = domain.split(".")[-1]
+    # Reject local parts that are too short (<2 chars) or purely numeric digits (e.g. 12@gmail.com)
+    if len(local_part) < 2 or local_part.isdigit():
+        return None
+
+    # Reject system/automated role accounts (noreply, donotreply, etc.)
+    if any(local_part == prefix or local_part.startswith(f"{prefix}-") or local_part.startswith(f"{prefix}.") or local_part.startswith(f"{prefix}_") for prefix in ROLE_PREFIXES):
+        return None
+
+    # Reject dummy local parts
+    if local_part in DUMMY_LOCAL_PARTS:
+        return None
+
+    # 5. Validate Domain & TLD (Must have real alpha TLD like .com, .in, .co.in, .org, .net)
+    tld_parts = domain.split(".")
+    if len(tld_parts) < 2:
+        return None
+    tld = tld_parts[-1]
     if not tld.isalpha() or len(tld) < 2 or len(tld) > 12:
         return None
 
-    # Reject double dots or invalid characters in domain
+    # Reject double dots, double dashes, or leading/trailing hyphens
     if ".." in domain or "--" in domain or domain.startswith("-") or domain.endswith("-"):
         return None
 
+    # Reject dummy domains
+    if domain in DUMMY_DOMAINS:
+        return None
+
     return email
+
+def is_valid_clean_email(email_str: str) -> tuple[bool, str | None]:
+    """Convenience validator returning (True, clean_email) or (False, None)."""
+    cleaned = clean_syntax(email_str)
+    if not cleaned:
+        return False, None
+    ok, _ = check_role_and_disposable(cleaned)
+    if not ok:
+        return False, None
+    return True, cleaned
 
 def check_role_and_disposable(email):
     """Tier 2: Check if email is a dummy, role account, or disposable domain."""
@@ -149,37 +193,52 @@ def check_dns_mx(domain, timeout=3.5):
     if domain in _MX_CACHE:
         return _MX_CACHE[domain]
 
-    if not HAS_DNS:
-        # Fallback to standard socket resolution if dnspython is absent
-        try:
-            socket.getaddrinfo(domain, 25, socket.AF_INET, socket.SOCK_STREAM)
-            _MX_CACHE[domain] = (True, [domain])
-            return True, [domain]
-        except Exception:
-            _MX_CACHE[domain] = (False, [])
-            return False, []
+    # Instant bypass for 100% verified major providers
+    KNOWN_PROVIDERS = {
+        "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "yahoo.in",
+        "outlook.com", "hotmail.com", "live.com", "msn.com", "icloud.com",
+        "zoho.com", "zoho.in", "rediffmail.com", "protonmail.com", "yandex.com"
+    }
+    if domain in KNOWN_PROVIDERS:
+        _MX_CACHE[domain] = (True, [f"mail.{domain}"])
+        return True, [f"mail.{domain}"]
 
+    # 1. Native dnspython resolver if available
+    if HAS_DNS:
+        try:
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = timeout
+            resolver.lifetime = timeout
+            answers = resolver.resolve(domain, "MX")
+            mx_records = [str(r.exchange).rstrip(".") for r in answers]
+            if mx_records:
+                _MX_CACHE[domain] = (True, mx_records)
+                return True, mx_records
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.LifetimeTimeout, Exception):
+            pass
+
+    # 2. DNS-over-HTTPS (DoH) fallback via Google Public DNS (Immune to ISP/firewall port 25 & 53 blocking)
     try:
-        resolver = dns.resolver.Resolver()
-        resolver.timeout = timeout
-        resolver.lifetime = timeout
-        
-        # 1. Check MX records
-        answers = resolver.resolve(domain, "MX")
-        mx_records = [str(r.exchange).rstrip(".") for r in answers]
-        if mx_records:
-            _MX_CACHE[domain] = (True, mx_records)
-            return True, mx_records
-    except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.LifetimeTimeout, Exception):
+        import urllib.request
+        import json as pyjson
+        req = urllib.request.Request(
+            f"https://dns.google/resolve?name={domain}&type=MX",
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=2.5) as resp:
+            data = pyjson.loads(resp.read().decode())
+            if data.get("Status") == 0 and data.get("Answer"):
+                mx_ans = [ans.get("data", "") for ans in data["Answer"] if ans.get("type") == 15]
+                if mx_ans:
+                    _MX_CACHE[domain] = (True, mx_ans)
+                    return True, mx_ans
+    except Exception:
         pass
 
-    # 2. Fallback to A/AAAA record if domain itself acts as mail exchanger (RFC 5321)
+    # 3. Fallback: Hostname address resolution (A-record mail host fallback RFC 5321)
     try:
-        resolver = dns.resolver.Resolver()
-        resolver.timeout = 2.0
-        resolver.lifetime = 2.0
-        a_records = resolver.resolve(domain, "A")
-        if a_records:
+        ip = socket.gethostbyname(domain)
+        if ip:
             _MX_CACHE[domain] = (True, [domain])
             return True, [domain]
     except Exception:

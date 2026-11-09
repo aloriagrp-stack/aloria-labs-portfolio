@@ -27,11 +27,35 @@ JUNK_NAME_KEYWORDS = [
     "agoda", "tripadvisor", "expedia", "airbnb", "oyorooms", "trivago",
     "advertisement", "ad choices", "adchoices", "click here", "read more",
     
-    # Legal, Terms & Government Portals
+    # Streaming & Entertainment
+    "hotstar", "jiohotstar", "disney", "netflix", "prime video", "subscription",
+    "cancel my subscription", "movie", "trailer", "shows", "cricket", "episodes",
+    
+    # Govt, Legal, Exams, Sarkari Portals
     "terms of service", "terms & conditions", "privacy policy", "cookie policy", 
     "disclaimer", "all rights reserved", "copyright", "user agreement",
     "link aadhaar", "aadhaar verification", "uidai", "pan card", "passport seva", 
-    "income tax", "e-filing", "verification ofppp", "haryana labour",
+    "income tax", "e-filing", "verification ofppp", "haryana labour", "epfo", "upsc",
+    "ssc", "admit card", "answer key", "syllabus", "result 20", "scorecard", "prelims",
+    "mains result", "cut-off", "parivar pehchan", "handbook of quality", "irc sp",
+    
+    # Adult / NSFW
+    "xxx", "sex", "porn", "adult", "tamil sex", "aunty", "செக்ஸ்", "ஆண்டி",
+    "காமப்படம", "வீடியோ", "படம்", "xvideos", "xnxx", "sextube",
+    
+    # Gaming Portals
+    "poki", "y8", "crazygames", "online games", "free games", "popular games",
+    
+    # Tech Forums, Blogs, AI, Software
+    "transformer", "nlp", "llm", "anydesk", "teamviewer", "vpn差異", "gif problem",
+    "whatsapp web", "huawei", "zhihu", "ithome", "tinhte", "vivaldi",
+    
+    # Math & Education worksheets / Quizzes
+    "multiplication", "table de", "quiz", "handbook", "weekly quiz", "bing quiz",
+    
+    # Generic Corporate / Automotive
+    "mahindra", "thar og", "staffing services", "equipment solutions",
+    "company profile", "chalhoub",
     
     # Generic Tech / Clones / Wikipedia
     "wikipedia", "wikimedia", "google maps", "google earth", "google search",
@@ -57,11 +81,17 @@ def sanitize_and_validate_business_name(raw_name: str) -> Tuple[bool, str, str]:
         if kw in name_lower:
             return False, name, f"Contains blacklisted aggregator/system phrase: '{kw}'"
 
+    # Reject question phrases / headlines
+    if any(name_lower.startswith(q) for q in [
+        "how to", "how do", "what is", "what are", "why do", "why does",
+        "can't", "cant", "issues with", "is there", "where to"
+    ]):
+        return False, name, "Rejected: Looks like a search query/article headline, not a business name"
+
+    if "?" in name:
+        return False, name, "Rejected: Contains question mark (article/query)"
+
     # 3. Strip trailing SEO noise, city tags, official site badges
-    # Examples:
-    # "Hotel Mount View | Luxury Hotel in Shimla" -> "Hotel Mount View"
-    # "The Grand Palace - Official Website" -> "The Grand Palace"
-    # "Hotel Taj (Best Rates Guaranteed)" -> "Hotel Taj"
     strip_patterns = [
         r'\s*[\-|–—|]\s*(?:official\s*(?:site|website)|luxury\s*hotel|best\s*rates?|book\s*online|home|welcome).*$',
         r'\s*[\-|–—|]\s*(?:resort\s*&?\s*spa|boutique\s*hotel|5\s*star\s*hotel).*$',
@@ -97,7 +127,7 @@ DISALLOWED_EMAIL_PREFIXES = {
     "abuse", "spam", "postmaster", "mailer-daemon", "asxvm", "asxvmprobertest",
     "hostmaster", "webmaster", "noc", "security", "compliance", "legal", "terms", 
     "privacy", "dmca", "copyright", "security-alert", "alert", "alerts",
-    "noreply", "no-reply", "donotreply", "do-not-reply", "authsupport", "itlabour",
+    "noreply", "no-reply", "donotreply", "do-not-reply", "authsupport", "itlabour", "helpdesk",
     
     # Irrelevant Corporate Roles (Not Decision Makers)
     "jobs", "careers", "recruiting", "recruitment", "press", "media", "pr", 
@@ -107,18 +137,36 @@ DISALLOWED_EMAIL_PREFIXES = {
 
 DISALLOWED_EMAIL_DOMAINS = {
     # Govt & National Identity
-    "gov.in", "nic.in", "uidai.net", "uidai.gov.in", "incometax.gov.in",
+    "gov.in", "nic.in", "uidai.net", "uidai.gov.in", "incometax.gov.in", "media.org",
     
     # Tech Giants & System Domains
     "google.com", "googlemail.com", "accounts.google.com", "apple.com", "microsoft.com",
     "wix.com", "wixpress.com", "wordpress.org", "github.com", "cloudflare.com", "schema.org",
     
+    # Streaming & Media
+    "hotstar.com", "jiohotstar.com", "disney.com", "netflix.com",
+    
+    # Forums, Exam Prep & Social Portals
+    "pagalguy.com", "zhihu.com", "ithome.com.tw", "tinhte.vn", "vivaldi.com", "vivaldi.net",
+    "huaweicloud.com", "vajiramandravi.com", "semrush.com", "quora.com", "reddit.com",
+    
+    # Adult
+    "xxnx.kim", "sexvideo.kim", "sextube.rodeo",
+    
+    # Gaming & Quizzes
+    "poki.com", "crazygames.com", "y8.com", "weeklyquiz.net", "bingquizzes.com", "bingquiz.org",
+    
+    # Education & Automotive
+    "enseignons.be", "maitrelucas.fr", "translate.com", "immersivetranslate.com",
+    "mahindra.com", "soilassociation.org",
+    
     # Aggregators & Competitors
     "makemytrip.com", "goibibo.com", "booking.com", "agoda.com", "tripadvisor.com", 
     "expedia.com", "airbnb.com", "oyorooms.com", "trivago.com", "betterhelp.com", "carwale.com",
+    "udchalo.com",
     
     # Junk Clones & Traps
-    "popcornden.me", "kartoons.me",
+    "popcornden.me", "kartoons.me", "xonapp.store",
     
     # Disposable / Temp Email Services
     "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com", "trashmail.com",
@@ -159,8 +207,16 @@ def validate_email_super_intelligence(email_str: str, check_mx: bool = False) ->
 
     # Check for subdomains of blocked domains (e.g. support.google.com)
     for bd in DISALLOWED_EMAIL_DOMAINS:
-        if domain.endswith("." + bd):
+        if domain.endswith("." + bd) or domain == bd:
             return False, clean, f"Subdomain of blocked domain: '{bd}'"
+
+    # Absolute Government & Public Sector Block
+    if any(g in domain for g in [".gov.in", ".nic.in", "gov.in", "nic.in", ".mil.in"]):
+        return False, clean, "Blocked Government / NIC public domain"
+
+    # General keyword blocks in domain (entertainment, gaming, adult, forums)
+    if any(k in domain for k in ["hotstar", "pagalguy", "xxnx", "sexvideo", "sextube", "porn", "xvideos", "poki", "crazygames", "y8", "bingquiz"]):
+        return False, clean, f"Domain contains blacklisted keyword: '{domain}'"
 
     # Reject asset version strings (e.g. wix-fonts@1.14.0)
     if re.search(r'@[0-9]+', clean) or re.search(r'@[a-z0-9_-]*\d+\.\d+', clean):

@@ -129,10 +129,18 @@ class HotelSentinelAgent(BaseAgent):
             new_replies_this_cycle = 0
             new_bounces_this_cycle = 0
 
-            for p_key in target_profiles:
-                b_count, r_count = self._scan_single_inbox(p_key)
-                new_bounces_this_cycle += b_count
-                new_replies_this_cycle += r_count
+            # Parallel inbox scanning: 6 concurrent workers across accounts (3-5s total instead of 40s)
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, len(target_profiles))) as executor:
+                scan_futures = {executor.submit(self._scan_single_inbox, p): p for p in target_profiles}
+                for fut in concurrent.futures.as_completed(scan_futures):
+                    try:
+                        b_count, r_count = fut.result()
+                        new_bounces_this_cycle += b_count
+                        new_replies_this_cycle += r_count
+                    except Exception as scan_err:
+                        p_name = scan_futures[fut]
+                        self.log_event(f"Inbox scan error for profile '{p_name}': {scan_err}", "WARNING")
 
             summary_msg = f"Inbox audit complete across {len(target_profiles)} inboxes: {new_replies_this_cycle} new replies detected, {new_bounces_this_cycle} bounces blacklisted."
             if new_replies_this_cycle > 0:

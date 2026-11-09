@@ -94,20 +94,28 @@ load_india_locations()
 
 # Destination Micro-Locality Knowledge Base (for deep city neighborhood partitions)
 DESTINATION_MICRO_ZONES = {
-    # Pan-India Nationwide Top Travel & Hotel Clusters
+    # Pan-India Nationwide Top Travel & Hotel Clusters across all States
     "india": [
-        "Goa", "Jaipur", "Udaipur", "Manali", "Rishikesh",
-        "Munnar Kerala", "Shimla", "Ooty", "Lonavala", "Varanasi",
-        "Mussoorie", "Coorg", "Dharamshala", "Pondicherry", "Agra",
-        "Srinagar", "Kolkata", "Bengaluru", "Mumbai", "Delhi",
-        "Amritsar", "Darjeeling", "Pushkar", "Mount Abu"
+        "Goa", "Jaipur Rajasthan", "Udaipur Rajasthan", "Manali Himachal", "Rishikesh Uttarakhand",
+        "Munnar Kerala", "Shimla Himachal", "Ooty Tamil Nadu", "Lonavala Maharashtra", "Varanasi UP",
+        "Mussoorie Uttarakhand", "Coorg Karnataka", "Dharamshala Himachal", "Pondicherry", "Agra UP",
+        "Srinagar Kashmir", "Kolkata West Bengal", "Bengaluru Karnataka", "Mumbai Maharashtra", "Delhi NCR",
+        "Amritsar Punjab", "Darjeeling West Bengal", "Pushkar Rajasthan", "Mount Abu Rajasthan",
+        "Alleppey Kerala", "Jodhpur Rajasthan", "Jaisalmer Rajasthan", "Nainital Uttarakhand",
+        "Mysore Karnataka", "Hampi Karnataka", "Gokarna Karnataka", "Kodaikanal Tamil Nadu",
+        "Mahabaleshwar Maharashtra", "Gangtok Sikkim", "Shillong Meghalaya", "Hyderabad Telangana",
+        "Puri Odisha", "Indore Madhya Pradesh", "Dehradun Uttarakhand", "Kochi Kerala", "Kasol Himachal", "Wayanad Kerala"
     ],
     "all india": [
-        "Goa", "Jaipur", "Udaipur", "Manali", "Rishikesh",
-        "Munnar Kerala", "Shimla", "Ooty", "Lonavala", "Varanasi",
-        "Mussoorie", "Coorg", "Dharamshala", "Pondicherry", "Agra",
-        "Srinagar", "Kolkata", "Bengaluru", "Mumbai", "Delhi",
-        "Amritsar", "Darjeeling", "Pushkar", "Mount Abu"
+        "Goa", "Jaipur Rajasthan", "Udaipur Rajasthan", "Manali Himachal", "Rishikesh Uttarakhand",
+        "Munnar Kerala", "Shimla Himachal", "Ooty Tamil Nadu", "Lonavala Maharashtra", "Varanasi UP",
+        "Mussoorie Uttarakhand", "Coorg Karnataka", "Dharamshala Himachal", "Pondicherry", "Agra UP",
+        "Srinagar Kashmir", "Kolkata West Bengal", "Bengaluru Karnataka", "Mumbai Maharashtra", "Delhi NCR",
+        "Amritsar Punjab", "Darjeeling West Bengal", "Pushkar Rajasthan", "Mount Abu Rajasthan",
+        "Alleppey Kerala", "Jodhpur Rajasthan", "Jaisalmer Rajasthan", "Nainital Uttarakhand",
+        "Mysore Karnataka", "Hampi Karnataka", "Gokarna Karnataka", "Kodaikanal Tamil Nadu",
+        "Mahabaleshwar Maharashtra", "Gangtok Sikkim", "Shillong Meghalaya", "Hyderabad Telangana",
+        "Puri Odisha", "Indore Madhya Pradesh", "Dehradun Uttarakhand", "Kochi Kerala", "Kasol Himachal", "Wayanad Kerala"
     ],
     # Specific Cities / Destinations Micro-Neighborhoods
     "goa": [
@@ -154,26 +162,63 @@ OTA_DOMAINS = [
     "hostelworld.com", "vrbo.com", "skyscanner", "lonelyplanet.com",
     "holidify.com", "thrillophilia.com", "trip.com", "travelguru.com",
     "facebook.com", "instagram.com", "justdial.com", "indiamart.com",
-    "youtube.com", "twitter.com", "x.com", "linkedin.com", "airbnb", "wikipedia.org"
+    "youtube.com", "twitter.com", "x.com", "linkedin.com", "airbnb", "wikipedia.org",
+    # Government & Official Public Portals (Strict Zero-Crawl Rule)
+    ".gov.in", ".nic.in", "gov.in", "nic.in", ".gov", ".nic", ".mil.in", ".res.in"
 ]
 
-def generate_swarm_queries(city: str, country: str, niche: str = "Hotels", count: int = 12) -> List[Dict[str, str]]:
+def is_ota_or_social(url: str) -> bool:
+    if not url:
+        return False
+    try:
+        from urllib.parse import urlparse
+        netloc = urlparse(url).netloc.lower()
+        if not netloc:
+            netloc = urlparse("https://" + url).netloc.lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        netloc = netloc.split(":")[0]
+    except Exception:
+        netloc = url.lower()
+
+    exact_otas = {
+        "booking.com", "agoda.com", "makemytrip.com", "goibibo.com",
+        "expedia.com", "hotels.com", "trivago.com", "yatra.com",
+        "cleartrip.com", "easemytrip.com", "oyorooms.com", "treebo.com",
+        "fabhotels.com", "ixigo.com", "kayak.com", "hostelworld.com",
+        "vrbo.com", "skyscanner.com", "skyscanner.net", "holidify.com",
+        "thrillophilia.com", "trip.com", "travelguru.com", "airbnb.com",
+        "facebook.com", "instagram.com", "justdial.com", "indiamart.com",
+        "youtube.com", "twitter.com", "x.com", "linkedin.com", "wikipedia.org"
+    }
+    if any(netloc == dom or netloc.endswith("." + dom) for dom in exact_otas):
+        return True
+    if "tripadvisor." in netloc or "airbnb." in netloc:
+        return True
+    if any(netloc.endswith(g) or f".{g}." in netloc for g in [".gov.in", ".nic.in", "gov.in", "nic.in", ".gov", ".nic", ".mil.in", ".res.in"]):
+        return True
+    return False
+
+def generate_swarm_queries(city: str, country: str, niche: str = "Hotels", count: int = 12, cycle: int = 1) -> List[Dict[str, str]]:
     """
     Partitions the target destination into 10-12 distinct micro-zones or niche variations.
-    - If target is 'India' or nationwide: Spreads 12 workers across India's top hotel hubs.
-    - If target is a State/UT (e.g. 'Uttar Pradesh', 'Maharashtra', 'Kerala'): Pulls 12 actual districts from india_locations.json.
-    - If target is a specific city: Pulls micro-zones or generates 12 keyword variations.
+    Rotates queries across cycles so that Cycle 2, 3, 4, 5... hit completely fresh untouched markets!
+    - If target is 'India' or nationwide: Rotates across India's top 25+ hotel hubs.
+    - If target is a State/UT: Rotates across actual districts from india_locations.json.
+    - If target is a specific city: Rotates across micro-zones and specialized niche variations.
     """
     clean_city = (city or "").strip().lower()
     clean_country = (country or "").strip().lower()
     queries = []
+    offset = max(0, (cycle - 1) * count)
 
-    # 1. Check if nationwide sweep is requested (city is 'india', 'all india', 'pan india', or city matches country)
+    # 1. Check if nationwide sweep is requested
     is_nationwide = clean_city in ["india", "all india", "pan india", "bharat", "all", "entire"] or (clean_city == clean_country and clean_country in ["india", "algeria", "uae"])
 
     if is_nationwide and "india" in (clean_city + " " + clean_country):
         hubs = DESTINATION_MICRO_ZONES["india"]
-        for idx, hub in enumerate(hubs[:count]):
+        for idx in range(count):
+            hub = hubs[(offset + idx) % len(hubs)]
             queries.append({
                 "worker_id": f"Hunter-{idx+1:02d}",
                 "zone": hub,
@@ -193,9 +238,9 @@ def generate_swarm_queries(city: str, country: str, niche: str = "Hotels", count
             break
 
     if matched_districts:
-        # User specified a state (e.g., "Uttar Pradesh", "Himachal Pradesh", "Kerala")
-        # Distribute 12 workers across 12 distinct districts/cities in that state
-        for idx, dist in enumerate(matched_districts[:count]):
+        # Rotate districts across cycles so subsequent waves hit fresh cities in the state
+        for idx in range(count):
+            dist = matched_districts[(offset + idx) % len(matched_districts)]
             queries.append({
                 "worker_id": f"Hunter-{idx+1:02d}",
                 "zone": dist,
@@ -212,7 +257,9 @@ def generate_swarm_queries(city: str, country: str, niche: str = "Hotels", count
             break
 
     if matched_zones:
-        for idx, zone in enumerate(matched_zones[:count]):
+        # Rotate micro-zones across waves
+        for idx in range(count):
+            zone = matched_zones[(offset + idx) % len(matched_zones)]
             q = f"{niche} in {zone}, {city}"
             queries.append({
                 "worker_id": f"Hunter-{idx+1:02d}",
@@ -235,9 +282,14 @@ def generate_swarm_queries(city: str, country: str, niche: str = "Hotels", count
         f"{niche} in North {city}, {country}",
         f"{niche} in South {city}, {country}",
         f"{niche} in Central {city}, {country}",
-        f"Top rated {niche} in {city}, {country}"
+        f"Top rated {niche} in {city}, {country}",
+        f"Beach stays in {city}, {country}",
+        f"Cottages in {city}, {country}",
+        f"Bed and Breakfast in {city}, {country}",
+        f"Budget {niche} in {city}, {country}"
     ]
-    for idx, v in enumerate(variations[:count]):
+    for idx in range(count):
+        v = variations[(offset + idx) % len(variations)]
         queries.append({
             "worker_id": f"Hunter-{idx+1:02d}",
             "zone": f"Zone-{idx+1}",
@@ -254,7 +306,8 @@ async def _scrape_single_tab(
     business_id: str = "gethotelstays",
     city: str = "",
     country: str = "",
-    niche: str = ""
+    niche: str = "",
+    existing_names: set | None = None
 ) -> List[Dict[str, Any]]:
     """
     Scrapes Google Maps search results inside a dedicated tab of the single shared Chromium browser.
@@ -265,23 +318,17 @@ async def _scrape_single_tab(
     discovered = []
 
     try:
-        # Route Interception: Abort images, fonts, media to keep RAM and CPU feather-light
-        async def _block_heavy_assets(route):
-            try:
-                req_type = route.request.resource_type
-                if req_type in ["image", "media", "font"]:
-                    await route.abort()
-                elif any(bad in route.request.url for bad in ["google-analytics", "doubleclick", "googletagmanager"]):
-                    await route.abort()
-                else:
-                    await route.continue_()
-            except Exception:
-                pass
-
-        await page.route("**/*", _block_heavy_assets)
-
         search_url = f"https://www.google.com/maps/search/{urllib.parse.quote_plus(query)}?hl=en"
-        await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
+        for attempt in range(2):
+            try:
+                await page.goto(search_url, wait_until="domcontentloaded", timeout=45000)
+                break
+            except Exception as nav_err:
+                if attempt == 0:
+                    await asyncio.sleep(1.0)
+                    continue
+                raise nav_err
+
         await asyncio.sleep(1.2)
 
         # Accept consent if prompted
@@ -308,16 +355,16 @@ async def _scrape_single_tab(
         except Exception:
             pass
 
-        # Fast smooth scroll of results feed (3-5 scrolls)
-        scrolls = max(3, min(6, (max_places // 5) + 1))
+        # Smooth adaptive scroll of results feed (6-10 scrolls with 0.6s delay for full network tile hydration)
+        scrolls = max(6, min(12, (max_places // 2) + 2))
         for _ in range(scrolls):
             try:
                 feed = page.locator(feed_selector)
-                await feed.evaluate("el => el.scrollBy(0, 4000)")
-                await asyncio.sleep(0.35)
+                await feed.evaluate("el => el.scrollBy(0, 3500)")
+                await asyncio.sleep(0.6)
             except Exception:
                 await page.mouse.wheel(0, 1500)
-                await asyncio.sleep(0.35)
+                await asyncio.sleep(0.6)
 
         # Instant DOM Batch Extraction via JavaScript (0.01 seconds)
         feed_items = await page.evaluate("""() => {
@@ -332,11 +379,24 @@ async def _scrape_single_tab(
                 const webBtn = card.querySelector('a[data-value="Website"], a[aria-label*="Website"], a[aria-label*="website"], a[data-item-id="authority"]');
                 const website = webBtn ? webBtn.getAttribute('href') : null;
                 const text = card.innerText || '';
-                results.push({title, website, text, href: link.getAttribute('href')});
+
+                // Extract any mailto links in card
+                const mailBtn = card.querySelector('a[href^="mailto:"]');
+                let cardEmail = mailBtn ? mailBtn.getAttribute('href').replace(/^mailto:/i, '').split('?')[0].trim() : null;
+
+                // Check text for email regex
+                if (!cardEmail && text.includes('@')) {
+                    const emMatch = text.match(/[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/);
+                    if (emMatch) cardEmail = emMatch[0].trim();
+                }
+
+                results.push({title, website, text, href: link.getAttribute('href'), email: cardEmail});
             }
             return results;
         }""")
 
+        if existing_names is None:
+            existing_names = db.get_existing_business_names_set()
         seen_titles = set()
         count = 0
 
@@ -346,7 +406,8 @@ async def _scrape_single_tab(
                 break
 
             title = item.get("title", "").strip()
-            if not title or title in seen_titles:
+            # ULTRA-FAST DEDUPLICATION: Skip in 0.0001s if already in DB or seen
+            if not title or title in seen_titles or title.lower() in existing_names:
                 continue
             seen_titles.add(title)
 
@@ -357,11 +418,15 @@ async def _scrape_single_tab(
                     website_url = urllib.parse.unquote(match.group(1))
 
             if website_url:
-                lower_url = website_url.lower()
-                if any(dom in lower_url for dom in OTA_DOMAINS):
+                if is_ota_or_social(website_url):
                     website_url = None
 
             card_text = item.get("text", "")
+            direct_email = item.get("email")
+            if not direct_email and "@" in card_text:
+                m_em = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', card_text)
+                if m_em:
+                    direct_email = m_em.group(0).strip()
 
             # Extract Phone from card text
             phone_match = re.search(r'(?:\+91[\-\s]?)?[6-9]\d{9}|\b0\d{2,4}[\-\s]?\d{6,8}\b', card_text)
@@ -379,27 +444,86 @@ async def _scrape_single_tab(
             addr_match = re.search(r'(?:Near|Opposite|Road|Nagar|Colony|Beach|Lane|Street|Marg|Bazaar)[^,\.\n]+', card_text, flags=re.I)
             address = addr_match.group(0).strip() if addr_match else f"{zone or city}, {country}"
 
-            # Quick click on card if website button wasn't immediately on card face
-            if not website_url and count < 6:
+            # Only open place detail page if website URL was NOT already present in search card
+            place_href = item.get("href")
+            if not website_url and place_href and place_href.startswith("http"):
+                dp = None
                 try:
-                    card_link = page.locator(f'a[aria-label="{title}"], a[href*="/maps/place/"]:has-text("{title[:15]}")').first
-                    if await card_link.is_visible(timeout=400):
-                        await card_link.click(timeout=600)
-                        await asyncio.sleep(0.25)
-                        web_btn = page.locator('a[data-item-id="authority"], a[aria-label*="Website"], a[aria-label*="website"]').first
-                        if await web_btn.is_visible(timeout=400):
-                            w_href = await web_btn.get_attribute("href")
-                            if w_href and "google.com/url?" in w_href:
-                                m = re.search(r'url=([^&]+)', w_href)
-                                if m:
-                                    w_href = urllib.parse.unquote(m.group(1))
-                            if w_href and not any(dom in w_href.lower() for dom in OTA_DOMAINS):
-                                website_url = w_href
+                    dp = await page.context.new_page()
+                    await dp.goto(place_href, wait_until="domcontentloaded", timeout=7000)
+                    await asyncio.sleep(0.3)
+
+                    # 1. Extract Website URL
+                    web_btn = dp.locator('a[data-item-id="authority"], a[data-tooltip*="website" i], a[aria-label*="website" i], a[data-value="Website"]').first
+                    if await web_btn.is_visible(timeout=1000):
+                        w_href = await web_btn.get_attribute("href")
+                        if w_href and "google.com/url?" in w_href:
+                            m = re.search(r'url=([^&]+)', w_href)
+                            if m:
+                                w_href = urllib.parse.unquote(m.group(1))
+                        if w_href and not is_ota_or_social(w_href):
+                            website_url = w_href
+
+                    # 2. Extract Phone if not already captured
+                    if not phone:
+                        try:
+                            phone_loc = dp.locator('button[data-tooltip*="phone" i], button[aria-label*="phone" i], button[data-item-id*="phone"]').first
+                            if await phone_loc.is_visible(timeout=400):
+                                phone_aria = await phone_loc.get_attribute("aria-label") or await phone_loc.inner_text()
+                                if phone_aria:
+                                    phone_m = re.search(r'(?:\+91[\-\s]?)?[6-9]\d{9}|\b0\d{2,4}[\-\s]?\d{6,8}\b', phone_aria)
+                                    if phone_m:
+                                        phone = phone_m.group(0).strip()
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+                finally:
+                    if dp:
+                        try:
+                            await dp.close()
+                        except Exception:
+                            pass
+
+            # REAL-TIME WEBSITE & FOOTPRINT EMAIL EXTRACTION (Every Tab Audits Its Leads Live!)
+            lead_city = worker_info.get("city_override") or zone or city
+            if not direct_email and website_url:
+                try:
+                    temp_lead = {
+                        "id": 0,
+                        "business_name": title,
+                        "website_url": website_url,
+                        "city": lead_city,
+                        "email": None,
+                        "business_id": business_id
+                    }
+                    audit_res = await asyncio.to_thread(website_auditor.audit_single_website, temp_lead)
+                    if audit_res and audit_res.get("email"):
+                        direct_email = audit_res.get("email")
                 except Exception:
                     pass
 
-            # Insert into SQLite Database
-            lead_city = worker_info.get("city_override") or zone or city
+            if not direct_email and not website_url:
+                try:
+                    fp_emails = await asyncio.to_thread(website_auditor.hunt_email_via_search_footprint, title, lead_city, "")
+                    for f_em in fp_emails:
+                        verified = website_auditor.clean_and_verify_email(f_em, check_mx=True)
+                        if verified:
+                            direct_email = verified
+                            break
+                except Exception:
+                    pass
+
+            if direct_email:
+                direct_email = website_auditor.clean_email(direct_email)
+
+            # STRICT ACTIONABLE CONTACT GATE:
+            # If a candidate has NO website, NO email, AND NO phone number, it's a ghost lead! Discard immediately!
+            if not website_url and not direct_email and not phone:
+                continue
+
+            # Golden Lead Rule: If lead has NO website, route 100% to Aloria Labs (Web Dev pitch target)
+            target_biz_id = "aloria_labs" if not website_url else business_id
             lead_id = db.insert_lead(
                 business_name=title,
                 country=country or "India",
@@ -410,9 +534,11 @@ async def _scrape_single_tab(
                 rating=rating,
                 reviews_count=reviews_count,
                 website_url=website_url,
-                business_id=business_id
+                business_id=target_biz_id,
+                email=direct_email
             )
 
+            existing_names.add(title.lower())
             if lead_id:
                 discovered.append({
                     "id": lead_id,
@@ -422,10 +548,12 @@ async def _scrape_single_tab(
                     "phone": phone,
                     "rating": rating,
                     "reviews": reviews_count,
-                    "zone": zone
+                    "zone": zone,
+                    "email": direct_email
                 })
                 count += 1
-                sys.stdout.write(f"\r  {ui.C_GREEN}[✓ {worker_id} (Tab)]{ui.RESET} Harvested: {title[:26]} ({zone}) | Tab: {count}/{max_places}   ")
+                email_badge = f"{ui.C_GREEN}{direct_email}{ui.RESET}" if direct_email else f"{ui.C_DIM}Pending web{ui.RESET}"
+                sys.stdout.write(f"\r  {ui.C_GREEN}[✓ {worker_id} (Tab)]{ui.RESET} Harvested: {title[:22]} │ {email_badge} │ Tab: {count}/{max_places}   \n")
                 sys.stdout.flush()
 
     except Exception as e:
@@ -439,54 +567,73 @@ async def _hunt_with_swarm_async(
     niche: str = "Hotels",
     goal: int = 150,
     business_id: str = "gethotelstays",
-    workers_count: int = 10,
-    headless: bool = False
+    workers_count: int = 12,
+    headless: bool = False,
+    cycle: int = 1,
+    max_concurrency: int = 12
 ) -> List[Dict[str, Any]]:
-    queries = generate_swarm_queries(city, country, niche, count=workers_count)
+    queries = generate_swarm_queries(city, country, niche, count=workers_count, cycle=cycle)
     per_worker_quota = max(15, min(35, (goal // len(queries)) + 5))
 
-    print(f"  {ui.C_YELLOW}[*] Generated {len(queries)} micro-locality search partitions across {city}:{ui.RESET}")
+    print(f"  {ui.C_YELLOW}[*] Generated {len(queries)} micro-locality search partitions across {city} (Wave Cycle #{cycle}):{ui.RESET}")
     for q_item in queries:
         print(f"      {ui.C_CYAN}► {q_item['worker_id']}:{ui.RESET} {q_item['query']}")
     print()
 
-    print(f"  {ui.C_CYAN}[⚡ 1-BROWSER 10-TABS ARCHITECTURE]{ui.RESET} Launching 1 single Chromium browser with {len(queries)} parallel tabs...")
+    concurrency_limit = max(1, min(12, max_concurrency or workers_count))
+    print(f"  {ui.C_CYAN}[⚡ HIGH-EFFICIENCY BROWSER SWARM]{ui.RESET} Launching Chromium engine ({len(queries)} micro-zones, all {concurrency_limit} concurrent tabs active)...")
 
     async with async_playwright() as p:
+        launch_args = [
+            "--disable-blink-features=AutomationControlled",
+            "--no-sandbox",
+            "--disable-gpu",
+            "--disable-dev-shm-usage",
+            "--disable-extensions",
+            "--disable-background-networking",
+            "--blink-settings=imagesEnabled=false",
+            "--js-flags=--max-old-space-size=1024"
+        ]
+        if headless:
+            launch_args.extend(["--headless=new", "--window-position=-2400,-2400"])
+
         browser = await p.chromium.launch(
             headless=headless,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-                "--disable-gpu",
-                "--disable-dev-shm-usage"
-            ]
+            args=launch_args
         )
         context = await browser.new_context(
             viewport={"width": 1280, "height": 720},
             locale="en-US"
         )
 
-        # Create all tabs inside the SAME single browser window
-        tabs = [await context.new_page() for _ in range(len(queries))]
-        print(f"  {ui.C_GREEN}[✓]{ui.RESET} Opened {len(tabs)} tabs in single browser window. Executing parallel scraping across all tabs...\n")
+        # Load existing database names once for all tabs (0.05s)
+        shared_existing_names = db.get_existing_business_names_set()
 
-        async def _run_tab(tab_idx):
-            page = tabs[tab_idx]
-            q_info = queries[tab_idx]
-            if tab_idx > 0:
-                await asyncio.sleep(tab_idx * 0.35)  # 350ms smooth stagger
-            return await _scrape_single_tab(
-                page=page,
-                worker_info=q_info,
-                max_places=per_worker_quota,
-                business_id=business_id,
-                city=city,
-                country=country,
-                niche=niche
-            )
+        sem = asyncio.Semaphore(concurrency_limit)
 
-        tasks = [_run_tab(i) for i in range(len(queries))]
+        async def _run_worker(q_info, idx):
+            async with sem:
+                if idx > 0:
+                    await asyncio.sleep(0.25)
+                page = await context.new_page()
+                try:
+                    return await _scrape_single_tab(
+                        page=page,
+                        worker_info=q_info,
+                        max_places=per_worker_quota,
+                        business_id=business_id,
+                        city=city,
+                        country=country,
+                        niche=niche,
+                        existing_names=shared_existing_names
+                    )
+                finally:
+                    try:
+                        await page.close()
+                    except Exception:
+                        pass
+
+        tasks = [_run_worker(q, i) for i, q in enumerate(queries)]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         total_discovered = []
@@ -498,8 +645,16 @@ async def _hunt_with_swarm_async(
                 total_discovered.extend(res)
                 print(f"\n  {ui.C_GREEN}[✓ Tab {q_info['worker_id']} COMPLETED]{ui.RESET} Captured {len(res)} unique properties in {q_info['zone']}.")
 
-        await context.close()
-        await browser.close()
+        try:
+            await context.close()
+        except Exception:
+            pass
+        try:
+            await browser.close()
+        except Exception:
+            pass
+        import gc
+        gc.collect()
         return total_discovered
 
 def hunt_with_swarm(
@@ -508,16 +663,17 @@ def hunt_with_swarm(
     niche: str = "Hotels",
     goal: int = 150,
     business_id: str = "gethotelstays",
-    workers_count: int = 10,
-    max_concurrency: int = 10,
+    workers_count: int = 12,
+    max_concurrency: int = 12,
     auto_audit: bool = True,
-    headless: bool | None = None
+    headless: bool | None = None,
+    cycle: int = 1
 ) -> List[Dict[str, Any]]:
     """
     Master 1-Browser Multi-Tab Swarm Coordinator:
     1. Launches 1 SINGLE Chromium browser instance.
-    2. Opens 10 tabs inside that single browser window.
-    3. Concurrently scrapes partitioned queries across the 10 tabs.
+    2. Opens tabs inside that single browser window bounded by concurrency semaphore.
+    3. Concurrently scrapes partitioned queries across the tabs.
     4. Aggregates all freshly discovered candidate properties.
     5. Automatically launches parallel website auditing & MX email verification (if auto_audit=True).
     """
@@ -525,8 +681,8 @@ def hunt_with_swarm(
         headless = getattr(config, "HEADLESS", False)
 
     print(f"\n{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}")
-    print(f"  {ui.C_WHITE}DEPLOYING 1-BROWSER 10-TABS PARALLEL HUNTER SWARM{ui.RESET}")
-    print(f"  {ui.C_WHITE}Target:{ui.RESET} {ui.C_YELLOW}{niche} in {city}, {country}{ui.RESET} │ {ui.C_WHITE}Goal Buffer:{ui.RESET} {ui.C_GREEN}{goal} Leads{ui.RESET} │ {ui.C_WHITE}Tabs in 1 Browser:{ui.RESET} {ui.C_MAGENTA}{workers_count} Tabs{ui.RESET}")
+    print(f"  {ui.C_WHITE}DEPLOYING 1-BROWSER PARALLEL HUNTER SWARM{ui.RESET}")
+    print(f"  {ui.C_WHITE}Target:{ui.RESET} {ui.C_YELLOW}{niche} in {city}, {country}{ui.RESET} │ {ui.C_WHITE}Goal Buffer:{ui.RESET} {ui.C_GREEN}{goal} Leads{ui.RESET} │ {ui.C_WHITE}Partitions:{ui.RESET} {ui.C_MAGENTA}{workers_count} Zones{ui.RESET}")
     print(f"{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}\n")
 
     start_time = time.time()
@@ -554,7 +710,9 @@ def hunt_with_swarm(
         goal,
         business_id,
         workers_count,
-        headless
+        headless,
+        cycle,
+        max_concurrency
     )
 
     elapsed = round(time.time() - start_time, 1)

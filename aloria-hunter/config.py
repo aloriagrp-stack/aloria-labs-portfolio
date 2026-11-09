@@ -24,7 +24,7 @@ DEFAULT_CITIES = [
     "Annaba"
 ]
 
-# Browser Display: False = Visible window on screen (you can watch it type/click), True = Silent background (100% headless)
+# Browser Display: False = Visible window on screen, True = Silent background (100% headless)
 HEADLESS = True
 
 # Rate Limiting & High-Speed Adaptive Pacing
@@ -33,14 +33,14 @@ EMAIL_DELAY_MINUTES = 0  # Replaced by high-speed adaptive jitter pacing in seco
 DISPATCH_DELAY_SECONDS = 10  # 8-12s humanized random jitter between dispatches
 PACING_MODE = "TURBO"  # "TURBO" (6-10s) | "BALANCED" (12-18s) | "SAFE" (25-35s)
 MAX_EMAILS_PER_DAY = 1000  # Full Swarm capacity
-MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS = 50       # Exactly 50 successfully delivered emails per account for GetHotelStays
-MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA = 100   # Exactly 100 successfully delivered emails per account for Aloria Labs
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS = 70       # Exactly 70 successfully delivered emails per account for GetHotelStays
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA = 50    # Exactly 50 successfully delivered emails per account for Aloria Labs
 
 # 10-12 Parallel Agent Lead Hunter Swarm Settings
 SWARM_WORKERS = 12
-SWARM_MAX_CONCURRENCY = 4  # Concurrently active Playwright processes to manage RAM safely
+SWARM_MAX_CONCURRENCY = 12  # All 12 tabs execute concurrently in the shared Chromium instance
 SWARM_BUFFER_GOAL = 200    # Default lead buffer target
-AUDITOR_WORKERS = 100      # 100 concurrent lightweight Python workers (~1MB RAM each) for blazing-fast website auditing
+AUDITOR_WORKERS = 25       # 25 concurrent lightweight workers for low-RAM high-speed website auditing
 
 def get_max_delivered_quota(business_id="gethotelstays"):
     if str(business_id).lower() in ["aloria_labs", "aloria"]:
@@ -50,6 +50,10 @@ def get_max_delivered_quota(business_id="gethotelstays"):
 MAX_DELIVERED_PER_ACCOUNT_PER_DAY = MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS
 FOLLOW_UP_INTERVAL_DAYS = 3  # Follow up after 3 days of no response
 MAX_FOLLOW_UPS = 2  # Total follow-ups (Initial + Follow-up 1 + Follow-up 2)
+
+# Official GetHotelStays Links
+GHS_ONBOARDING_LINK = "https://gethotelstays.com/list-property/"
+GHS_ABOUT_LINK = "https://gethotelstays.com/about/"
 
 # Load SMTP Credentials from parent directory smtp_config.json
 # Load SMTP Credentials from parent directory smtp_config.json

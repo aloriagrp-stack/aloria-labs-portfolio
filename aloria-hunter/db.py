@@ -8,6 +8,8 @@ def get_connection():
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    conn.execute("PRAGMA cache_size=-64000;")
     conn.execute("PRAGMA busy_timeout=30000;")
     return conn
 
@@ -72,6 +74,16 @@ def init_db():
     );
     CREATE INDEX IF NOT EXISTS idx_replied_contacts_email ON replied_contacts(email);
     CREATE INDEX IF NOT EXISTS idx_replied_contacts_domain ON replied_contacts(domain);
+
+    -- HIGH-SPEED PERFORMANCE INDEXES (ELIMINATES FULL TABLE SCANS)
+    CREATE INDEX IF NOT EXISTS idx_leads_biz_status ON leads(business_id, status);
+    CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email);
+    CREATE INDEX IF NOT EXISTS idx_leads_biz_name ON leads(business_name);
+    CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+    CREATE INDEX IF NOT EXISTS idx_leads_initial_sent ON leads(initial_email_sent_at);
+    CREATE INDEX IF NOT EXISTS idx_outreach_lead_id ON outreach_logs(lead_id);
+    CREATE INDEX IF NOT EXISTS idx_outreach_biz_status ON outreach_logs(business_id, status, pitch_type);
+    CREATE INDEX IF NOT EXISTS idx_outreach_sender_date ON outreach_logs(sender_email, sent_at);
     """)
     conn.commit()
 
@@ -100,52 +112,110 @@ def init_db():
         cursor.execute("ALTER TABLE outreach_logs ADD COLUMN business_id TEXT DEFAULT 'aloria_labs'")
         conn.commit()
 
-    # Automatic Backfill: Populates assigned_sender_email from past initial outreach logs
-    try:
-        cursor.execute("""
-        UPDATE leads
-        SET assigned_sender_email = (
-            SELECT sender_email FROM outreach_logs 
-            WHERE outreach_logs.lead_id = leads.id AND outreach_logs.pitch_type = 'INITIAL' AND outreach_logs.status = 'SENT'
-            ORDER BY id DESC LIMIT 1
-        )
-        WHERE (assigned_sender_email IS NULL OR assigned_sender_email = '')
-          AND initial_email_sent_at IS NOT NULL
-        """)
-        conn.commit()
-    except Exception:
-        pass
-
     conn.close()
 
-def insert_lead(business_name, country, city, niche, address=None, phone=None, rating=None, reviews_count=None, website_url=None, business_id="aloria_labs"):
+def insert_lead(business_name, country, city, niche, address=None, phone=None, rating=None, reviews_count=None, website_url=None, business_id="aloria_labs", email=None):
     conn = get_connection()
     cursor = conn.cursor()
     has_website = 1 if (website_url and website_url.strip() and website_url.startswith("http")) else 0
+    clean_email = email.strip().lower() if (email and isinstance(email, str) and "@" in email and "." in email) else None
+    clean_phone = (phone or "").strip()
+
+    # STRICT QUALITY GATE: Reject ghost leads with ZERO contact channels (no website, no email, no phone)
+    if not has_website and not clean_email and not clean_phone:
+        conn.close()
+        return None
+    
+    if not business_id:
+        business_id = "aloria_labs"
+
+    status = 'AUDITED' if clean_email else 'DISCOVERED'
+    if clean_email and has_website:
+        audit_summary = "★ Verified direct inbox captured from Google Maps listing"
+    elif not has_website and clean_phone:
+        audit_summary = f"★ Actionable Golden Lead (No Website | Phone: {clean_phone}) - Ready for WhatsApp/Calling Pitch"
+    elif not has_website:
+        audit_summary = "★ Golden Lead (No Website) - Assigned to Aloria Labs for Web Development & Direct Booking Platform."
+    else:
+        audit_summary = None
+
     try:
         cursor.execute("""
-        INSERT INTO leads (business_name, country, city, niche, address, phone, rating, reviews_count, has_website, website_url, status, business_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DISCOVERED', ?)
-        """, (business_name, country, city, niche, address, phone, rating, reviews_count, has_website, website_url, business_id))
+        INSERT INTO leads (business_name, country, city, niche, address, phone, rating, reviews_count, has_website, website_url, email, status, business_id, audit_summary)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (business_name, country, city, niche, address, phone, rating, reviews_count, has_website, website_url, clean_email, status, business_id, audit_summary))
         conn.commit()
         lead_id = cursor.lastrowid
         conn.close()
         return lead_id
     except sqlite3.IntegrityError:
+        # Check if the existing lead was NEVER contacted and has NO email (e.g. from an old failed scrape or ARCHIVED_OLD_POOL / REJECTED_JUNK)
+        cursor.execute("""
+        SELECT id, status, email, initial_email_sent_at FROM leads
+        WHERE LOWER(TRIM(business_name)) = LOWER(TRIM(?))
+          AND LOWER(TRIM(city)) = LOWER(TRIM(?))
+          AND LOWER(TRIM(country)) = LOWER(TRIM(?))
+        """, (business_name, city, country))
+        row = cursor.fetchone()
+        if row:
+            st = row["status"]
+            em = row["email"]
+            sent_at = row["initial_email_sent_at"]
+            # If it was never contacted and has no valid email, rejuvenate it with fresh crawled data!
+            if not sent_at and (not em or not em.strip()) and st in ('ARCHIVED_OLD_POOL', 'REJECTED_JUNK', 'DISCOVERED'):
+                new_st = 'AUDITED' if clean_email else 'DISCOVERED'
+                cursor.execute("""
+                UPDATE leads
+                SET website_url = ?, has_website = ?, phone = coalesce(?, phone),
+                    email = coalesce(?, email),
+                    rating = coalesce(?, rating), reviews_count = coalesce(?, reviews_count),
+                    address = coalesce(?, address), niche = ?, business_id = ?, status = ?,
+                    audit_summary = coalesce(?, audit_summary)
+                WHERE id = ?
+                """, (website_url, has_website, phone, clean_email, rating, reviews_count, address, niche, business_id, new_st, audit_summary, row["id"]))
+                conn.commit()
+                rejuv_id = row["id"]
+                conn.close()
+                return rejuv_id
         conn.close()
-        return None  # Duplicate already in database
+        return None  # Truly duplicate active lead with email/outreach
 
-def get_pending_audits(business_id=None, limit=20):
+def get_existing_business_names_set(city=None, country=None):
+    """
+    Returns an ultra-fast in-memory set of lowercase business names already cataloged in DB
+    that either have an email or have already been contacted.
+    """
     conn = get_connection()
     cursor = conn.cursor()
-    if business_id:
-        cursor.execute("""
-        SELECT * FROM leads WHERE status = 'DISCOVERED' AND has_website = 1 AND business_id = ? LIMIT ?
-        """, (business_id, limit))
+    condition = "WHERE ((email IS NOT NULL AND TRIM(email) != '') OR initial_email_sent_at IS NOT NULL OR status IN ('AUDITED', 'SENT_INITIAL', 'FOLLOW_UP_1', 'FOLLOW_UP_2', 'REPLIED', 'BOUNCED', 'BLACKLISTED'))"
+    if city and country:
+        sql = f"SELECT LOWER(TRIM(business_name)) FROM leads {condition} AND LOWER(TRIM(city)) = LOWER(TRIM(?)) AND LOWER(TRIM(country)) = LOWER(TRIM(?))"
+        cursor.execute(sql, (city, country))
+    elif city:
+        sql = f"SELECT LOWER(TRIM(business_name)) FROM leads {condition} AND LOWER(TRIM(city)) = LOWER(TRIM(?))"
+        cursor.execute(sql, (city,))
     else:
-        cursor.execute("""
-        SELECT * FROM leads WHERE status = 'DISCOVERED' AND has_website = 1 LIMIT ?
-        """, (limit,))
+        sql = f"SELECT LOWER(TRIM(business_name)) FROM leads {condition}"
+        cursor.execute(sql)
+    names = {r[0] for r in cursor.fetchall() if r[0]}
+    conn.close()
+    return names
+
+def get_pending_audits(business_id=None, limit=20, lead_ids=None):
+    conn = get_connection()
+    cursor = conn.cursor()
+    sql = "SELECT * FROM leads WHERE status = 'DISCOVERED'"
+    params = []
+    if lead_ids:
+        placeholders = ','.join('?' for _ in lead_ids)
+        sql += f" AND id IN ({placeholders})"
+        params.extend(lead_ids)
+    if business_id:
+        sql += " AND business_id = ?"
+        params.append(business_id)
+    sql += " ORDER BY has_website DESC, id ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(sql, tuple(params))
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return rows
@@ -168,18 +238,23 @@ def get_no_website_leads(business_id=None, limit=20):
 def update_audit(lead_id, email, audit_summary, business_id=None):
     conn = get_connection()
     cursor = conn.cursor()
+    # STRICT ANTI-HALLUCINATION: Only set AUDITED status if a real, valid email with @ and . was actually discovered
+    has_valid_email = bool(email and isinstance(email, str) and "@" in email and "." in email and len(email.strip()) > 5)
+    clean_email_val = email.strip().lower() if has_valid_email else None
+    new_status = 'AUDITED' if has_valid_email else 'NO_EMAIL_DISCOVERED'
+
     if business_id:
         cursor.execute("""
         UPDATE leads
-        SET email = ?, audit_summary = ?, status = 'AUDITED', business_id = ?
+        SET email = ?, audit_summary = ?, status = ?, business_id = ?
         WHERE id = ?
-        """, (email, audit_summary, business_id, lead_id))
+        """, (clean_email_val, audit_summary, new_status, business_id, lead_id))
     else:
         cursor.execute("""
         UPDATE leads
-        SET email = ?, audit_summary = ?, status = 'AUDITED'
+        SET email = ?, audit_summary = ?, status = ?
         WHERE id = ?
-        """, (email, audit_summary, lead_id))
+        """, (clean_email_val, audit_summary, new_status, lead_id))
     conn.commit()
     conn.close()
 
@@ -352,7 +427,7 @@ def is_email_or_domain_replied(email):
 def mark_lead_bounced(email, reason="Address not found / Mailbox unavailable"):
     return add_to_blacklist(email, reason=reason, source="IMAP_BOUNCE")
 
-def get_leads_ready_for_initial_email(business_id=None, limit=10):
+def get_leads_ready_for_initial_email(business_id=None, limit=10, lead_ids=None, country=None, niche=None):
     conn = get_connection()
     cursor = conn.cursor()
     # Strict deduplication & protection query:
@@ -364,12 +439,12 @@ def get_leads_ready_for_initial_email(business_id=None, limit=10):
     # 6. GROUP BY email ensures zero duplicate emails in the same batch
     sql = """
     SELECT * FROM leads
-    WHERE (status = 'AUDITED' OR (status = 'DISCOVERED' AND has_website = 0))
+    WHERE status = 'AUDITED'
       AND email IS NOT NULL AND TRIM(email) != ''
       AND email LIKE '%@%.%'
       AND email NOT LIKE '%..%'
       AND initial_email_sent_at IS NULL
-      AND status NOT IN ('BOUNCED', 'BLACKLISTED', 'INVALID_EMAIL', 'REPLIED', 'OPT_OUT', 'REJECTED_JUNK')
+      AND status NOT IN ('BOUNCED', 'BLACKLISTED', 'INVALID_EMAIL', 'REPLIED', 'OPT_OUT', 'REJECTED_JUNK', 'ARCHIVED_OLD_POOL')
       AND LOWER(TRIM(email)) NOT IN (SELECT LOWER(TRIM(email)) FROM email_blacklist)
       AND LOWER(TRIM(email)) NOT IN (SELECT LOWER(TRIM(email)) FROM replied_contacts)
       AND LOWER(TRIM(email)) NOT IN (
@@ -385,9 +460,23 @@ def get_leads_ready_for_initial_email(business_id=None, limit=10):
       )
     """
     params = []
+    if lead_ids:
+        placeholders = ','.join('?' for _ in lead_ids)
+        sql += f" AND id IN ({placeholders})"
+        params.extend(lead_ids)
     if business_id:
         sql += " AND business_id = ?"
         params.append(business_id)
+    if country:
+        c_clean = country.strip().upper()
+        if c_clean in ["USA", "US", "UNITED STATES", "UNITED STATES OF AMERICA"]:
+            sql += " AND (UPPER(country) LIKE '%USA%' OR UPPER(country) LIKE '%UNITED STATES%' OR UPPER(country) = 'US')"
+        else:
+            sql += " AND UPPER(country) LIKE ?"
+            params.append(f"%{c_clean}%")
+    if niche:
+        sql += " AND UPPER(niche) LIKE ?"
+        params.append(f"%{niche.strip().upper()}%")
 
     sql += " GROUP BY LOWER(TRIM(email)) ORDER BY id ASC LIMIT ?"
     params.append(limit)
@@ -725,7 +814,7 @@ def get_stats(business_id=None):
     base_cond = "WHERE business_id = ?" if business_id else ""
     params = (business_id,) if business_id else ()
 
-    cursor.execute(f"SELECT count(*) as total, sum(has_website) as with_website, count(CASE WHEN has_website = 0 THEN 1 END) as without_website FROM leads {base_cond}", params)
+    cursor.execute(f"SELECT count(*) as total, sum(has_website) as with_website, count(CASE WHEN has_website = 0 AND status != 'REJECTED_JUNK' AND ((phone IS NOT NULL AND TRIM(phone) != '') OR (email IS NOT NULL AND TRIM(email) != '')) THEN 1 END) as without_website FROM leads {base_cond}", params)
     raw_row = cursor.fetchone()
     res: dict = dict(raw_row) if raw_row else {"total": 0, "with_website": 0, "without_website": 0}
     if res.get("with_website") is None:

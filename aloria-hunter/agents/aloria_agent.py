@@ -50,34 +50,34 @@ class AloriaAgent(BaseAgent):
                 city=target_city,
                 country=target_country,
                 niche=target_niche,
-                limit=params.get("limit", 5),
+                limit=params.get("limit", 100),
                 headless=params.get("headless", True)
             )
         elif action == "audit":
-            self.execute_audit(limit=params.get("limit", 10))
+            self.execute_audit(limit=params.get("limit", 100))
         elif action == "dispatch_initial":
-            self.execute_dispatch(limit=params.get("limit", 5))
+            self.execute_dispatch(limit=params.get("limit", 25))
         elif action == "dispatch_followups":
-            self.execute_followups(limit=params.get("limit", 5))
+            self.execute_followups(limit=params.get("limit", 25))
         elif action == "dispatch_interleaved":
-            self.execute_interleaved_dispatch(limit=params.get("limit", 5))
+            self.execute_interleaved_dispatch(limit=params.get("limit", 25))
         elif action == "full_wave":
             self.execute_full_wave(
                 city=target_city,
                 country=target_country,
                 niche=target_niche,
-                limit=params.get("limit", 5)
+                limit=params.get("limit", 100)
             )
         elif action == "pause":
             self.pause()
         elif action == "resume":
             self.resume()
 
-    def execute_hunt_wave(self, city="Mumbai", country="India", niche="Restaurants", limit=5, headless=True):
+    def execute_hunt_wave(self, city="Mumbai", country="India", niche="Restaurants", limit=100, headless=True):
         self.current_stage = 1
         self.status = "DISCOVERY"
-        self.current_task = f"Scraping enterprise {niche} in {city}, {country}"
-        self.log_event(f"[STAGE 01: DISCOVERY] Searching {niche} in {city}, {country} (Target: {limit})...", "INFO")
+        self.current_task = f"Deploying Multi-Tab Swarm for 100 {niche} in {city}, {country}"
+        self.log_event(f"[STAGE 01: MULTI-TAB SWARM NET] Casting net for {limit} {niche} in {city}, {country} (Single Browser / 8 Parallel Tabs)...", "INFO")
 
         discovered = []
         def crawl_step(msg):
@@ -97,21 +97,15 @@ class AloriaAgent(BaseAgent):
         except Exception as e:
             self.log_event(f"Maps crawl error: {e}", "WARN")
 
-        # Cloud resilience fallback: if no leads discovered via browser, load candidate leads from database
-        if not discovered:
-            self.log_event(f"[PIPELINE ACTIVATION] Pulling verified candidate leads from database queue...", "INFO")
-            pending = db.get_pending_audits(business_id=self.business_id, limit=limit)
-            if pending:
-                discovered = pending
-                self.log_event(f"[DISCOVERY READY] Loaded {len(discovered)} prospects from active database queue.", "SUCCESS")
-
         self.stage_metrics["crawled"] = len(discovered)
         self.stage_metrics["stage_1_done"] = True
         if discovered:
-            self.log_event(f"[STAGE 01 COMPLETE] {len(discovered)} prospects ready for pipeline processing.", "SUCCESS")
+            self.log_event(f"[STAGE 01 COMPLETE] Captured {len(discovered)} fresh prospects in {city}.", "SUCCESS")
+        else:
+            self.log_event(f"[DISCOVERY] 0 fresh prospects captured in this sweep for {city}.", "WARN")
         return discovered
 
-    def execute_audit(self, limit=10):
+    def execute_audit(self, limit=10, lead_ids=None):
         self.current_stage = 3
         self.status = "AUDITING"
         self.current_task = "Auditing websites & analyzing digital infrastructure"
@@ -126,7 +120,8 @@ class AloriaAgent(BaseAgent):
             audited = website_auditor.audit_pending_leads(
                 limit=limit,
                 business_id=self.business_id,
-                on_step=audit_step
+                on_step=audit_step,
+                lead_ids=lead_ids
             )
             self.stage_metrics["audited"] = len(audited)
             self.stage_metrics["stage_3_done"] = True
@@ -136,7 +131,7 @@ class AloriaAgent(BaseAgent):
 
         return audited
 
-    def execute_dispatch(self, limit=5):
+    def execute_dispatch(self, limit=5, lead_ids=None):
         self.current_stage = 5
         self.status = "DISPATCHING"
         self.current_task = "Dispatching initial web modernization pitches"
@@ -147,7 +142,7 @@ class AloriaAgent(BaseAgent):
             self.log_event(f"[DISPATCH] {msg}", "SUCCESS")
 
         try:
-            sent = email_engine.dispatch_initial_emails(limit=limit, business_id=self.business_id)
+            sent = email_engine.dispatch_initial_emails(limit=limit, business_id=self.business_id, lead_ids=lead_ids)
             self.stage_metrics["dispatched"] = sent
             self.stage_metrics["stage_5_done"] = True
             self.log_event(f"Dispatch complete: {sent} emails successfully sent.", "SUCCESS")
@@ -175,7 +170,7 @@ class AloriaAgent(BaseAgent):
         self.status = "IDLE"
         self.current_task = "Standby"
 
-    def execute_interleaved_dispatch(self, limit=5):
+    def execute_interleaved_dispatch(self, limit=5, lead_ids=None):
         self.current_stage = 5
         self.status = "DISPATCHING"
         self.current_task = "Balanced outreach (Fresh leads & scheduled follow-ups)"
@@ -190,7 +185,8 @@ class AloriaAgent(BaseAgent):
             res = email_engine.dispatch_interleaved_wave(
                 limit=limit,
                 business_id=self.business_id,
-                on_step=dispatch_step
+                on_step=dispatch_step,
+                lead_ids=lead_ids
             )
             self.stage_metrics["stage_5_done"] = True
             sent_count = (res.get("initial_sent") or 0) + (res.get("followup_sent") or 0)
@@ -203,10 +199,10 @@ class AloriaAgent(BaseAgent):
 
         return sent_count
 
-    def execute_full_wave(self, city="Mumbai", country="India", niche="Restaurants", limit=5):
+    def execute_full_wave(self, city="Mumbai", country="India", niche="Restaurants", limit=50):
         self.cycle_count += 1
         target_goal = max(1, int(limit))
-        self.log_event(f"🎯 [TARGET WAVE START] Autonomous Goal: {target_goal} verified deliveries for {city}, {country}...", "INFO")
+        self.log_event(f"🎯 [WAVE #{self.cycle_count} START] Autonomous Goal: {target_goal} verified deliveries for {city}, {country}...", "INFO")
 
         self.stage_metrics = {
             "stage": 1,
@@ -225,23 +221,41 @@ class AloriaAgent(BaseAgent):
 
         total_dispatched_in_run = 0
         iteration = 0
-        max_iterations = 15
+        max_iterations = 25
         query_niches = [niche, "Cafes", "Fine Dining", "Bistros", "Bakeries", "Bars & Lounges", f"Premium {niche}"]
+
+        micro_zones = []
+        try:
+            import swarm_hunter
+            c_low = city.lower().strip()
+            if c_low in swarm_hunter.DESTINATION_MICRO_ZONES:
+                micro_zones = swarm_hunter.DESTINATION_MICRO_ZONES[c_low]
+            elif country.lower().strip() in swarm_hunter.DESTINATION_MICRO_ZONES:
+                micro_zones = swarm_hunter.DESTINATION_MICRO_ZONES[country.lower().strip()]
+        except Exception:
+            pass
+        if not micro_zones:
+            micro_zones = [city, f"North {city}", f"South {city}", f"Central {city}", f"Downtown {city}", f"West {city}", f"East {city}"]
 
         while total_dispatched_in_run < target_goal and iteration < max_iterations:
             iteration += 1
             remaining = target_goal - total_dispatched_in_run
-            # High-capacity candidate sweep: capture 50-100 leads in one shot so the pipeline
+            # High-capacity candidate sweep: capture 60-120 leads in one shot so the pipeline
             # can thoroughly filter valid vs invalid candidates before handing over to the sender swarm
-            crawl_batch = max(50, min(100, remaining * 5))
-            current_niche = query_niches[(iteration - 1) % len(query_niches)]
+            crawl_batch = max(60, min(120, remaining * 5))
+            active_sub_city = micro_zones[(iteration - 1) % len(micro_zones)]
+            current_niche = query_niches[((iteration - 1) // len(micro_zones)) % len(query_niches)]
 
-            self.log_event(f"[CYCLE #{iteration}] Progress: {total_dispatched_in_run}/{target_goal} delivered. Sweeping high-capacity batch ({crawl_batch} candidate {current_niche}) in {city}...", "INFO")
+            self.log_event(f"[WAVE #{self.cycle_count} • SUB-SWEEP #{iteration}] Progress: {total_dispatched_in_run}/{target_goal} delivered. Sweeping high-capacity batch ({crawl_batch} {current_niche}) in {active_sub_city}, {country}...", "INFO")
 
             # -------------------------------------------------------------
             # STAGE 1: Lead Discovery (Google Maps Crawl - 100% Silent Background)
             # -------------------------------------------------------------
-            discovered = self.execute_hunt_wave(city=city, country=country, niche=current_niche, limit=crawl_batch, headless=True)
+            discovered = self.execute_hunt_wave(city=active_sub_city, country=country, niche=current_niche, limit=crawl_batch, headless=True)
+
+            if not discovered:
+                self.log_event(f"[NOTICE] 0 fresh prospects discovered in this sub-sweep for {active_sub_city}. Rotating to next micro-zone...", "WARN")
+                continue
 
             # -------------------------------------------------------------
             # STAGE 2: Quality Filter & Candidate Screening
@@ -260,9 +274,24 @@ class AloriaAgent(BaseAgent):
             for p in discovered:
                 p_name = p.get("name", "Prospect")
                 p_web = p.get("website_url")
+                p_em = p.get("email")
                 is_blacklisted = False
+
+                # Reject sponsored ads
+                if "sponsored" in p_name.lower() or "\ue5d4" in p_name:
+                    pruned_count += 1
+                    continue
+
                 if p.get("phone") and db.is_email_blacklisted(p.get("phone")):
                     is_blacklisted = True
+
+                # Clean & validate candidate email (allow Gmail/Yahoo/Custom, reject code/assets)
+                if p_em:
+                    valid_em, clean_em = email_verifier.is_valid_clean_email(p_em)
+                    if valid_em and clean_em and not db.is_email_blacklisted(clean_em):
+                        p["email"] = clean_em
+                    else:
+                        p["email"] = None
 
                 if is_blacklisted:
                     pruned_count += 1
@@ -283,10 +312,15 @@ class AloriaAgent(BaseAgent):
             )
             time.sleep(0.3)
 
+            fresh_lead_ids = [p["id"] for p in qualified if p.get("id")]
+            if not fresh_lead_ids:
+                self.log_event(f"[NOTICE] 0 qualified prospects remained after suppression filter. Skipping dispatch.", "WARN")
+                continue
+
             # -------------------------------------------------------------
             # STAGE 3: Technical Audits on Discovered Leads (100-Worker Swarm)
             # -------------------------------------------------------------
-            self.execute_audit(limit=crawl_batch)
+            self.execute_audit(limit=crawl_batch, lead_ids=fresh_lead_ids)
             time.sleep(0.3)
 
             # -------------------------------------------------------------
@@ -297,7 +331,7 @@ class AloriaAgent(BaseAgent):
             self.current_task = "Resolving MX DNS records & validating zero-bounce deliverability"
             self.log_event(f"[STAGE 04: EMAIL VERIFICATION] Verifying MX handshake for candidate inboxes...", "INFO")
 
-            ready_leads = db.get_leads_ready_for_initial_email(business_id=self.business_id, limit=max(crawl_batch, remaining))
+            ready_leads = db.get_leads_ready_for_initial_email(business_id=self.business_id, limit=max(crawl_batch, remaining), lead_ids=fresh_lead_ids)
             verified_count = 0
             for l in ready_leads:
                 em = l.get("email")
@@ -312,10 +346,14 @@ class AloriaAgent(BaseAgent):
             self.log_event(f"[VERIFICATION COMPLETE] {verified_count} mailboxes verified for delivery.", "SUCCESS")
             time.sleep(0.3)
 
+            if not ready_leads:
+                self.log_event(f"[NOTICE] No fresh deliverable emails discovered in this cycle. Skipping dispatch.", "WARN")
+                continue
+
             # -------------------------------------------------------------
-            # STAGE 5: Balanced Outreach Dispatch
+            # STAGE 5: Balanced Outreach Dispatch (Fresh Verified Leads Only)
             # -------------------------------------------------------------
-            sent_now = self.execute_interleaved_dispatch(limit=remaining)
+            sent_now = self.execute_interleaved_dispatch(limit=remaining, lead_ids=fresh_lead_ids)
             total_dispatched_in_run += (sent_now or 0)
             self.stage_metrics["dispatched"] = total_dispatched_in_run
 
@@ -323,11 +361,15 @@ class AloriaAgent(BaseAgent):
                 self.stage_metrics["target_completed"] = True
                 self.stage_metrics["completed_target"] = target_goal
                 self.stage_metrics["total_dispatched"] = total_dispatched_in_run
-                self.log_event(f"🎯 [TARGET GOAL ACHIEVED] Completed all {target_goal} target deliveries!", "SUCCESS")
+                self.log_event(f"🎯 [WAVE #{self.cycle_count} GOAL ACHIEVED] Completed all {target_goal} verified deliveries for Aloria Labs!", "SUCCESS")
                 break
             else:
-                self.log_event(f"[TARGET IN PROGRESS] {total_dispatched_in_run}/{target_goal} delivered. Starting cycle #{iteration + 1} to reach target...", "INFO")
+                self.log_event(f"[WAVE #{self.cycle_count} IN PROGRESS] {total_dispatched_in_run}/{target_goal} delivered ({target_goal - total_dispatched_in_run} needed). Staying in Wave #{self.cycle_count} to sweep next partition...", "INFO")
                 time.sleep(1.0)
+
+            # Low-RAM memory collection after each sub-iteration
+            import gc
+            gc.collect()
 
         self.current_stage = 0
         self.status = "IDLE"

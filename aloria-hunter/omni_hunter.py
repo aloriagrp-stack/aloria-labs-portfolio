@@ -20,6 +20,7 @@ if sys.platform == "win32":
 import db
 import ui
 import email_verifier
+import super_intelligence
 
 EMAIL_REGEX = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,10}')
 PHONE_REGEX = re.compile(r'(?:\+91[\-\s]?)?[6-9]\d{9}|\b0\d{2,4}[\-\s]?\d{6,8}\b')
@@ -40,7 +41,18 @@ OTA_DOMAINS = [
     "holidify.com", "thrillophilia.com", "trip.com", "travelguru.com",
     "facebook.com", "instagram.com", "justdial.com", "indiamart.com",
     "youtube.com", "twitter.com", "x.com", "linkedin.com", "airbnb", "wikipedia.org",
-    "bing.com", "microsoft.com", "google.com", "yahoo.com", "mapsofindia.com"
+    "bing.com", "microsoft.com", "google.com", "yahoo.com", "mapsofindia.com",
+    # Streaming & Entertainment
+    "hotstar", "jiohotstar", "disney", "netflix",
+    # Exam & Govt Portals
+    "pagalguy", "epfindia", ".gov.in", ".nic.in", "gov.in", "nic.in", ".gov", ".nic", ".mil.in", ".res.in",
+    # Adult / NSFW
+    "xxnx", "sexvideo", "sextube", "porn", "xvideos",
+    # Gaming & Quizzes
+    "poki.com", "crazygames", "y8.com", "weeklyquiz", "bingquiz",
+    # Tech Forums & Corporate
+    "zhihu", "ithome", "tinhte", "vivaldi", "huawei", "semrush", "quora", "reddit",
+    "mahindra.com", "soilassociation", "enseignons.be", "maitrelucas.fr", "translate.com"
 ]
 
 def get_random_headers():
@@ -83,8 +95,36 @@ def decode_search_url(raw_url: Optional[str]) -> str:
 def is_ota_or_social(url: str) -> bool:
     if not url:
         return True
-    lower = url.lower()
-    return any(dom in lower for dom in OTA_DOMAINS)
+    try:
+        from urllib.parse import urlparse
+        netloc = urlparse(url).netloc.lower()
+        if not netloc:
+            netloc = urlparse("https://" + url).netloc.lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        netloc = netloc.split(":")[0]
+    except Exception:
+        netloc = url.lower()
+
+    # Exact or subdomain matches
+    exact_otas = {
+        "booking.com", "agoda.com", "makemytrip.com", "goibibo.com",
+        "expedia.com", "hotels.com", "trivago.com", "yatra.com",
+        "cleartrip.com", "easemytrip.com", "oyorooms.com", "treebo.com",
+        "fabhotels.com", "ixigo.com", "kayak.com", "hostelworld.com",
+        "vrbo.com", "skyscanner.com", "skyscanner.net", "holidify.com",
+        "thrillophilia.com", "trip.com", "travelguru.com", "airbnb.com",
+        "facebook.com", "instagram.com", "justdial.com", "indiamart.com",
+        "youtube.com", "twitter.com", "x.com", "linkedin.com", "wikipedia.org",
+        "bing.com", "microsoft.com", "google.com", "yahoo.com", "mapsofindia.com"
+    }
+    if any(netloc == dom or netloc.endswith("." + dom) for dom in exact_otas):
+        return True
+    if any(k in netloc for k in ["tripadvisor.", "airbnb.", "poki.com", "crazygames", "y8.com", "quora.com", "reddit.com"]):
+        return True
+    if any(netloc.endswith(g) or f".{g}." in netloc for g in [".gov.in", ".nic.in", "gov.in", "nic.in", ".gov", ".nic", ".mil.in", ".res.in"]):
+        return True
+    return False
 
 def search_serp(query: str, limit: int = 15) -> List[Dict[str, str]]:
     """
@@ -159,8 +199,8 @@ def hunt_google_dorking(city: str, country: str = "India", niche: str = "Hotels"
             seen_urls.add(target_url)
 
             raw_title = item["title"]
-            title = raw_title.split("-")[0].split("|")[0].split("—")[0].replace("Official Site", "").replace("Official Website", "").strip()
-            if not title or len(title) < 3:
+            ok, title, _ = super_intelligence.sanitize_and_validate_business_name(raw_title)
+            if not ok or len(title) < 3:
                 continue
 
             snippet_text = item["snippet"]
@@ -218,11 +258,12 @@ def hunt_instagram_bios(city: str, country: str = "India", niche: str = "Hotels"
     Extracts direct booking WhatsApp numbers, official email addresses, and bio website links
     without requiring any Instagram login or account.
     """
-    print(f"  {ui.C_MAGENTA}[⚡ CHANNEL 3: INSTAGRAM SOCIAL BIO HUNTER]{ui.RESET} Hunting boutique stays in {city}...")
+    print(f"  {ui.C_MAGENTA}[⚡ CHANNEL 3: INSTAGRAM SOCIAL BIO HUNTER]{ui.RESET} Hunting boutique stays, villas & homestays in {city}...")
     queries = [
-        f'site:instagram.com "{niche}" "{city}" ("email" OR "reservations" OR "bookings" OR "contact")',
-        f'site:instagram.com "resort in {city}" ("wa.me" OR "+91" OR "@gmail.com")',
-        f'site:instagram.com "boutique stay in {city}" ("booking" OR "dm")'
+        f'site:instagram.com "{niche}" "{city}" ("email" OR "reservations" OR "bookings" OR "contact" OR "DM for bookings")',
+        f'site:instagram.com ("homestay" OR "villa" OR "resort" OR "cottage" OR "guest house") "{city}" ("wa.me" OR "+91" OR "@gmail.com")',
+        f'site:instagram.com "{city}" ("stay" OR "hotel" OR "rooms") ("booking" OR "call" OR "WhatsApp" OR "DM to book")',
+        f'site:instagram.com "boutique stay in {city}" ("booking" OR "dm for price" OR "enquiries")'
     ]
 
     discovered = []
@@ -257,9 +298,14 @@ def hunt_instagram_bios(city: str, country: str = "India", niche: str = "Hotels"
             found_emails = EMAIL_REGEX.findall(snippet)
             bio_email = found_emails[0].strip().lower() if found_emails else None
 
-            # Extract phone/WhatsApp from bio snippet
-            phone_match = PHONE_REGEX.search(snippet)
-            phone_val = phone_match.group(0).strip() if phone_match else None
+            # Extract phone/WhatsApp from bio snippet (handles +91, normal mobile, and wa.me links)
+            phone_val = None
+            wa_match = re.search(r'wa\.me/(?:\+?91)?(\d{10})', snippet)
+            if wa_match:
+                phone_val = "+91 " + wa_match.group(1)
+            else:
+                phone_match = PHONE_REGEX.search(snippet)
+                phone_val = phone_match.group(0).strip() if phone_match else None
 
             # Extract external website link from bio snippet if mentioned
             web_match = re.search(r'(https?://[^\s]+|www\.[^\s]+)', snippet)
@@ -507,8 +553,8 @@ def hunt_maps_footprints(city: str, country: str = "India", niche: str = "Hotels
             seen_urls.add(target_url)
 
             raw_title = item["title"]
-            title = raw_title.split("-")[0].split("|")[0].split("—")[0].replace("Google Maps", "").replace("Official Site", "").strip()
-            if not title or len(title) < 3:
+            ok, title, _ = super_intelligence.sanitize_and_validate_business_name(raw_title)
+            if not ok or len(title) < 3:
                 continue
 
             snippet_text = item["snippet"]
@@ -551,7 +597,7 @@ def hunt_maps_footprints(city: str, country: str = "India", niche: str = "Hotels
 # =====================================================================
 # MASTER OMNICHANNEL SWARM COORDINATOR (2X HARVEST & 100-WORKER SCREENING)
 # =====================================================================
-def hunt_omnichannel_swarm(city: str = "Goa", country: str = "India", niche: str = "Hotels", goal: int = 150, business_id: str = "gethotelstays") -> Dict[str, Any]:
+def hunt_omnichannel_swarm(city: str = "Goa", country: str = "India", niche: str = "Hotels", goal: int = 150, business_id: str = "gethotelstays", cycle: int = 1) -> Dict[str, Any]:
     """
     Coordinates the Complete 2X Harvest & 100-Worker Screening Pipeline:
     1. Harvests 2X Buffer (e.g. Target 500 -> 1000 Raw Leads harvested).
@@ -567,7 +613,7 @@ def hunt_omnichannel_swarm(city: str = "Goa", country: str = "India", niche: str
     per_channel_goal = max(20, harvest_goal // 5)
 
     print(f"\n{ui.C_CYAN}═══════════════════════════════════════════════════════════════════════════════════════════════{ui.RESET}")
-    print(f"  {ui.C_WHITE}DEPLOYING 2X HARVEST & 100-WORKER SCREENING ENGINE{ui.RESET}")
+    print(f"  {ui.C_WHITE}DEPLOYING 2X HARVEST & 100-WORKER SCREENING ENGINE (Cycle #{cycle}){ui.RESET}")
     print(f"  {ui.C_WHITE}Target Goal:{ui.RESET} {ui.C_YELLOW}{goal} Leads{ui.RESET} │ {ui.C_WHITE}Harvest Buffer (2X):{ui.RESET} {ui.C_GREEN}{harvest_goal} Raw Leads{ui.RESET}")
     print(f"  {ui.C_WHITE}Channels:{ui.RESET} {ui.C_GREEN}[1] Maps Swarm{ui.RESET} │ {ui.C_CYAN}[2] Dorking{ui.RESET} │ {ui.C_MAGENTA}[3] Instagram{ui.RESET} │ {ui.C_YELLOW}[4] Justdial{ui.RESET} │ {ui.C_BLUE}[5] OTA Reverse{ui.RESET}")
     print(f"  {ui.C_WHITE}Screening:{ui.RESET} {ui.C_MAGENTA}100-Worker Parallel Auditor ➔ [With Web: Mail] │ [No Web: Aloria Labs Golden Lead]{ui.RESET}")
@@ -593,8 +639,10 @@ def hunt_omnichannel_swarm(city: str = "Goa", country: str = "India", niche: str
             goal=harvest_goal // 2,
             business_id=business_id,
             workers_count=12,
-            max_concurrency=4,
-            auto_audit=False
+            max_concurrency=12,
+            auto_audit=False,
+            headless=False,
+            cycle=cycle
         )
 
         ch2_leads = f_ch2.result()
