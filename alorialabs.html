@@ -3,27 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aloria Hunter — Autonomous Control</title>
+  <title>Aloria Hunter — Terminal Cockpit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #090a0f;
-      --card-bg: rgba(18, 20, 29, 0.75);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(99, 102, 241, 0.4);
-      --accent: #6366f1;
-      --accent-glow: rgba(99, 102, 241, 0.25);
-      --green: #10b981;
-      --green-glow: rgba(16, 185, 129, 0.25);
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --dim: #4b5563;
+      --bg: #050608;
+      --term-bg: #0a0c10;
+      --term-border: #1e2430;
+      --green: #22c55e;
+      --cyan: #06b6d4;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --text: #e2e8f0;
+      --dim: #475569;
     }
     * {
       margin: 0; padding: 0; box-sizing: border-box;
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
       -webkit-tap-highlight-color: transparent;
     }
     body {
@@ -33,434 +31,508 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 16px;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+      padding: 12px;
     }
-    .container {
+    .terminal-window {
       width: 100%;
-      max-width: 580px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 18px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      backdrop-filter: blur(12px);
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logo-badge {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #6366f1, #3b82f6);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      color: #fff;
-    }
-    .brand-title {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-    }
-    .live-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--green);
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .pulse-dot {
-      width: 7px;
-      height: 7px;
-      background: var(--green);
-      border-radius: 50%;
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-    /* Profile Selector Pills */
-    .profile-switch {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      background: rgba(0,0,0,0.3);
-      padding: 4px;
+      max-width: 720px;
+      background: var(--term-bg);
+      border: 1px solid var(--term-border);
       border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-    .profile-btn {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      padding: 10px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(34, 197, 94, 0.05);
       display: flex;
+      flex-direction: column;
+    }
+    .title-bar {
+      background: #11141c;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
+      border-bottom: 1px solid var(--term-border);
+      font-size: 12px;
+    }
+    .traffic-lights {
+      display: flex;
       gap: 6px;
     }
-    .profile-btn.active {
-      background: var(--accent);
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 2px 10px var(--accent-glow);
+    .traffic-lights span {
+      width: 10px; height: 10px; border-radius: 50%;
     }
-    /* Metrics Row */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 12px;
-      text-align: center;
-      backdrop-filter: blur(12px);
-    }
-    .stat-label {
+    .tl-red { background: #ef4444; }
+    .tl-yellow { background: #f59e0b; }
+    .tl-green { background: #22c55e; }
+    .term-title {
+      color: var(--dim);
       font-size: 11px;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
     }
-    .stat-val {
-      font-size: 20px;
-      font-weight: 700;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
+    .status-badge {
+      color: var(--green);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    /* Main Control Box */
-    .control-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
+    .status-dot {
+      width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .term-body {
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      backdrop-filter: blur(12px);
+      gap: 14px;
     }
-    .target-banner {
+    .ascii-banner {
+      font-size: 8px;
+      line-height: 1.1;
+      color: var(--cyan);
+      white-space: pre;
+      overflow-x: hidden;
+      text-align: center;
+      opacity: 0.9;
+    }
+    @media (min-width: 500px) {
+      .ascii-banner { font-size: 10.5px; }
+    }
+
+    /* Target Setup Box */
+    .target-box {
+      background: #0d1017;
+      border: 1px solid var(--term-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .target-box-title {
+      font-size: 12px;
+      color: var(--cyan);
+      font-weight: 600;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 13px;
-      color: var(--muted);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      padding-bottom: 12px;
     }
-    .target-val {
-      color: #fff;
-      font-weight: 600;
-    }
-    .main-btn {
-      width: 100%;
-      padding: 16px;
-      border-radius: 14px;
-      border: none;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.2px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-      box-shadow: 0 4px 18px var(--green-glow);
-    }
-    .main-btn.running {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      box-shadow: 0 4px 18px rgba(245, 158, 11, 0.25);
-    }
-    .main-btn:active {
-      transform: scale(0.98);
-    }
-    .sub-actions {
+    .target-form {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
-    .sub-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 10px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .sub-btn:hover {
-      background: rgba(255, 255, 255, 0.09);
-      color: #fff;
-    }
-    /* Terminal Console */
-    .terminal-card {
-      background: #06070a;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .terminal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.02);
-      border-bottom: 1px solid var(--border);
-      font-size: 12px;
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .terminal-body {
-      height: 220px;
-      overflow-y: auto;
-      padding: 12px 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      line-height: 1.6;
-      color: #94a3b8;
+    .field-group {
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
-    .terminal-line {
-      word-break: break-all;
+    .field-group.full {
+      grid-column: span 2;
     }
-    .terminal-line.success { color: #34d399; }
-    .terminal-line.warn { color: #fbbf24; }
-    .terminal-line.accent { color: #818cf8; }
-    .terminal-line.dim { color: #475569; }
+    .field-label {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+    .field-input {
+      background: #06070a;
+      border: 1px solid var(--term-border);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field-input:focus {
+      border-color: var(--cyan);
+    }
+
+    /* Switcher Pills */
+    .empire-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .empire-btn {
+      background: #0d1017;
+      border: 1px solid var(--term-border);
+      color: var(--dim);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .empire-btn.active {
+      border-color: var(--cyan);
+      color: #fff;
+      background: rgba(6, 182, 212, 0.12);
+      font-weight: 600;
+    }
+
+    /* Telemetry Stats Bar */
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .t-card {
+      background: #0d1017;
+      border: 1px solid var(--term-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      text-align: center;
+    }
+    .t-label {
+      font-size: 9px;
+      color: var(--dim);
+      text-transform: uppercase;
+    }
+    .t-val {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Action Buttons */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .act-btn {
+      background: #0d1017;
+      border: 1px solid var(--term-border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .act-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .act-btn.primary {
+      grid-column: span 2;
+      background: rgba(34, 197, 94, 0.12);
+      border-color: var(--green);
+      color: var(--green);
+      justify-content: center;
+      font-size: 13px;
+    }
+    .act-btn.primary.running {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+    .act-btn:active {
+      transform: scale(0.99);
+    }
+
+    /* Terminal Log Feed */
+    .term-feed-card {
+      background: #050608;
+      border: 1px solid var(--term-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .term-feed-header {
+      background: #0d1017;
+      padding: 6px 10px;
+      font-size: 10px;
+      color: var(--dim);
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--term-border);
+    }
+    .term-feed-logs {
+      height: 190px;
+      overflow-y: auto;
+      padding: 10px;
+      font-size: 11px;
+      line-height: 1.55;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .log-line { word-break: break-all; }
+    .log-green { color: #22c55e; }
+    .log-cyan { color: #06b6d4; }
+    .log-amber { color: #f59e0b; }
+    .log-dim { color: #475569; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Top Header -->
-    <header>
-      <div class="brand">
-        <div class="logo-badge">A</div>
-        <div class="brand-title">Aloria Hunter</div>
+  <div class="terminal-window">
+    <!-- Title Bar -->
+    <div class="title-bar">
+      <div class="traffic-lights">
+        <span class="tl-red"></span>
+        <span class="tl-yellow"></span>
+        <span class="tl-green"></span>
       </div>
-      <div class="live-pill">
-        <div class="pulse-dot"></div>
-        <span id="system-status">24/7 ONLINE</span>
-      </div>
-    </header>
-
-    <!-- Profile Switcher -->
-    <div class="profile-switch">
-      <button class="profile-btn active" id="btn-aloria" onclick="switchProfile('aloria_labs')">
-        🇺🇸 Aloria Labs (USA)
-      </button>
-      <button class="profile-btn" id="btn-ghs" onclick="switchProfile('gethotelstays')">
-        🏨 GetHotelStays
-      </button>
-    </div>
-
-    <!-- 3 Core Minimal Metrics -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Delivered Today</div>
-        <div class="stat-val" id="stat-delivered">0 / 200</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Volume</div>
-        <div class="stat-val" id="stat-total">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Inbound Replies</div>
-        <div class="stat-val" id="stat-replies">0</div>
+      <div class="term-title">aloria@swarm-cloud: /aloria-hunter</div>
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span id="sys-status">24/7 ONLINE</span>
       </div>
     </div>
 
-    <!-- Main Controller -->
-    <div class="control-card">
-      <div class="target-banner">
-        <span>Active Focus</span>
-        <span class="target-val" id="target-display">USA • Miami, FL • MedSpas</span>
+    <div class="term-body">
+      <!-- ASCII Header -->
+      <div class="ascii-banner">
+   ___   __   ____  ___  ________     __  _____  ___  _________________
+  / _ | / /  / __ \/ _ \/  _/ _  /    / / / / / / / / / / / /_  __/ __/ _ \
+ / __ |/ /__/ /_/ / , _// // __ /    / /_/ / /_/ / /_/ / /_/ / / / / _// , _/
+/_/ |_/____/\____/_/|_/___/_/ |_|    \____/\____/\____/\____/ /_/ /___/_/|_| 
+           [ 24/7 AUTONOMOUS B2B ACQUISITION & CLOSER ENGINE ]</div>
+
+      <!-- Empire Selector -->
+      <div class="empire-row">
+        <button class="empire-btn active" id="btn-aloria" onclick="setEmpire('aloria_labs')">
+          [B] 🇺🇸 Aloria Labs (USA)
+        </button>
+        <button class="empire-btn" id="btn-ghs" onclick="setEmpire('gethotelstays')">
+          [B] 🏨 GetHotelStays (Hotels)
+        </button>
       </div>
 
-      <button class="main-btn" id="toggle-swarm-btn" onclick="toggleSwarm()">
-        ▶ START 24/7 AUTONOMOUS SWARM
-      </button>
+      <!-- Target Setup Form (Interactive & Configurable) -->
+      <div class="target-box">
+        <div class="target-box-title">
+          <span>⚙ [T] TARGET MISSION CONFIGURATION</span>
+          <span style="font-size: 10px; color: var(--green); cursor: pointer;" onclick="saveTarget()">[💾 SAVE TARGET]</span>
+        </div>
+        <div class="target-form">
+          <div class="field-group">
+            <span class="field-label">Target Country</span>
+            <input class="field-input" id="inp-country" value="USA" placeholder="e.g. USA, UAE, India">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Target City / State</span>
+            <input class="field-input" id="inp-city" value="Miami, FL" placeholder="e.g. Miami, FL / Austin, TX">
+          </div>
+          <div class="field-group full">
+            <span class="field-label">Target Niche / Category</span>
+            <input class="field-input" id="inp-niche" value="MedSpas & Aesthetic Clinics" placeholder="e.g. MedSpas, Roofing, Hotels">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Lead Goal (Quota)</span>
+            <input class="field-input" id="inp-goal" type="number" value="50" placeholder="e.g. 25, 50, 100">
+          </div>
+          <div class="field-group">
+            <span class="field-label">Execution Mode</span>
+            <select class="field-input" id="inp-mode">
+              <option value="continuous">24/7 Continuous Loop</option>
+              <option value="single_wave">Stop After Goal</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-      <div class="sub-actions">
-        <button class="sub-btn" onclick="triggerAction('wave')">⚡ Run 1-Click Wave</button>
-        <button class="sub-btn" onclick="triggerAction('closer')">🤖 AI Closer Sync</button>
+      <!-- Live Telemetry Stats -->
+      <div class="telemetry-row">
+        <div class="t-card">
+          <div class="t-label">Delivered Today</div>
+          <div class="t-val" id="val-delivered">0 / 200</div>
+        </div>
+        <div class="t-card">
+          <div class="t-label">Pipeline Ready</div>
+          <div class="t-val" id="val-leads">0 Leads</div>
+        </div>
+        <div class="t-card">
+          <div class="t-label">Client Replies</div>
+          <div class="t-val" id="val-replies">9 Captured</div>
+        </div>
       </div>
-    </div>
 
-    <!-- Minimal Terminal Feed -->
-    <div class="terminal-card">
-      <div class="terminal-header">
-        <span>LIVE EXECUTION STREAM</span>
-        <span id="log-count">0 events</span>
+      <!-- Terminal Actions Grid -->
+      <div class="actions-grid">
+        <button class="act-btn primary" id="btn-toggle-engine" onclick="toggleEngine()">
+          [1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM
+        </button>
+        <button class="act-btn" onclick="executeAction('hunt_wave')">
+          [W] ⚡ Sweep 1 Wave
+        </button>
+        <button class="act-btn" onclick="executeAction('run_closer')">
+          [A] 🤖 Run AI Closer
+        </button>
+        <button class="act-btn" onclick="executeAction('bounces')">
+          [C] 🛡 Scan Bounces
+        </button>
+        <button class="act-btn" onclick="executeAction('followups')">
+          [F] ⚡ Priority Followups
+        </button>
       </div>
-      <div class="terminal-body" id="terminal-feed">
-        <div class="terminal-line dim">[System] Connected to Aloria Cloud Daemon.</div>
-        <div class="terminal-line success">[Ready] All 4 sender accounts authenticated.</div>
+
+      <!-- Live Monospace Terminal Output -->
+      <div class="term-feed-card">
+        <div class="term-feed-header">
+          <span>CONSOLE STREAM & TELEMETRY</span>
+          <span id="stream-indicator">● LIVE</span>
+        </div>
+        <div class="term-feed-logs" id="terminal-logs">
+          <div class="log-line log-dim">[00:00:01] Initializing Cloud Aloria Terminal Core...</div>
+          <div class="log-line log-green">[00:00:02] Connected to SQLite state machine. 4 sender accounts armed.</div>
+          <div class="log-line log-cyan">[00:00:03] Ready. Enter target configuration above and press [1] to launch.</div>
+        </div>
       </div>
+
     </div>
   </div>
 
   <script>
-    const AUTH_TOKEN = "aloria_master_shriyansh0402";
-    let activeBiz = "aloria_labs";
-    let isRunning = false;
+    const TOKEN = "aloria_master_shriyansh0402";
+    let activeEmpire = "aloria_labs";
+    let engineRunning = false;
 
-    async function apiFetch(endpoint, method = "GET", body = null) {
+    async function req(url, method = "GET", body = null) {
       try {
-        const options = {
+        const opt = {
           method,
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${AUTH_TOKEN}`
+            "Authorization": `Bearer ${TOKEN}`
           }
         };
-        if (body) options.body = JSON.stringify(body);
-        const res = await fetch(endpoint, options);
-        return await res.json();
+        if (body) opt.body = JSON.stringify(body);
+        const r = await fetch(url, opt);
+        return await r.json();
       } catch (e) {
-        console.error("API Error:", e);
         return null;
       }
     }
 
-    async function switchProfile(bizId) {
-      activeBiz = bizId;
-      document.getElementById('btn-aloria').classList.toggle('active', bizId === 'aloria_labs');
-      document.getElementById('btn-ghs').classList.toggle('active', bizId === 'gethotelstays');
-      
-      logToTerminal(`[Profile] Switched active empire to: ${bizId.toUpperCase()}`, 'accent');
-      await apiFetch('/api/action', 'POST', { action: 'switch_business', business_id: bizId });
-      refreshDashboard();
+    function log(msg, cls = "log-dim") {
+      const el = document.getElementById("terminal-logs");
+      const d = document.createElement("div");
+      d.className = `log-line ${cls}`;
+      const now = new Date().toTimeString().split(' ')[0];
+      d.innerText = `[${now}] ${msg}`;
+      el.appendChild(d);
+      el.scrollTop = el.scrollHeight;
     }
 
-    async function refreshDashboard() {
-      const data = await apiFetch('/api/status');
-      if (!data) return;
+    async function setEmpire(emp) {
+      activeEmpire = emp;
+      document.getElementById("btn-aloria").classList.toggle("active", emp === "aloria_labs");
+      document.getElementById("btn-ghs").classList.toggle("active", emp === "gethotelstays");
 
-      if (data.active_business_id) {
-        activeBiz = data.active_business_id;
-        document.getElementById('btn-aloria').classList.toggle('active', activeBiz === 'aloria_labs');
-        document.getElementById('btn-ghs').classList.toggle('active', activeBiz === 'gethotelstays');
-      }
-
-      // Update Target Display
-      if (activeBiz === 'aloria_labs') {
-        document.getElementById('target-display').innerText = "USA • Miami, FL • MedSpas & Web Sales";
+      if (emp === "aloria_labs") {
+        document.getElementById("inp-country").value = "USA";
+        document.getElementById("inp-city").value = "Miami, FL";
+        document.getElementById("inp-niche").value = "MedSpas & Aesthetic Clinics";
       } else {
-        document.getElementById('target-display').innerText = "UAE / India • Dubai • Hotels";
+        document.getElementById("inp-country").value = "UAE";
+        document.getElementById("inp-city").value = "Dubai";
+        document.getElementById("inp-niche").value = "Hotels";
       }
 
-      // Update Metrics
-      const deliveredToday = data.delivered_today || 0;
-      const dailyCap = data.daily_cap || 200;
-      document.getElementById('stat-delivered').innerText = `${deliveredToday} / ${dailyCap}`;
-      document.getElementById('stat-total').innerText = data.total_outreach || data.total_leads || 0;
-      document.getElementById('stat-replies').innerText = data.replies_count || data.replied || 0;
+      log(`Switched empire profile to: ${emp.toUpperCase()}`, "log-cyan");
+      await req("/api/action", "POST", { action: "switch_business", business_id: emp });
+      syncStatus();
+    }
 
-      // Update Swarm State
-      isRunning = !!(data.autopilot_running || data.is_running);
-      const btn = document.getElementById('toggle-swarm-btn');
-      if (isRunning) {
-        btn.innerText = "⏸ PAUSE AUTONOMOUS SWARM";
-        btn.classList.add('running');
+    async function saveTarget() {
+      const country = document.getElementById("inp-country").value.trim();
+      const city = document.getElementById("inp-city").value.trim();
+      const niche = document.getElementById("inp-niche").value.trim();
+      const goal = document.getElementById("inp-goal").value.trim();
+
+      log(`[Target Config Saved] ${niche} in ${city}, ${country} (Goal: ${goal})`, "log-green");
+      await req("/api/action", "POST", {
+        action: "update_target",
+        business_id: activeEmpire,
+        params: { country, city, niche, goal }
+      });
+    }
+
+    async function toggleEngine() {
+      const btn = document.getElementById("btn-toggle-engine");
+      const country = document.getElementById("inp-country").value.trim();
+      const city = document.getElementById("inp-city").value.trim();
+      const niche = document.getElementById("inp-niche").value.trim();
+      const goal = document.getElementById("inp-goal").value.trim();
+
+      if (!engineRunning) {
+        btn.innerText = "[PAUSE] ⏸ PAUSE 24/7 AUTONOMOUS SWARM";
+        btn.classList.add("running");
+        engineRunning = true;
+        log(`[SWARM LAUNCHED] Deploying 24/7 Swarm for ${niche} in ${city}, ${country} (Target: ${goal} leads)...`, "log-green");
+        await req("/api/autopilot/start", "POST", {
+          business_id: activeEmpire,
+          country, city, niche, goal
+        });
       } else {
-        btn.innerText = "▶ START 24/7 AUTONOMOUS SWARM";
-        btn.classList.remove('running');
+        btn.innerText = "[1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM";
+        btn.classList.remove("running");
+        engineRunning = false;
+        log(`[SWARM PAUSED] Autonomous loop halted by operator.`, "log-amber");
+        await req("/api/autopilot/stop", "POST", { business_id: activeEmpire });
       }
+      syncStatus();
     }
 
-    async function toggleSwarm() {
-      const btn = document.getElementById('toggle-swarm-btn');
-      if (!isRunning) {
-        btn.innerText = "Starting...";
-        await apiFetch('/api/autopilot/start', 'POST', { business_id: activeBiz });
-        logToTerminal(`[Swarm] 🚀 24/7 Autonomous outreach loop launched!`, 'success');
-        isRunning = true;
+    async function executeAction(act) {
+      if (act === "hunt_wave") {
+        log(`[Manual Action] Sweeping 1 Wave of fresh discovery & audits...`, "log-cyan");
+        await req("/api/action", "POST", { action: "hunt_wave", business_id: activeEmpire });
+      } else if (act === "run_closer") {
+        log(`[AI Closer Engine] Scanning inbound replies and auto-closing with booking link...`, "log-cyan");
+        const res = await req("/api/action", "POST", { action: "run_closer", business_id: activeEmpire });
+        if (res && res.closed_count !== undefined) {
+          log(`[AI Closer] Processed threads. Closed: ${res.closed_count}`, "log-green");
+        }
+      } else if (act === "bounces") {
+        log(`[Scan Bounces] Auditing inboxes for bounce notifications...`, "log-amber");
+        await req("/api/bounces/scan", "POST");
+      } else if (act === "followups") {
+        log(`[Follow-ups] Dispatching priority overdue follow-ups...`, "log-cyan");
+        await req("/api/followup/run", "POST");
+      }
+      syncStatus();
+    }
+
+    async function syncStatus() {
+      const s = await req("/api/status");
+      if (!s) return;
+
+      if (s.active_business_id) {
+        activeEmpire = s.active_business_id;
+        document.getElementById("btn-aloria").classList.toggle("active", activeEmpire === "aloria_labs");
+        document.getElementById("btn-ghs").classList.toggle("active", activeEmpire === "gethotelstays");
+      }
+
+      const delivered = s.delivered_today || 0;
+      const cap = s.daily_cap || 200;
+      document.getElementById("val-delivered").innerText = `${delivered} / ${cap}`;
+      document.getElementById("val-leads").innerText = `${s.total_leads || 0} Leads`;
+      document.getElementById("val-replies").innerText = `${s.replies_count || s.replied || 0} Captured`;
+
+      engineRunning = !!(s.autopilot_running || s.is_running);
+      const btn = document.getElementById("btn-toggle-engine");
+      if (engineRunning) {
+        btn.innerText = "[PAUSE] ⏸ PAUSE 24/7 AUTONOMOUS SWARM";
+        btn.classList.add("running");
       } else {
-        btn.innerText = "Pausing...";
-        await apiFetch('/api/autopilot/stop', 'POST', { business_id: activeBiz });
-        logToTerminal(`[Swarm] ⏸ Swarm paused by operator.`, 'warn');
-        isRunning = false;
-      }
-      refreshDashboard();
-    }
-
-    async function triggerAction(actionType) {
-      if (actionType === 'wave') {
-        logToTerminal(`[Execution] Dispatching 1-Click Discovery & Outreach Wave...`, 'accent');
-        await apiFetch('/api/action', 'POST', { action: 'hunt_wave', business_id: activeBiz });
-      } else if (actionType === 'closer') {
-        logToTerminal(`[AI Closer] Scanning inbound replies and auto-closing with booking link...`, 'accent');
-        await apiFetch('/api/action', 'POST', { action: 'run_closer', business_id: activeBiz });
-      }
-      refreshDashboard();
-    }
-
-    function logToTerminal(text, type = 'normal') {
-      const feed = document.getElementById('terminal-feed');
-      const line = document.createElement('div');
-      line.className = `terminal-line ${type}`;
-      const now = new Date().toLocaleTimeString();
-      line.innerText = `[${now}] ${text}`;
-      feed.appendChild(line);
-      feed.scrollTop = feed.scrollHeight;
-    }
-
-    async function pollLogs() {
-      const logs = await apiFetch('/api/logs?limit=8');
-      if (logs && Array.isArray(logs) && logs.length > 0) {
-        const feed = document.getElementById('terminal-feed');
-        // display top events
-        document.getElementById('log-count').innerText = `${logs.length} logged`;
+        btn.innerText = "[1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM";
+        btn.classList.remove("running");
       }
     }
 
-    // Auto-refresh every 3.5 seconds
-    setInterval(refreshDashboard, 3500);
-    setInterval(pollLogs, 6000);
-    refreshDashboard();
+    setInterval(syncStatus, 4000);
+    syncStatus();
   </script>
 </body>
 </html>
