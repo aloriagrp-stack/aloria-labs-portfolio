@@ -842,8 +842,27 @@ async def post_action(request: Request):
         data = {}
     if not isinstance(data, dict):
         data = {}
-    agent = data.get("agent", "aloria")
+    
     action = data.get("action", "hunt")
+    biz_id = data.get("business_id")
+    if biz_id:
+        business_manager.set_active_business(biz_id)
+
+    if action == "switch_business":
+        return {"status": "ok", "active_business_id": biz_id}
+    elif action == "run_closer":
+        try:
+            import ai_closer_engine
+            cnt = ai_closer_engine.process_and_close_inbound_threads(dry_run=False, limit=35)
+            return {"status": "ok", "closed_count": cnt}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+    elif action == "hunt_wave":
+        active = biz_id or business_manager.get_active_business_id()
+        agent = "hotel" if active == "gethotelstays" else "aloria"
+        return orchestrator.command_agent(agent, "hunt", {"business_id": active, "limit": 15})
+
+    agent = data.get("agent", "aloria")
     params = data.get("params", {})
     res = orchestrator.command_agent(agent, action, params)
     return res
