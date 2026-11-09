@@ -306,7 +306,19 @@ async def _async_multi_tab_crawl_maps(
                 launch_args.append("--start-maximized")
 
             # 1 SINGLE CHROMIUM BROWSER INSTANCE
-            browser = await p.chromium.launch(headless=headless, args=launch_args)
+            try:
+                browser = await p.chromium.launch(headless=headless, args=launch_args)
+            except Exception as launch_err:
+                err_msg = str(launch_err).lower()
+                if "playwright install" in err_msg or "executable doesn't exist" in err_msg or "chromium" in err_msg:
+                    print("  [⚡ PLAYWRIGHT CLOUD FIX] Auto-installing missing Chromium binaries on Render...")
+                    if on_step:
+                        on_step("Auto-downloading Playwright Chromium engine on cloud server...")
+                    import subprocess
+                    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], check=False)
+                    browser = await p.chromium.launch(headless=headless, args=launch_args)
+                else:
+                    raise launch_err
             context = await browser.new_context(
                 viewport={"width": 1366, "height": 768},
                 locale="en-US"
