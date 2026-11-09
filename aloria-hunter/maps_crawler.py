@@ -15,8 +15,8 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Set Playwright browser path if exists
-if os.path.exists("D:\\playwright-browsers"):
+# Set Playwright browser path if exists (Windows local only)
+if os.name == "nt" and os.path.exists("D:\\playwright-browsers"):
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
 
 try:

@@ -11,7 +11,7 @@ import db
 import business_manager
 import ui
 
-if os.path.exists("D:/playwright-browsers"):
+if os.name == "nt" and os.path.exists("D:/playwright-browsers"):
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:/playwright-browsers"
     SESSION_DIR = Path("D:/playwright-browsers/whatsapp_profile")
 else:

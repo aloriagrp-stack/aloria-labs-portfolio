@@ -64,7 +64,8 @@ RESET = Style.RESET_ALL
 
 # Set environment
 
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
+if os.name == "nt" and os.path.exists("D:\\playwright-browsers"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
 
 BASE_DIR = Path(__file__).resolve().parent
 

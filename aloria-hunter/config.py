@@ -5,8 +5,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 PARENT_DIR = BASE_DIR.parent
 
-# Playwright browser path on D drive
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
+# Playwright browser path on D drive (Windows local only)
+if os.name == "nt" and os.path.exists("D:\\playwright-browsers"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
 
 # Targeting Configuration
 DEFAULT_COUNTRY = "Algeria"

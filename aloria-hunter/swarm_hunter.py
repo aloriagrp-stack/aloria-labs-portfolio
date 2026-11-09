@@ -17,7 +17,8 @@ if sys.platform == "win32":
         pass
 
 # Ensure Playwright browser path is set
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
+if os.name == "nt" and os.path.exists("D:\\playwright-browsers"):
+    os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "D:\\playwright-browsers"
 
 from playwright.async_api import async_playwright
 import config
