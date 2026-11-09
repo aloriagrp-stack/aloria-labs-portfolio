@@ -34,7 +34,7 @@ DISPATCH_DELAY_SECONDS = 10  # 8-12s humanized random jitter between dispatches
 PACING_MODE = "TURBO"  # "TURBO" (6-10s) | "BALANCED" (12-18s) | "SAFE" (25-35s)
 MAX_EMAILS_PER_DAY = 1000  # Full Swarm capacity
 MAX_DELIVERED_PER_ACCOUNT_PER_DAY_GHS = 50       # Exactly 50 successfully delivered emails per account for GetHotelStays
-MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA = 100   # Exactly 100 successfully delivered emails per account for Aloria Labs
+MAX_DELIVERED_PER_ACCOUNT_PER_DAY_ALORIA = 50    # Exactly 50 successfully delivered emails per account for Aloria Labs
 
 # 10-12 Parallel Agent Lead Hunter Swarm Settings
 SWARM_WORKERS = 12

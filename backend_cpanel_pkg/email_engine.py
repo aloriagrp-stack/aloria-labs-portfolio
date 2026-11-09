@@ -112,8 +112,8 @@ def generate_pitch(lead, email_type="INITIAL", sender_profile=None):
     if is_golden_hotel:
         biz_id = "aloria_labs"
 
-    # For Aloria Labs (non-hotel golden leads): Use 500-problem intelligence library from Aloria Brain
-    if biz_id == "aloria_labs" and not is_golden_hotel:
+    # For Aloria Labs: Use Autonomous Niche & Flaw Intelligence from Aloria Brain
+    if biz_id == "aloria_labs":
         try:
             import aloria_brain
             subj, body, html_body, meta = aloria_brain.generate_dynamic_email(lead, email_type)
@@ -482,18 +482,21 @@ def send_email_via_smtp(to_email, subject, plain_text, html_text, profile_name=N
     msg.attach(MIMEText(html_text, "html", "utf-8"))
 
     try:
+        clean_password = str(password).strip().replace(" ", "")
         if int(smtp_port) == 465:
             import ssl
             ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
             with smtplib.SMTP_SSL(smtp_server, 465, context=ssl_ctx, timeout=20) as server:
-                server.login(sender_email, password)
+                server.login(sender_email, clean_password)
                 server.sendmail(sender_email, [to_email], msg.as_string())
         else:
             with smtplib.SMTP(smtp_server, int(smtp_port), timeout=20) as server:
                 server.ehlo()
                 server.starttls()
                 server.ehlo()
-                server.login(sender_email, password)
+                server.login(sender_email, clean_password)
                 server.sendmail(sender_email, [to_email], msg.as_string())
         return True, sender_email
     except smtplib.SMTPAuthenticationError:

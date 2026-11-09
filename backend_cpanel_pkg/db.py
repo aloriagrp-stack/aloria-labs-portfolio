@@ -122,6 +122,8 @@ def insert_lead(business_name, country, city, niche, address=None, phone=None, r
     conn = get_connection()
     cursor = conn.cursor()
     has_website = 1 if (website_url and website_url.strip() and website_url.startswith("http")) else 0
+    if not has_website:
+        business_id = "aloria_labs"
     try:
         cursor.execute("""
         INSERT INTO leads (business_name, country, city, niche, address, phone, rating, reviews_count, has_website, website_url, status, business_id)

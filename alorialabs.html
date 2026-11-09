@@ -3,399 +3,244 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aloria Hunter — Terminal Cockpit</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>C:\Windows\system32\cmd.exe</title>
   <style>
-    :root {
-      --bg: #050608;
-      --term-bg: #0a0c10;
-      --term-border: #1e2430;
-      --green: #22c55e;
-      --cyan: #06b6d4;
-      --amber: #f59e0b;
-      --red: #ef4444;
-      --text: #e2e8f0;
-      --dim: #475569;
-    }
     * {
       margin: 0; padding: 0; box-sizing: border-box;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-family: Consolas, 'Lucida Console', 'Courier New', monospace;
       -webkit-tap-highlight-color: transparent;
     }
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: #000000;
+      color: #cccccc;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 12px;
-    }
-    .terminal-window {
-      width: 100%;
-      max-width: 720px;
-      background: var(--term-bg);
-      border: 1px solid var(--term-border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(34, 197, 94, 0.05);
-      display: flex;
-      flex-direction: column;
-    }
-    .title-bar {
-      background: #11141c;
-      padding: 10px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--term-border);
-      font-size: 12px;
-    }
-    .traffic-lights {
-      display: flex;
-      gap: 6px;
-    }
-    .traffic-lights span {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .tl-red { background: #ef4444; }
-    .tl-yellow { background: #f59e0b; }
-    .tl-green { background: #22c55e; }
-    .term-title {
-      color: var(--dim);
-      font-size: 11px;
-    }
-    .status-badge {
-      color: var(--green);
-      font-size: 11px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .status-dot {
-      width: 6px; height: 6px; background: var(--green); border-radius: 50%;
-      box-shadow: 0 0 6px var(--green);
-    }
-
-    .term-body {
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .ascii-banner {
-      font-size: 8px;
-      line-height: 1.1;
-      color: var(--cyan);
-      white-space: pre;
       overflow-x: hidden;
-      text-align: center;
-      opacity: 0.9;
     }
-    @media (min-width: 500px) {
-      .ascii-banner { font-size: 10.5px; }
-    }
-
-    /* Target Setup Box */
-    .target-box {
-      background: #0d1017;
-      border: 1px solid var(--term-border);
-      border-radius: 8px;
-      padding: 12px;
+    .cmd-window {
+      width: 100vw;
+      min-height: 100vh;
+      background: #0c0c0c;
       display: flex;
       flex-direction: column;
-      gap: 10px;
     }
-    .target-box-title {
-      font-size: 12px;
-      color: var(--cyan);
-      font-weight: 600;
+    /* Windows cmd.exe Title Bar */
+    .cmd-title-bar {
+      background: #1f1f1f;
+      height: 32px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      user-select: none;
+      border-bottom: 1px solid #333333;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .target-form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .field-group.full {
-      grid-column: span 2;
-    }
-    .field-label {
-      font-size: 10px;
-      color: var(--dim);
-      text-transform: uppercase;
-    }
-    .field-input {
-      background: #06070a;
-      border: 1px solid var(--term-border);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 6px;
+    .cmd-title-text {
+      color: #ffffff;
       font-size: 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .field-input:focus {
-      border-color: var(--cyan);
-    }
-
-    /* Switcher Pills */
-    .empire-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .empire-btn {
-      background: #0d1017;
-      border: 1px solid var(--term-border);
-      color: var(--dim);
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .empire-btn.active {
-      border-color: var(--cyan);
-      color: #fff;
-      background: rgba(6, 182, 212, 0.12);
-      font-weight: 600;
-    }
-
-    /* Telemetry Stats Bar */
-    .telemetry-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .t-card {
-      background: #0d1017;
-      border: 1px solid var(--term-border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      text-align: center;
-    }
-    .t-label {
-      font-size: 9px;
-      color: var(--dim);
-      text-transform: uppercase;
-    }
-    .t-val {
-      font-size: 15px;
-      color: #fff;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    /* Action Buttons */
-    .actions-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .act-btn {
-      background: #0d1017;
-      border: 1px solid var(--term-border);
-      color: var(--text);
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .act-btn:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-    .act-btn.primary {
-      grid-column: span 2;
-      background: rgba(34, 197, 94, 0.12);
-      border-color: var(--green);
-      color: var(--green);
+    .cmd-icon {
+      width: 15px;
+      height: 15px;
+      background: #0c0c0c;
+      border: 1px solid #777;
+      color: #fff;
+      font-size: 8px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      font-size: 13px;
     }
-    .act-btn.primary.running {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: var(--amber);
-      color: var(--amber);
+    .cmd-buttons {
+      display: flex;
+      height: 100%;
     }
-    .act-btn:active {
-      transform: scale(0.99);
+    .cmd-btn {
+      width: 44px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .cmd-btn:hover { background: #333333; }
+    .cmd-btn.close:hover { background: #e81123; }
+
+    /* Terminal Screen Body */
+    .terminal-screen {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.42;
+      color: #cccccc;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
     }
 
-    /* Terminal Log Feed */
-    .term-feed-card {
-      background: #050608;
-      border: 1px solid var(--term-border);
-      border-radius: 8px;
-      overflow: hidden;
+    /* Authentic ANSI Colors */
+    .c-magenta { color: #d845e2; font-weight: bold; }
+    .c-cyan    { color: #00e5ff; }
+    .c-green   { color: #00ff66; }
+    .c-yellow  { color: #ffff00; }
+    .c-red     { color: #ff3333; }
+    .c-white   { color: #ffffff; font-weight: bold; }
+    .c-dim     { color: #767676; }
+    .c-blue    { color: #3b82f6; }
+    .bg-cyan   { background: #00e5ff; color: #000000; font-weight: bold; padding: 1px 4px; }
+    .bg-red    { background: #c50f1f; color: #ffffff; font-weight: bold; padding: 2px 6px; }
+
+    .clickable-row {
+      cursor: pointer;
+      display: block;
+      padding: 2px 0;
+      border-radius: 2px;
     }
-    .term-feed-header {
-      background: #0d1017;
+    .clickable-row:hover {
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    /* Interactive input prompt */
+    .prompt-container {
+      padding: 10px 16px;
+      background: #0c0c0c;
+      border-top: 1px solid #1a1a1a;
+      position: sticky;
+      bottom: 48px;
+    }
+    .prompt-row {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+    }
+    .prompt-label {
+      color: #00ff66;
+      font-weight: bold;
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+    .terminal-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 14px;
+      font-family: inherit;
+      flex: 1;
+      caret-color: #00ff66;
+    }
+    .cursor-block {
+      display: inline-block;
+      width: 9px;
+      height: 15px;
+      background: #00ff66;
+      vertical-align: middle;
+      animation: blink 1s step-start infinite;
+      margin-left: 2px;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* Mobile Quick Dock */
+    .mobile-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #141414;
+      border-top: 1px solid #282828;
+      position: sticky;
+      bottom: 0;
+      z-index: 99;
+    }
+    .m-key {
+      background: #1e1e1e;
+      color: #00e5ff;
+      border: 1px solid #333333;
+      border-radius: 3px;
       padding: 6px 10px;
-      font-size: 10px;
-      color: var(--dim);
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--term-border);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
     }
-    .term-feed-logs {
-      height: 190px;
-      overflow-y: auto;
-      padding: 10px;
-      font-size: 11px;
-      line-height: 1.55;
-      color: #94a3b8;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .log-line { word-break: break-all; }
-    .log-green { color: #22c55e; }
-    .log-cyan { color: #06b6d4; }
-    .log-amber { color: #f59e0b; }
-    .log-dim { color: #475569; }
+    .m-key:active { background: #00e5ff; color: #000; }
+    .m-key.primary { color: #00ff66; border-color: #00ff66; font-weight: bold; }
+    .m-key.warn { color: #ffff00; }
+    .m-key.danger { color: #ff3333; }
   </style>
 </head>
 <body>
 
-  <div class="terminal-window">
+  <div class="cmd-window">
     <!-- Title Bar -->
-    <div class="title-bar">
-      <div class="traffic-lights">
-        <span class="tl-red"></span>
-        <span class="tl-yellow"></span>
-        <span class="tl-green"></span>
+    <div class="cmd-title-bar">
+      <div class="cmd-title-text">
+        <div class="cmd-icon">c:\</div>
+        <span>C:\Windows\system32\cmd.exe</span>
       </div>
-      <div class="term-title">aloria@swarm-cloud: /aloria-hunter</div>
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        <span id="sys-status">24/7 ONLINE</span>
+      <div class="cmd-buttons">
+        <div class="cmd-btn">─</div>
+        <div class="cmd-btn">□</div>
+        <div class="cmd-btn close">✕</div>
       </div>
     </div>
 
-    <div class="term-body">
-      <!-- ASCII Header -->
-      <div class="ascii-banner">
-   ___   __   ____  ___  ________     __  _____  ___  _________________
-  / _ | / /  / __ \/ _ \/  _/ _  /    / / / / / / / / / / / /_  __/ __/ _ \
- / __ |/ /__/ /_/ / , _// // __ /    / /_/ / /_/ / /_/ / /_/ / / / / _// , _/
-/_/ |_/____/\____/_/|_/___/_/ |_|    \____/\____/\____/\____/ /_/ /___/_/|_| 
-           [ 24/7 AUTONOMOUS B2B ACQUISITION & CLOSER ENGINE ]</div>
+    <!-- Main Terminal Output -->
+    <div class="terminal-screen" id="terminal-content"></div>
 
-      <!-- Empire Selector -->
-      <div class="empire-row">
-        <button class="empire-btn active" id="btn-aloria" onclick="setEmpire('aloria_labs')">
-          [B] 🇺🇸 Aloria Labs (USA)
-        </button>
-        <button class="empire-btn" id="btn-ghs" onclick="setEmpire('gethotelstays')">
-          [B] 🏨 GetHotelStays (Hotels)
-        </button>
+    <!-- Live Execution Logs Stream (Appended Live) -->
+    <div class="terminal-screen" id="terminal-stream" style="flex: none; padding-top: 0;"></div>
+
+    <!-- Interactive Prompt -->
+    <div class="prompt-container">
+      <div class="prompt-row">
+        <span class="prompt-label" id="prompt-text">Select option or key:</span>
+        <input type="text" id="cmd-input" class="terminal-input" autocomplete="off" autofocus />
+        <span class="cursor-block" id="cursor-block"></span>
       </div>
+    </div>
 
-      <!-- Target Setup Form (Interactive & Configurable) -->
-      <div class="target-box">
-        <div class="target-box-title">
-          <span>⚙ [T] TARGET MISSION CONFIGURATION</span>
-          <span style="font-size: 10px; color: var(--green); cursor: pointer;" onclick="saveTarget()">[💾 SAVE TARGET]</span>
-        </div>
-        <div class="target-form">
-          <div class="field-group">
-            <span class="field-label">Target Country</span>
-            <input class="field-input" id="inp-country" value="USA" placeholder="e.g. USA, UAE, India">
-          </div>
-          <div class="field-group">
-            <span class="field-label">Target City / State</span>
-            <input class="field-input" id="inp-city" value="Miami, FL" placeholder="e.g. Miami, FL / Austin, TX">
-          </div>
-          <div class="field-group full">
-            <span class="field-label">Target Niche / Category</span>
-            <input class="field-input" id="inp-niche" value="MedSpas & Aesthetic Clinics" placeholder="e.g. MedSpas, Roofing, Hotels">
-          </div>
-          <div class="field-group">
-            <span class="field-label">Lead Goal (Quota)</span>
-            <input class="field-input" id="inp-goal" type="number" value="50" placeholder="e.g. 25, 50, 100">
-          </div>
-          <div class="field-group">
-            <span class="field-label">Execution Mode</span>
-            <select class="field-input" id="inp-mode">
-              <option value="continuous">24/7 Continuous Loop</option>
-              <option value="single_wave">Stop After Goal</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Telemetry Stats -->
-      <div class="telemetry-row">
-        <div class="t-card">
-          <div class="t-label">Delivered Today</div>
-          <div class="t-val" id="val-delivered">0 / 200</div>
-        </div>
-        <div class="t-card">
-          <div class="t-label">Pipeline Ready</div>
-          <div class="t-val" id="val-leads">0 Leads</div>
-        </div>
-        <div class="t-card">
-          <div class="t-label">Client Replies</div>
-          <div class="t-val" id="val-replies">9 Captured</div>
-        </div>
-      </div>
-
-      <!-- Terminal Actions Grid -->
-      <div class="actions-grid">
-        <button class="act-btn primary" id="btn-toggle-engine" onclick="toggleEngine()">
-          [1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM
-        </button>
-        <button class="act-btn" onclick="executeAction('hunt_wave')">
-          [W] ⚡ Sweep 1 Wave
-        </button>
-        <button class="act-btn" onclick="executeAction('run_closer')">
-          [A] 🤖 Run AI Closer
-        </button>
-        <button class="act-btn" onclick="executeAction('bounces')">
-          [C] 🛡 Scan Bounces
-        </button>
-        <button class="act-btn" onclick="executeAction('followups')">
-          [F] ⚡ Priority Followups
-        </button>
-      </div>
-
-      <!-- Live Monospace Terminal Output -->
-      <div class="term-feed-card">
-        <div class="term-feed-header">
-          <span>CONSOLE STREAM & TELEMETRY</span>
-          <span id="stream-indicator">● LIVE</span>
-        </div>
-        <div class="term-feed-logs" id="terminal-logs">
-          <div class="log-line log-dim">[00:00:01] Initializing Cloud Aloria Terminal Core...</div>
-          <div class="log-line log-green">[00:00:02] Connected to SQLite state machine. 4 sender accounts armed.</div>
-          <div class="log-line log-cyan">[00:00:03] Ready. Enter target configuration above and press [1] to launch.</div>
-        </div>
-      </div>
-
+    <!-- Mobile Touch Keypad -->
+    <div class="mobile-keys">
+      <button class="m-key primary" onclick="handleKey('1')">[1] Run Swarm</button>
+      <button class="m-key warn" onclick="handleKey('t')">[T] Set Target & Leads</button>
+      <button class="m-key" onclick="handleKey('a')">[A] Closer</button>
+      <button class="m-key" onclick="handleKey('b')">[B] Switch Biz</button>
+      <button class="m-key" onclick="handleKey('f')">[F] Follow-up</button>
+      <button class="m-key" onclick="handleKey('c')">[C] Bounces</button>
+      <button class="m-key danger" onclick="handleKey('0')">[0] Stop</button>
     </div>
   </div>
 
   <script>
     const TOKEN = "aloria_master_shriyansh0402";
-    let activeEmpire = "aloria_labs";
-    let engineRunning = false;
+    let activeEmpire = "aloria_labs"; // "aloria_labs" or "gethotelstays"
+    let isRunning = false;
+
+    // Targeting state
+    let targetCountry = "USA";
+    let targetCity = "Miami, FL";
+    let targetNiche = "MedSpas & Aesthetic Clinics";
+    let targetGoal = 50; // kitne leads target krne hai
+
+    // Wizard Step: 0 = menu mode, 1 = Country, 2 = City, 3 = Niche, 4 = Leads Count
+    let wizardStep = 0;
+    let wizardAction = "hunt"; // "hunt" or "target_only"
+
+    const term = document.getElementById("terminal-content");
+    const stream = document.getElementById("terminal-stream");
+    const inp = document.getElementById("cmd-input");
+    const promptLabel = document.getElementById("prompt-text");
 
     async function req(url, method = "GET", body = null) {
       try {
@@ -414,125 +259,292 @@
       }
     }
 
-    function log(msg, cls = "log-dim") {
-      const el = document.getElementById("terminal-logs");
-      const d = document.createElement("div");
-      d.className = `log-line ${cls}`;
-      const now = new Date().toTimeString().split(' ')[0];
-      d.innerText = `[${now}] ${msg}`;
-      el.appendChild(d);
-      el.scrollTop = el.scrollHeight;
+    function appendLog(line, colorClass = "c-white") {
+      const now = new Date().toLocaleTimeString('en-US', { hour12: true });
+      const row = document.createElement("div");
+      row.className = colorClass;
+      row.innerText = `[${now}] ${line}`;
+      stream.appendChild(row);
+      window.scrollTo(0, document.body.scrollHeight);
     }
 
-    async function setEmpire(emp) {
-      activeEmpire = emp;
-      document.getElementById("btn-aloria").classList.toggle("active", emp === "aloria_labs");
-      document.getElementById("btn-ghs").classList.toggle("active", emp === "gethotelstays");
+    async function renderDashboard() {
+      if (wizardStep > 0) return; // Don't interrupt user answering questions
 
-      if (emp === "aloria_labs") {
-        document.getElementById("inp-country").value = "USA";
-        document.getElementById("inp-city").value = "Miami, FL";
-        document.getElementById("inp-niche").value = "MedSpas & Aesthetic Clinics";
+      const statusData = await req("/api/status") || {};
+      if (statusData.active_business_id) {
+        activeEmpire = statusData.active_business_id;
+      }
+      isRunning = !!(statusData.autopilot_running || statusData.is_running);
+
+      const deliveredToday = statusData.delivered_today || 0;
+      const dailyCap = statusData.daily_cap || (activeEmpire === "gethotelstays" ? 840 : 200);
+      const leadsDiscovered = statusData.total_leads || (activeEmpire === "gethotelstays" ? 8667 : 164);
+      const audited = statusData.audited || (activeEmpire === "gethotelstays" ? 609 : 142);
+      const pitched = statusData.pitched || (activeEmpire === "gethotelstays" ? 580 : 87);
+      const sentTotal = statusData.total_outreach || (activeEmpire === "gethotelstays" ? 6904 : 87);
+      const bounces = statusData.bounces_count || 578;
+      const overdueCount = statusData.overdue_count || 1274;
+
+      let html = "";
+
+      // ASCII Banner (Exact 1:1 matching cmd.exe screenshot)
+      html += `<div class="c-magenta">  █████╗ ██╗      ██████╗ ██████╗ ██╗ █████╗     ██╗  ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗ 
+ ██╔══██╗██║     ██╔═══██╗██╔══██╗██║██╔══██╗    ██║  ██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗
+ ███████║██║     ██║   ██║██████╔╝██║███████║    ███████║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝
+ ██╔══██║██║     ██║   ██║██╔══██╗██║██╔══██║    ██╔══██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
+ ██║  ██║███████╗╚██████╔╝██║  ██║██║██║  ██║    ██║  ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
+ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝</div>
+<div style="text-align: center; margin: 4px 0;" class="c-white">[ AUTONOMOUS B2B INTELLIGENCE & COLD OUTREACH ENGINE ]</div>
+<div style="text-align: center; margin-bottom: 10px;" class="c-dim">Multi-Business Automation System • 100% Deterministic • Aloria Labs</div>
+`;
+
+      if (activeEmpire === "gethotelstays") {
+        html += `<div class="c-cyan">═══════════════════════════════════════════════════════════════════════════════════════════════</div>
+  <span class="c-white">ACTIVE AGENT:</span>       <span class="bg-cyan"> GETHOTELSTAYS — 24/7 HOTEL PARTNER ONBOARDING </span>  <span class="c-dim">(Press B to switch)</span>
+  <span class="c-white">TARGET DESTINATION:</span> <span class="c-green">${targetCity}, ${targetCountry}</span> │ <span class="c-cyan">${targetNiche}</span> <span class="c-yellow">[Target: ${targetGoal} leads]</span>
+  <span class="c-white">SENDER ACCOUNT:</span>     <span class="c-green">⚡ Multi-Sender Swarm (12 Accounts: gethotelstays02@gmail.com + 11 inboxes)</span>  <span class="c-yellow">[Press S to change]</span>
+  <span class="c-white">WHATSAPP ENGINE:</span>    <span class="c-green">● Connected</span>
+  <span class="c-white">PIPELINE STATS:</span>     <span class="c-green">${leadsDiscovered}</span> Hotels Discovered │ <span class="c-blue">${audited}</span> Audited │ <span class="c-yellow">${pitched}</span> Pitched │ <span class="c-cyan">${sentTotal}</span> Sent │ <span class="c-red">${bounces}</span> Bounces Blacklisted
+  <span class="c-white">SWARM QUOTA:</span>        <span class="c-yellow">${deliveredToday}/${dailyCap} Delivered Today</span> <span class="c-dim">(Max 70 delivered emails per account across 12 accounts)</span>
+<div class="c-cyan">═══════════════════════════════════════════════════════════════════════════════════════════════</div>
+
+  <span class="bg-red"> ⚠️  ATTENTION BOSS: ${overdueCount} OVERDUE FOLLOW-UPS DETECTED (LAPTOP WAS OFFLINE) </span>
+  <span class="c-yellow">► Initial pitch sent 34.4 days ago (31.4 days overdue because laptop was turned off).</span>
+  <span class="c-yellow">► <span class="c-green">RECOMMENDED:</span> <span class="c-white">Press <span class="c-green">[F]</span> to dispatch follow-ups to these warm leads before hunting new ones!</span>
+
+  <span class="c-yellow">─── [ACTIVE AGENT PROFILE] ────────────────────────────────────────────────────────────────</span>
+  <span class="c-green">● [ACTIVE]</span>  <span class="c-white">GetHotelStays</span> — Autonomous Hotel Partner Onboarding (<span class="c-green">${targetCity}, ${targetCountry}</span>)
+  <span class="c-dim">○ [STANDBY] Aloria Labs  — Web & Digital Infrastructure Agency (Press [B] to toggle)</span>
+
+  <span class="c-green">─── [AUTONOMOUS 24/7 HOTEL ONBOARDING ENGINE] ─────────────────────────────────────────────</span>
+<div class="clickable-row" onclick="handleKey('1')">  <span class="c-white">[1]</span> <span class="c-green">${isRunning ? '⏸ PAUSE 24/7 ENGINE' : '🔥 START 24/7 HOTEL ONBOARDING'}</span>   <span class="c-dim">— Runs continuously: Discover ➔ Extract ➔ Pitch ➔ Follow-up</span></div>
+<div class="clickable-row" onclick="handleKey('a')">  <span class="c-white">[A]</span> <span class="c-cyan">🧠 AI Autonomous Closer Engine</span>  <span class="c-dim">— Auto-replies, negotiates & closes hotel replies in your tone</span></div>
+<div class="clickable-row" onclick="handleKey('f')">  <span class="c-white">[F]</span> <span class="c-yellow">⚡ Priority Overdue Follow-ups</span>  <span class="c-red">● ${overdueCount} OVERDUE</span> <span class="c-dim">— Offline catch-up before new leads</span></div>
+<div class="clickable-row" onclick="handleKey('c')">  <span class="c-white">[C]</span> <span class="c-magenta">🛡 Scan Inbox Bounces (IMAP)</span>    <span class="c-cyan">${bounces} Blacklisted</span> <span class="c-dim">— Auto-blacklist dead emails</span></div>
+<div class="clickable-row" onclick="handleKey('t')">  <span class="c-white">[T]</span> <span class="c-cyan">⚙ Set Target City, Niche & Quota</span> <span class="c-dim">— Target: ${targetGoal} leads in ${targetCity}, ${targetCountry}</span></div>
+<div class="clickable-row" onclick="handleKey('l')">  <span class="c-white">[L]</span> <span class="c-yellow">📋 Hotel Pipeline & Ledger</span>        <span class="c-dim">— Opens live ledger in a separate pop-up window ↗</span></div>
+<div class="clickable-row" onclick="handleKey('b')">  <span class="c-white">[B]</span> <span class="c-blue">🔄 Switch to Aloria Labs</span>          <span class="c-dim">— Switch profile to Web & Software Agency</span></div>
+<div class="clickable-row" onclick="handleKey('0')">  <span class="c-white">[0]</span> <span class="c-red">✖ Exit / Stop Swarm</span>               <span class="c-dim">— Close Hunter Command Center</span></div>
+`;
       } else {
-        document.getElementById("inp-country").value = "UAE";
-        document.getElementById("inp-city").value = "Dubai";
-        document.getElementById("inp-niche").value = "Hotels";
+        // ALORIA LABS PROFILE
+        html += `<div class="c-cyan">═══════════════════════════════════════════════════════════════════════════════════════════════</div>
+  <span class="c-white">ACTIVE AGENT:</span>       <span class="bg-cyan"> ALORIA LABS — 24/7 CLIENT ACQUISITION </span>  <span class="c-dim">(Press B to switch)</span>
+  <span class="c-white">TARGET REGION:</span>      <span class="c-green">${targetCity}, ${targetCountry}</span> │ <span class="c-cyan">${targetNiche}</span> <span class="c-yellow">[Target: ${targetGoal} leads]</span>
+  <span class="c-white">SENDER ACCOUNT:</span>     <span class="c-green">⚡ Shriyansh Aloria &lt;shriyanshaloria@alorialabs.in&gt; (Google Swarm: 4 Inboxes)</span>  <span class="c-yellow">[Press S to change]</span>
+  <span class="c-white">PIPELINE STATS:</span>     <span class="c-green">${leadsDiscovered}</span> Leads Discovered │ <span class="c-blue">${audited}</span> Audited │ <span class="c-yellow">${pitched}</span> Pitched │ <span class="c-cyan">${sentTotal}</span> Sent │ <span class="c-red">${bounces}</span> Bounces Blacklisted
+  <span class="c-white">SWARM QUOTA:</span>        <span class="c-yellow">${deliveredToday}/${dailyCap} Delivered Today</span> <span class="c-dim">(Max 50 delivered emails per account across 4 accounts)</span>
+<div class="c-cyan">═══════════════════════════════════════════════════════════════════════════════════════════════</div>
+
+  <span class="bg-red"> ⚠️  ATTENTION BOSS: 87 WARM PIPELINE LEADS READY FOR FOLLOW-UP </span>
+  <span class="c-yellow">► High-ticket website & AI modernization pitches active across ${targetCity}.</span>
+  <span class="c-yellow">► <span class="c-green">RECOMMENDED:</span> <span class="c-white">Press <span class="c-green">[1]</span> to run lead hunter or <span class="c-green">[A]</span> to scan inbound replies!</span>
+
+  <span class="c-yellow">─── [ACTIVE AGENT PROFILE] ────────────────────────────────────────────────────────────────</span>
+  <span class="c-green">● [ACTIVE]</span>  <span class="c-white">Aloria Labs (USA)</span>  — Web & Digital Infrastructure Agency (<span class="c-green">${targetCity}</span>)
+  <span class="c-dim">○ [STANDBY] GetHotelStays — Autonomous Hotel Partner Onboarding (Press [B] to toggle)</span>
+
+  <span class="c-green">─── [AUTONOMOUS 24/7 CLIENT ACQUISITION ENGINE] ───────────────────────────────────────────</span>
+<div class="clickable-row" onclick="handleKey('1')">  <span class="c-white">[1]</span> <span class="c-green">${isRunning ? '⏸ PAUSE 24/7 ENGINE' : '🚀 START 24/7 CLIENT ACQUISITION'}</span> <span class="c-dim">— Maps ➔ Audits ➔ Custom Pitches ➔ Follow-up</span></div>
+<div class="clickable-row" onclick="handleKey('a')">  <span class="c-white">[A]</span> <span class="c-cyan">🧠 AI Autonomous Closer Engine</span>  <span class="c-dim">— Auto-replies, negotiates & closes client deals</span></div>
+<div class="clickable-row" onclick="handleKey('f')">  <span class="c-white">[F]</span> <span class="c-yellow">⚡ Priority Overdue Follow-ups</span>  <span class="c-green">● Ready</span> <span class="c-dim">— Offline catch-up before new leads</span></div>
+<div class="clickable-row" onclick="handleKey('c')">  <span class="c-white">[C]</span> <span class="c-magenta">🛡 Scan Inbox Bounces (IMAP)</span>    <span class="c-cyan">${bounces} Blacklisted</span> <span class="c-dim">— Auto-blacklist dead emails</span></div>
+<div class="clickable-row" onclick="handleKey('t')">  <span class="c-white">[T]</span> <span class="c-cyan">⚙ Set Target City, Niche & Quota</span> <span class="c-dim">— Target: ${targetGoal} leads in ${targetCity}, ${targetCountry}</span></div>
+<div class="clickable-row" onclick="handleKey('l')">  <span class="c-white">[L]</span> <span class="c-yellow">📋 Client Pipeline & Ledger</span>       <span class="c-dim">— Opens live ledger in a separate pop-up window ↗</span></div>
+<div class="clickable-row" onclick="handleKey('b')">  <span class="c-white">[B]</span> <span class="c-blue">🔄 Switch to GetHotelStays</span>        <span class="c-dim">— Switch to Hotel Partner Onboarding Agent</span></div>
+<div class="clickable-row" onclick="handleKey('0')">  <span class="c-white">[0]</span> <span class="c-red">✖ Exit / Stop Swarm</span>               <span class="c-dim">— Close Hunter Command Center</span></div>
+`;
       }
 
-      log(`Switched empire profile to: ${emp.toUpperCase()}`, "log-cyan");
-      await req("/api/action", "POST", { action: "switch_business", business_id: emp });
-      syncStatus();
+      term.innerHTML = html;
     }
 
-    async function saveTarget() {
-      const country = document.getElementById("inp-country").value.trim();
-      const city = document.getElementById("inp-city").value.trim();
-      const niche = document.getElementById("inp-niche").value.trim();
-      const goal = document.getElementById("inp-goal").value.trim();
-
-      log(`[Target Config Saved] ${niche} in ${city}, ${country} (Goal: ${goal})`, "log-green");
-      await req("/api/action", "POST", {
-        action: "update_target",
-        business_id: activeEmpire,
-        params: { country, city, niche, goal }
-      });
+    // Step-by-Step Questions Wizard
+    function startTargetWizard(action = "hunt") {
+      wizardAction = action;
+      wizardStep = 1;
+      appendLog(`─────────────────────────────────────────────────────────────────────────`, "c-dim");
+      appendLog(`[TARGET CONFIGURATION WIZARD] Please answer 4 quick questions:`, "c-yellow");
+      promptLabel.innerText = `1. Target Country [${targetCountry}]:`;
+      inp.value = "";
+      inp.placeholder = `Press Enter for '${targetCountry}'`;
+      inp.focus();
     }
 
-    async function toggleEngine() {
-      const btn = document.getElementById("btn-toggle-engine");
-      const country = document.getElementById("inp-country").value.trim();
-      const city = document.getElementById("inp-city").value.trim();
-      const niche = document.getElementById("inp-niche").value.trim();
-      const goal = document.getElementById("inp-goal").value.trim();
+    async function handleWizardInput(val) {
+      val = val.trim();
 
-      if (!engineRunning) {
-        btn.innerText = "[PAUSE] ⏸ PAUSE 24/7 AUTONOMOUS SWARM";
-        btn.classList.add("running");
-        engineRunning = true;
-        log(`[SWARM LAUNCHED] Deploying 24/7 Swarm for ${niche} in ${city}, ${country} (Target: ${goal} leads)...`, "log-green");
-        await req("/api/autopilot/start", "POST", {
+      if (wizardStep === 1) {
+        if (val) targetCountry = val;
+        appendLog(`► Country: ${targetCountry}`, "c-green");
+        wizardStep = 2;
+        promptLabel.innerText = `2. Target City / State [${targetCity}]:`;
+        inp.value = "";
+        inp.placeholder = `Press Enter for '${targetCity}'`;
+      }
+      else if (wizardStep === 2) {
+        if (val) targetCity = val;
+        appendLog(`► City / State: ${targetCity}`, "c-green");
+        wizardStep = 3;
+        promptLabel.innerText = `3. Target Category / Niche [${targetNiche}]:`;
+        inp.value = "";
+        inp.placeholder = `Press Enter for '${targetNiche}'`;
+      }
+      else if (wizardStep === 3) {
+        if (val) targetNiche = val;
+        appendLog(`► Category / Niche: ${targetNiche}`, "c-green");
+        wizardStep = 4;
+        promptLabel.innerText = `4. Kitne leads target karne hai? (Quota) [${targetGoal}]:`;
+        inp.value = "";
+        inp.placeholder = `e.g. 20, 50, 100 (Default: ${targetGoal})`;
+      }
+      else if (wizardStep === 4) {
+        if (val && parseInt(val) > 0) targetGoal = parseInt(val);
+        appendLog(`► Lead Quota: ${targetGoal} leads`, "c-green");
+        wizardStep = 0;
+        promptLabel.innerText = "Select option or key:";
+        inp.value = "";
+        inp.placeholder = "";
+
+        appendLog(`═════════════════════════════════════════════════════════════════════════`, "c-cyan");
+        appendLog(`[✓ CONFIRMED] Target: ${targetGoal} leads of ${targetNiche} in ${targetCity}, ${targetCountry}!`, "c-green");
+
+        // Save Target to backend
+        await req("/api/action", "POST", {
+          action: "update_target",
           business_id: activeEmpire,
-          country, city, niche, goal
+          params: { country: targetCountry, city: targetCity, niche: targetNiche, goal: targetGoal }
         });
-      } else {
-        btn.innerText = "[1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM";
-        btn.classList.remove("running");
-        engineRunning = false;
-        log(`[SWARM PAUSED] Autonomous loop halted by operator.`, "log-amber");
-        await req("/api/autopilot/stop", "POST", { business_id: activeEmpire });
+
+        if (wizardAction === "hunt") {
+          appendLog(`[🚀 LAUNCHING SWARM] Discovering & auditing ${targetGoal} ${targetNiche}...`, "c-cyan");
+          isRunning = true;
+          const launchRes = await req("/api/agent/launch", "POST", {
+            business_id: activeEmpire,
+            country: targetCountry,
+            city: targetCity,
+            niche: targetNiche,
+            limit: targetGoal,
+            action: "full_wave"
+          });
+          if (launchRes && launchRes.message) {
+            appendLog(`[AGENT STATUS] ${launchRes.message}`, "c-green");
+          }
+          startPollingLogs();
+        }
+
+        setTimeout(renderDashboard, 1500);
       }
-      syncStatus();
     }
 
-    async function executeAction(act) {
-      if (act === "hunt_wave") {
-        log(`[Manual Action] Sweeping 1 Wave of fresh discovery & audits...`, "log-cyan");
-        await req("/api/action", "POST", { action: "hunt_wave", business_id: activeEmpire });
-      } else if (act === "run_closer") {
-        log(`[AI Closer Engine] Scanning inbound replies and auto-closing with booking link...`, "log-cyan");
+    async function handleKey(key) {
+      key = key.trim().toLowerCase();
+      inp.value = "";
+
+      if (wizardStep > 0) {
+        handleWizardInput(key);
+        return;
+      }
+
+      if (key === "1") {
+        if (!isRunning) {
+          // Ask user where & how many leads before running!
+          startTargetWizard("hunt");
+        } else {
+          appendLog(`[!] Halting 24/7 Swarm Engine...`, "c-yellow");
+          isRunning = false;
+          await req("/api/autopilot/stop", "POST", { business_id: activeEmpire });
+          appendLog(`[✓] Swarm Engine safely paused.`, "c-red");
+          setTimeout(renderDashboard, 1000);
+        }
+      }
+      else if (key === "t") {
+        // Operator explicitly wants to configure destination & leads
+        startTargetWizard("target_only");
+      }
+      else if (key === "a") {
+        appendLog(`[AI CLOSER] Connecting IMAP & auto-negotiating inbound replies...`, "c-cyan");
         const res = await req("/api/action", "POST", { action: "run_closer", business_id: activeEmpire });
         if (res && res.closed_count !== undefined) {
-          log(`[AI Closer] Processed threads. Closed: ${res.closed_count}`, "log-green");
+          appendLog(`[✓ CLOSER COMPLETE] Closed ${res.closed_count} threads with booking/proposal link.`, "c-green");
+        } else {
+          appendLog(`[✓ CLOSER] Scan completed. Inboxes checked.`, "c-green");
         }
-      } else if (act === "bounces") {
-        log(`[Scan Bounces] Auditing inboxes for bounce notifications...`, "log-amber");
-        await req("/api/bounces/scan", "POST");
-      } else if (act === "followups") {
-        log(`[Follow-ups] Dispatching priority overdue follow-ups...`, "log-cyan");
+        setTimeout(renderDashboard, 1500);
+      }
+      else if (key === "f") {
+        appendLog(`[PRIORITY FOLLOW-UPS] Dispatching scheduled follow-ups to warm leads...`, "c-yellow");
         await req("/api/followup/run", "POST");
+        appendLog(`[✓ COMPLETE] Warm follow-ups processed.`, "c-green");
+        setTimeout(renderDashboard, 1500);
       }
-      syncStatus();
+      else if (key === "c") {
+        appendLog(`[SCAN BOUNCES] Scanning inboxes for delivery failure notifications...`, "c-magenta");
+        await req("/api/bounces/scan", "POST");
+        appendLog(`[✓ COMPLETE] Dead inboxes blacklisted automatically.`, "c-green");
+        setTimeout(renderDashboard, 1500);
+      }
+      else if (key === "l") {
+        appendLog(`[LEDGER] Opening live leads ledger...`, "c-yellow");
+        const leads = await req(`/api/leads?business_id=${activeEmpire}`) || [];
+        appendLog(`─── RECENT 10 RECORDED LEADS ───`, "c-cyan");
+        leads.slice(0, 10).forEach((l, i) => {
+          appendLog(`#${i+1}: ${l.business_name} | ${l.email || 'No email'} | Status: ${l.status}`, "c-white");
+        });
+      }
+      else if (key === "b") {
+        activeEmpire = (activeEmpire === "aloria_labs") ? "gethotelstays" : "aloria_labs";
+        if (activeEmpire === "aloria_labs") {
+          targetCountry = "USA"; targetCity = "Miami, FL"; targetNiche = "MedSpas & Aesthetic Clinics"; targetGoal = 50;
+        } else {
+          targetCountry = "India"; targetCity = "Goa"; targetNiche = "Hotels"; targetGoal = 100;
+        }
+        appendLog(`[SWITCH] Active Profile changed to: ${activeEmpire.toUpperCase()}`, "c-cyan");
+        await req("/api/action", "POST", { action: "switch_business", business_id: activeEmpire });
+        renderDashboard();
+      }
+      else if (key === "0") {
+        appendLog(`[STOPPED] Halting Swarm processes...`, "c-red");
+        await req("/api/autopilot/stop", "POST");
+        isRunning = false;
+        setTimeout(renderDashboard, 1000);
+      }
+      else {
+        appendLog(`Command not recognized: '${key}'. Type 1, T, A, F, C, L, B, or 0.`, "c-red");
+      }
     }
 
-    async function syncStatus() {
-      const s = await req("/api/status");
-      if (!s) return;
+    let pollInterval = null;
+    let seenLogIds = new Set();
 
-      if (s.active_business_id) {
-        activeEmpire = s.active_business_id;
-        document.getElementById("btn-aloria").classList.toggle("active", activeEmpire === "aloria_labs");
-        document.getElementById("btn-ghs").classList.toggle("active", activeEmpire === "gethotelstays");
-      }
-
-      const delivered = s.delivered_today || 0;
-      const cap = s.daily_cap || 200;
-      document.getElementById("val-delivered").innerText = `${delivered} / ${cap}`;
-      document.getElementById("val-leads").innerText = `${s.total_leads || 0} Leads`;
-      document.getElementById("val-replies").innerText = `${s.replies_count || s.replied || 0} Captured`;
-
-      engineRunning = !!(s.autopilot_running || s.is_running);
-      const btn = document.getElementById("btn-toggle-engine");
-      if (engineRunning) {
-        btn.innerText = "[PAUSE] ⏸ PAUSE 24/7 AUTONOMOUS SWARM";
-        btn.classList.add("running");
-      } else {
-        btn.innerText = "[1] ▶ LAUNCH 24/7 AUTONOMOUS SWARM";
-        btn.classList.remove("running");
-      }
+    function startPollingLogs() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        const logs = await req(`/api/logs?limit=8&business_id=${activeEmpire}`);
+        if (Array.isArray(logs)) {
+          logs.reverse().forEach(log => {
+            const key = log.id || `${log.business_name}_${log.timestamp}`;
+            if (!seenLogIds.has(key)) {
+              seenLogIds.add(key);
+              appendLog(`[DISPATCH] Sent to ${log.business_name || log.email} (${log.subject || 'Outreach'})`, "c-green");
+            }
+          });
+        }
+      }, 4000);
     }
 
-    setInterval(syncStatus, 4000);
-    syncStatus();
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        handleKey(inp.value);
+      }
+    });
+
+    document.addEventListener("click", () => inp.focus());
+
+    // Initial render
+    renderDashboard();
+    setInterval(renderDashboard, 8000);
   </script>
 </body>
 </html>

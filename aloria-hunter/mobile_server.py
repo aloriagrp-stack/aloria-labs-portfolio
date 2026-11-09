@@ -768,6 +768,10 @@ async def launch_agent_wave(request: Request):
     action = str(data.get("action", "full_wave")).strip() or "full_wave"
 
     agent_target = "hotel" if business_id == "gethotelstays" else "aloria"
+    try:
+        business_manager.set_target_settings(business_id, country=country, city=city, niche=niche)
+    except Exception:
+        pass
     params = {
         "city": city,
         "country": country,

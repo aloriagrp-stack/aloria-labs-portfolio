@@ -174,10 +174,20 @@ def audit_single_website(lead):
         if not url.startswith("https://"):
             vulnerabilities.append("Non-secure HTTP connection (missing SSL certificate)")
 
-        # 3. Check for modern interactive features
+        # 3. Check Response Latency
+        if response_time > 2.0:
+            vulnerabilities.append(f"High server response latency ({response_time:.1f}s TTFB — slows mobile loading)")
+
+        # 4. Check for WhatsApp Speed-to-Lead CTA
+        has_whatsapp = any(w in resp_text.lower() for w in ["wa.me", "api.whatsapp.com", "whatsapp.com/send", "whatsapp"])
+        if not has_whatsapp:
+            vulnerabilities.append("Missing direct WhatsApp speed-to-lead channel (leads bounce before inquiry)")
+
+        # 5. Check for automated self-serve booking or estimate calculator
         text_lower = resp_text.lower()
-        if "order online" not in text_lower and "book table" not in text_lower and "reservation" not in text_lower:
-            vulnerabilities.append("Lacks automated online booking or order system")
+        has_interactive = any(b in text_lower for b in ["appointment", "consultation", "estimate", "calculator", "booking", "book now", "reservation", "order online"])
+        if not has_interactive:
+            vulnerabilities.append("Lacks automated self-serve booking or instant appointment qualification")
 
         # 4. Extract Emails from Schema.org / JSON-LD / Meta tags
         for script in soup.find_all("script", type="application/ld+json"):
